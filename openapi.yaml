@@ -1,0 +1,214 @@
+openapi: 3.1.0
+info:
+  title: Developers Italia API
+  version: '1.0.0'
+  summary: Developers Italia API
+  description: The API of Developers Italia
+  license:
+    name: Apache
+    url: 'https://www.apache.org/licenses/LICENSE-2.0'
+  contact:
+    email: contatti@developers.italia.it
+    url: 'https://developers.italia.it/en/contacts'
+    name: Developers Italia
+  x-api-id: 0f9ca6b0-db47-11ec-96f7-d8bbc146d165
+servers:
+  - url: 'https://api.developers.italia.it'
+    description: The production server
+paths:
+  /software:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-software
+    post:
+      summary: ''
+      operationId: post-software
+      responses:
+        '200':
+          description: OK
+  '/software/{softwareId}':
+    parameters:
+      - schema:
+          type: string
+        name: softwareId
+        in: path
+        required: true
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-software-softwareId
+    put:
+      summary: ''
+      operationId: put-software-softwareId
+      responses:
+        '200':
+          description: OK
+    patch:
+      summary: ''
+      operationId: patch-software-softwareId
+      responses:
+        '200':
+          description: OK
+    delete:
+      summary: ''
+      operationId: delete-software-softwareId
+      responses:
+        '200':
+          description: OK
+  '/software/{softwareId}/logs':
+    parameters:
+      - schema:
+          type: string
+        name: softwareId
+        in: path
+        required: true
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-software-softwareId-logs
+    post:
+      summary: ''
+      operationId: post-software-softwareId-logs
+      responses:
+        '200':
+          description: OK
+  /bundles:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-bundles
+    post:
+      summary: ''
+      operationId: post-bundles
+      responses:
+        '200':
+          description: OK
+  '/bundle/{bundleId}':
+    parameters:
+      - schema:
+          type: string
+        name: bundleId
+        in: path
+        required: true
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-bundle-bundleId
+    put:
+      summary: ''
+      operationId: put-bundle-bundleId
+      responses:
+        '200':
+          description: OK
+    patch:
+      summary: ''
+      operationId: patch-bundle-bundleId
+      responses:
+        '200':
+          description: OK
+    delete:
+      summary: ''
+      operationId: delete-bundle-bundleId
+      responses:
+        '200':
+          description: OK
+  /logs:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-logs
+    post:
+      summary: ''
+      operationId: post-logs
+      responses:
+        '200':
+          description: OK
+  /publishers:
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-publishers
+    post:
+      summary: ''
+      operationId: post-publishers
+      responses:
+        '200':
+          description: OK
+  '/publishers/{publisherId}':
+    parameters:
+      - schema:
+          type: string
+        name: publisherId
+        in: path
+        required: true
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses: {}
+      operationId: get-publishers-publisherId
+    put:
+      summary: ''
+      operationId: put-publishers-publisherId
+      responses:
+        '200':
+          description: OK
+    patch:
+      summary: ''
+      operationId: patch-publishers-publisherId
+      responses:
+        '200':
+          description: OK
+    delete:
+      summary: ''
+      operationId: delete-publishers-publisherId
+      responses:
+        '200':
+          description: OK
+components:
+  schemas:
+    Software:
+      title: Software
+      x-stoplight:
+        id: g73zfvx7rmc20
+      type: object
+      properties:
+        id:
+          type: string
+    Publisher:
+      title: Publisher
+      x-stoplight:
+        id: o9ohv7d53cd5o
+      type: object
+      properties:
+        id:
+          type: string
+    Log:
+      title: Log
+      x-stoplight:
+        id: 17yfpqsmi2dy1
+      type: object
+      properties:
+        id:
+          type: string
+    Bundle:
+      title: Bundle
+      x-stoplight:
+        id: vjkub0yybmkka
+      type: object
+      properties:
+        id:
+          type: string
+  securitySchemes:
+    API Key - 1:
+      name: API Key
+      type: apiKey
+      in: header
+      description: ''
