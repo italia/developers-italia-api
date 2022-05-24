@@ -1,0 +1,11 @@
+on:
+  - pull_request
+
+jobs:
+  spectral:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: curl https://italia.github.io/api-oas-checker/spectral-full.yml > .spectral.yml
+
+      - uses: stoplightio/spectral-action@v0.8.2
