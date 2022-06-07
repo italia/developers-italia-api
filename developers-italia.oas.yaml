@@ -1,7 +1,7 @@
-openapi: 3.1.0
+openapi: 3.0.0
 info:
   title: Developers Italia API
-  version: '1.0.0'
+  version: 1.0.0
   summary: Developers Italia API
   description: The API of Developers Italia
   license:
@@ -18,16 +18,72 @@ servers:
 paths:
   /software:
     get:
-      summary: Your GET endpoint
-      tags: []
-      responses: {}
+      summary: List all software
+      description: This endpoint allows you to list all software
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Software'
+                  meta:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       operationId: get-software
+      parameters:
+        - schema:
+            type: number
+            example: 100
+            minimum: 1
+            multipleOf: 1
+          in: query
+          name: limit
+          description: Limit the amount of results
+        - schema:
+            type: number
+            example: 3
+            minimum: 1
+            multipleOf: 1
+          in: query
+          name: page
+          description: Page number for use in pagination
     post:
-      summary: ''
+      summary: Create a new software
       operationId: post-software
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Software'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Software'
+            examples: {}
   '/software/{softwareId}':
     parameters:
       - schema:
@@ -36,28 +92,59 @@ paths:
         in: path
         required: true
     get:
-      summary: Your GET endpoint
-      tags: []
-      responses: {}
-      operationId: get-software-softwareId
-    put:
-      summary: ''
-      operationId: put-software-softwareId
+      summary: Get a Software
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Software'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      operationId: get-software-softwareId
     patch:
-      summary: ''
+      summary: Update a Software
       operationId: patch-software-softwareId
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Software'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
-      summary: ''
+      summary: Delete a Software
       operationId: delete-software-softwareId
       responses:
-        '200':
-          description: OK
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   '/software/{softwareId}/logs':
     parameters:
       - schema:
@@ -66,28 +153,140 @@ paths:
         in: path
         required: true
     get:
-      summary: Your GET endpoint
-      tags: []
-      responses: {}
+      summary: List all Logs for a Software
       operationId: get-software-softwareId-logs
-    post:
-      summary: ''
-      operationId: post-software-softwareId-logs
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Log'
+                  meta:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      parameters:
+        - schema:
+            type: number
+            example: 100
+            minimum: 1
+            multipleOf: 1
+          in: query
+          name: limit
+          description: Limit the amount of results
+        - schema:
+            type: number
+            example: 3
+            minimum: 1
+            multipleOf: 1
+          in: query
+          name: page
+          description: Page number for use in pagination
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only logs after this time (ISO 8601 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only logs before this time (ISO 8601 datetime)
+    post:
+      summary: Create Logs for a Software
+      operationId: post-software-softwareId-logs
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Log'
+            examples:
+              example-1:
+                value:
+                  - id: string
   /bundles:
     get:
-      summary: Your GET endpoint
-      tags: []
-      responses: {}
+      summary: List all Bundles
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Bundle'
+                  meta:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
       operationId: get-bundles
     post:
-      summary: ''
+      summary: Create a Bundle
       operationId: post-bundles
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bundle'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Bundle'
+            examples: {}
+
   '/bundle/{bundleId}':
     parameters:
       - schema:
@@ -96,52 +295,190 @@ paths:
         in: path
         required: true
     get:
-      summary: Your GET endpoint
-      tags: []
-      responses: {}
-      operationId: get-bundle-bundleId
-    put:
-      summary: ''
-      operationId: put-bundle-bundleId
+      summary: Get a Bundle
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bundle'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      operationId: get-bundle-bundleId
+
     patch:
-      summary: ''
+      summary: Update a Bundle
       operationId: patch-bundle-bundleId
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Software'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
     delete:
-      summary: ''
+      summary: Delete a Bundle
       operationId: delete-bundle-bundleId
       responses:
-        '200':
-          description: OK
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /logs:
     get:
-      summary: Your GET endpoint
-      tags: []
-      responses: {}
-      operationId: get-logs
-    post:
-      summary: ''
-      operationId: post-logs
+      summary: List all Logs
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Log'
+                  meta:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+      operationId: get-logs
+      parameters:
+        - schema:
+            type: number
+            example: 100
+            minimum: 1
+            multipleOf: 1
+          in: query
+          name: limit
+          description: Limit the amount of results
+        - schema:
+            type: number
+            example: 3
+            minimum: 1
+            multipleOf: 1
+          in: query
+          name: page
+          description: Page number for use in pagination
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only logs after this time (ISO 8601 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only logs before this time (ISO 8601 datetime)
+
+    post:
+      summary: Create Logs
+      operationId: post-logs
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Log'
   /publishers:
     get:
-      summary: Your GET endpoint
-      tags: []
-      responses: {}
+      summary: List all Publishers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Publisher'
+                  meta:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
       operationId: get-publishers
     post:
-      summary: ''
+      summary: Create a new Publisher
       operationId: post-publishers
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Publisher'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   '/publishers/{publisherId}':
     parameters:
       - schema:
@@ -150,29 +487,121 @@ paths:
         in: path
         required: true
     get:
-      summary: Your GET endpoint
-      tags: []
-      responses: {}
-      operationId: get-publishers-publisherId
-    put:
-      summary: ''
-      operationId: put-publishers-publisherId
+      summary: Get a Publisher
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Publisher'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+      operationId: get-publishers-publisherId
+
     patch:
-      summary: ''
+      summary: Update a Publisher
       operationId: patch-publishers-publisherId
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Publisher'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
-      summary: ''
+      summary: Delete a Publisher
       operationId: delete-publishers-publisherId
       responses:
-        '200':
-          description: OK
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
+  responses:
+    NoContent:
+      description: No Content
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
   schemas:
     Software:
       title: Software
@@ -181,6 +610,8 @@ components:
       type: object
       properties:
         id:
+          type: string
+        publiccode:
           type: string
     Publisher:
       title: Publisher
@@ -206,6 +637,41 @@ components:
       properties:
         id:
           type: string
+    Pagination:
+      type: object
+      properties:
+        pagination:
+          type: object
+          properties:
+            per_page:
+              type: integer
+            current_page:
+              type: integer
+      x-examples:
+        example-1:
+          pagination:
+            per_page: 200
+            current_page: 3
+    Error:
+      type: object
+      x-examples:
+        example-1:
+          code: x
+          title: x
+          detail: x
+      properties:
+        code:
+          type: string
+          description: Application-specific error code
+        title:
+          type: string
+          description: 'Short, human-readable summary of the problem'
+        detail:
+          type: string
+          description: Human-readable explanation of the problem
+      required:
+        - title
+        - detail
   securitySchemes:
     API Key - 1:
       name: API Key
