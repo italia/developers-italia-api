@@ -550,7 +550,7 @@ components:
     BadRequest:
       description: Bad Request
       content:
-        application/json:
+        application/problem+json:
           schema:
             type: object
             properties:
@@ -561,7 +561,7 @@ components:
     Unauthorized:
       description: Unauthorized
       content:
-        application/json:
+        application/problem+json:
           schema:
             type: object
             properties:
@@ -572,7 +572,7 @@ components:
     NotFound:
       description: Not found
       content:
-        application/json:
+        application/problem+json:
           schema:
             type: object
             properties:
@@ -583,7 +583,7 @@ components:
     TooManyRequests:
       description: Too Many Requests
       content:
-        application/json:
+        application/problem+json:
           schema:
             type: object
             properties:
@@ -594,7 +594,7 @@ components:
     InternalServerError:
       description: Internal Server Error
       content:
-        application/json:
+        application/problem+json:
           schema:
             type: object
             properties:
