@@ -166,6 +166,11 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/Software'
     delete:
       summary: Delete a Software
       description: Delete a Sofware by its id
@@ -388,6 +393,11 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/Bundle'
     delete:
       summary: Delete a Bundle
       description: Delete a Bundle by its id
@@ -594,6 +604,11 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/Publisher'
     delete:
       summary: Delete a Publisher
       description: Delete a Publisher by its id
