@@ -71,18 +71,18 @@ paths:
       operationId: get-software
       parameters:
         - schema:
-            type: number
+            type: integer
+            format: int32
             example: 100
             minimum: 1
-            multipleOf: 1
           in: query
           name: limit
           description: Limit the amount of results
         - schema:
-            type: number
+            type: integer
+            format: int32
             example: 3
             minimum: 1
-            multipleOf: 1
           in: query
           name: page
           description: Page number for use in pagination
@@ -227,18 +227,18 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       parameters:
         - schema:
-            type: number
+            type: integer
+            format: int32
             example: 100
             minimum: 1
-            multipleOf: 1
           in: query
           name: limit
           description: Limit the amount of results
         - schema:
-            type: number
+            type: integer
+            format: int32
             example: 3
             minimum: 1
-            multipleOf: 1
           in: query
           name: page
           description: Page number for use in pagination
@@ -448,18 +448,18 @@ paths:
       operationId: get-logs
       parameters:
         - schema:
-            type: number
+            type: integer
+            format: int32
             example: 100
             minimum: 1
-            multipleOf: 1
           in: query
           name: limit
           description: Limit the amount of results
         - schema:
-            type: number
+            type: integer
+            format: int32
             example: 3
             minimum: 1
-            multipleOf: 1
           in: query
           name: page
           description: Page number for use in pagination
