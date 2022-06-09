@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Developers Italia API
   version: 1.0.0
-  summary: Developers Italia API
+  x-summary: Developers Italia API
   description: The API of Developers Italia
   license:
     name: Apache
@@ -15,11 +15,22 @@ info:
 servers:
   - url: 'https://api.developers.italia.it'
     description: The production server
+tags:
+  - name: software
+    description: Operations on software
+  - name: bundles
+    description: Operations on bundles
+  - name: logs
+    description: Operations on logs
+  - name: publishers
+    description: Operations on publishers
 paths:
   /software:
     get:
       summary: List all software
       description: This endpoint allows you to list all software
+      tags:
+        - software
       responses:
         '200':
           description: OK
@@ -59,7 +70,10 @@ paths:
           name: page
           description: Page number for use in pagination
     post:
-      summary: Create a new software
+      summary: Create a new Software
+      description: Create a new Software
+      tags:
+        - software
       operationId: post-software
       responses:
         '200':
@@ -93,6 +107,9 @@ paths:
         required: true
     get:
       summary: Get a Software
+      description: Get a Software from its id
+      tags:
+        - software
       responses:
         '200':
           description: OK
@@ -111,6 +128,9 @@ paths:
       operationId: get-software-softwareId
     patch:
       summary: Update a Software
+      description: Update a Software by its id
+      tags:
+        - software
       operationId: patch-software-softwareId
       responses:
         '200':
@@ -131,6 +151,9 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     delete:
       summary: Delete a Software
+      description: Delete a Sofware by its id
+      tags:
+        - software
       operationId: delete-software-softwareId
       responses:
         '204':
@@ -154,6 +177,9 @@ paths:
         required: true
     get:
       summary: List all Logs for a Software
+      description: List all Logs for a Software by its id
+      tags:
+        - logs
       operationId: get-software-softwareId-logs
       responses:
         '200':
@@ -210,6 +236,9 @@ paths:
           description: Only logs before this time (ISO 8601 datetime)
     post:
       summary: Create Logs for a Software
+      description: Create Logs for a Software by its id
+      tags:
+        - logs
       operationId: post-software-softwareId-logs
       responses:
         '204':
@@ -238,6 +267,9 @@ paths:
   /bundles:
     get:
       summary: List all Bundles
+      description: List all Bundles
+      tags:
+        - bundles
       responses:
         '200':
           description: OK
@@ -258,10 +290,12 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
       operationId: get-bundles
     post:
       summary: Create a Bundle
+      description: Create a Bundle
+      tags:
+        - bundles
       operationId: post-bundles
       responses:
         '200':
@@ -286,7 +320,6 @@ paths:
             schema:
               $ref: '#/components/schemas/Bundle'
             examples: {}
-
   '/bundle/{bundleId}':
     parameters:
       - schema:
@@ -296,6 +329,9 @@ paths:
         required: true
     get:
       summary: Get a Bundle
+      description: Get a Bundle by its id
+      tags:
+        - bundles
       responses:
         '200':
           description: OK
@@ -312,9 +348,11 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       operationId: get-bundle-bundleId
-
     patch:
       summary: Update a Bundle
+      description: Update a Bundle by its id
+      tags:
+        - bundles
       operationId: patch-bundle-bundleId
       responses:
         '200':
@@ -333,9 +371,11 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
     delete:
       summary: Delete a Bundle
+      description: Delete a Bundle by its id
+      tags:
+        - bundles
       operationId: delete-bundle-bundleId
       responses:
         '204':
@@ -350,10 +390,12 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
   /logs:
     get:
       summary: List all Logs
+      description: List all Logs
+      tags:
+        - logs
       responses:
         '200':
           description: OK
@@ -376,7 +418,6 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
       operationId: get-logs
       parameters:
         - schema:
@@ -409,9 +450,11 @@ paths:
           in: query
           name: to
           description: Only logs before this time (ISO 8601 datetime)
-
     post:
       summary: Create Logs
+      description: Create Logs
+      tags:
+        - logs
       operationId: post-logs
       responses:
         '204':
@@ -436,6 +479,9 @@ paths:
   /publishers:
     get:
       summary: List all Publishers
+      description: List all Publishers
+      tags:
+        - publishers
       responses:
         '200':
           description: OK
@@ -456,10 +502,12 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
       operationId: get-publishers
     post:
       summary: Create a new Publisher
+      description: Create a new Publisher
+      tags:
+        - publishers
       operationId: post-publishers
       responses:
         '200':
@@ -478,7 +526,6 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
   '/publishers/{publisherId}':
     parameters:
       - schema:
@@ -488,6 +535,9 @@ paths:
         required: true
     get:
       summary: Get a Publisher
+      description: Get a Publisher by its id
+      tags:
+        - publishers
       responses:
         '200':
           description: OK
@@ -503,11 +553,12 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
       operationId: get-publishers-publisherId
-
     patch:
       summary: Update a Publisher
+      description: Update a Publisher by its id
+      tags:
+        - publishers
       operationId: patch-publishers-publisherId
       responses:
         '200':
@@ -528,6 +579,9 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     delete:
       summary: Delete a Publisher
+      description: Delete a Publisher by its id
+      tags:
+        - publishers
       operationId: delete-publishers-publisherId
       responses:
         '204':
@@ -542,7 +596,6 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
 components:
   responses:
     NoContent:
@@ -639,19 +692,21 @@ components:
           type: string
     Pagination:
       type: object
+      x-examples:
+        example-1:
+          pagination:
+            per_page: 200
+            current_page: 3
       properties:
         pagination:
           type: object
           properties:
             per_page:
               type: integer
+              format: int32
             current_page:
               type: integer
-      x-examples:
-        example-1:
-          pagination:
-            per_page: 200
-            current_page: 3
+              format: int32
     Error:
       type: object
       x-examples:
