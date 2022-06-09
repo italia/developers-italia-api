@@ -24,7 +24,24 @@ tags:
     description: Operations on logs
   - name: publishers
     description: Operations on publishers
+  - name: monitor
+    description: Monitoring operations on the API
 paths:
+  /status:
+    get:
+      summary: Get the API status
+      description: Get the API status
+      tags: [monitor]
+      operationId: get-status
+      responses:
+        '204':
+          $ref: "#/components/responses/NoContent"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /software:
     get:
       summary: List all software
