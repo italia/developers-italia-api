@@ -110,6 +110,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -167,6 +168,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       requestBody:
+        required: true
         content:
           application/merge-patch+json:
             schema:
@@ -276,6 +278,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -337,6 +340,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -394,6 +398,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       requestBody:
+        required: true
         content:
           application/merge-patch+json:
             schema:
@@ -497,6 +502,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -605,6 +611,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
       requestBody:
+        required: true
         content:
           application/merge-patch+json:
             schema:
