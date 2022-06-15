@@ -12,6 +12,8 @@ info:
     url: 'https://developers.italia.it/en/contacts'
     name: Developers Italia
   x-api-id: 0f9ca6b0-db47-11ec-96f7-d8bbc146d165
+  # TODO: Create that page
+  termsOfService: https://developers.italia.it/en/api
 servers:
   - url: 'https://api.developers.italia.it'
     description: The production server
