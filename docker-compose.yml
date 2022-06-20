@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  api:
+    image: italia/developers-italia-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_DSN: host=localhost user=postgres password=postgres dbname=postgres port=5432
+
+  db:
+    image: postgres:14.3-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
