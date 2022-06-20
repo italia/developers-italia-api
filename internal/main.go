@@ -11,8 +11,7 @@ func main() {
 		return c.SendString("Hello, World!")
 	})
 
-	err := app.Listen(":3000")
-	if err != nil {
+	if err := app.Listen(":3000"); err != nil {
 		return
 	}
 }
