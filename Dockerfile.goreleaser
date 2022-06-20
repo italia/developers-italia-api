@@ -1,0 +1,10 @@
+#
+# This is the Docker image that gets published to GitHub.
+#
+# Goreleaser takes care of building the binary.
+#
+FROM alpine:3
+
+COPY developer-italia-api /usr/local/bin/developers-italia-api
+
+ENTRYPOINT ["/usr/local/bin/developers-italia-api"]
