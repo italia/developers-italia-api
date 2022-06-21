@@ -63,7 +63,7 @@ func PatchPublisher(ctx *fiber.Ctx) error {
 		})
 	}
 
-	query := db.Database.Model(models.Publisher{}).Where("id = ?", ctx.Params("id"))
+	query := db.Database.First(models.Publisher{}, ctx.Params("id"))
 
 	if err := query.Updates(&publisher).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
