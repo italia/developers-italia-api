@@ -38,6 +38,12 @@ output:
   # Default: colored-line-number
   format: github-actions
 
+linters-settings:
+  wrapcheck:
+    ignoreSigs:
+      # Fiber takes care of unwrapping the error
+      - func (*github.com/gofiber/fiber/v2.Ctx)
+
 linters:
   enable-all: true
 
@@ -48,6 +54,9 @@ linters:
     - interfacer
     - maligned
     - scopelint
+
+    # Not terribly useful and ends up in too much boilerplate
+    - exhaustruct
 
   # Run only fast linters from enabled linters set (first run won't be fast)
   # Default: false
