@@ -24,8 +24,7 @@ func main() {
 	app.Patch("/publishers/:id", handlers.PatchPublisher)
 	app.Delete("/publishers/:id", handlers.DeletePublisher)
 
-	err := app.Listen(":3000")
-	if err != nil {
+	if err := app.Listen(":3000"); err != nil {
 		log.Fatal(err)
 	}
 }
