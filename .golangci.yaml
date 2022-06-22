@@ -44,6 +44,16 @@ linters-settings:
       # Fiber takes care of unwrapping the error
       - func (*github.com/gofiber/fiber/v2.Ctx)
 
+      # Defaults
+      - .Errorf(
+      - errors.New(
+      - errors.Unwrap(
+      - .Wrap(
+      - .Wrapf(
+      - .WithMessage(
+      - .WithMessagef(
+      - .WithStack(
+
 linters:
   enable-all: true
 
@@ -57,6 +67,8 @@ linters:
 
     # Not terribly useful and ends up in too much boilerplate
     - exhaustruct
+    # False positives (https://github.com/daixiang0/gci/issues/54)
+    - gci
 
   # Run only fast linters from enabled linters set (first run won't be fast)
   # Default: false
