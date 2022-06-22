@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/italia/developers-italia-api/internal/common"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/italia/developers-italia-api/internal/database"
 	"github.com/italia/developers-italia-api/internal/handlers"
@@ -15,7 +17,8 @@ func main() {
 	}
 
 	app := fiber.New(fiber.Config{
-		Prefork: true,
+		Prefork:      true,
+		ErrorHandler: common.CustomErrorHandler,
 	})
 
 	app.Get("/publishers", handlers.GetPublishers)
