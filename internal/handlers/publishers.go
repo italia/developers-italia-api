@@ -17,14 +17,13 @@ func GetPublishers(ctx *fiber.Ctx) error {
 }
 
 func GetPublisher(ctx *fiber.Ctx) error {
-	publisherEntity := models.Publisher{}
-	requestID := ctx.Params("id")
+	publisher := models.Publisher{}
 
-	if err := db.Database.First(&publisherEntity, requestID).Error; err != nil {
+	if err := db.Database.First(&publisher, ctx.Params("id")).Error; err != nil {
 		return common.ServerError(ctx, err) //nolint:wrapcheck
 	}
 
-	return ctx.JSON(&publisherEntity)
+	return ctx.JSON(&publisher)
 }
 
 func PostPublisher(ctx *fiber.Ctx) error {
@@ -47,7 +46,6 @@ func PostPublisher(ctx *fiber.Ctx) error {
 
 func PatchPublisher(ctx *fiber.Ctx) error {
 	publisherReq := new(requests.Publisher)
-	requestID := ctx.Params("id")
 
 	if err := ctx.BodyParser(publisherReq); err != nil {
 		return common.UnprocessableEntity(ctx) //nolint:wrapcheck
@@ -59,7 +57,7 @@ func PatchPublisher(ctx *fiber.Ctx) error {
 
 	publisher := models.Publisher{}
 
-	if err := db.Database.First(&publisher, requestID).Error; err != nil {
+	if err := db.Database.First(&publisher, ctx.Params("id")).Error; err != nil {
 		return err
 	}
 
