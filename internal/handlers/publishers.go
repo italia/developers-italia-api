@@ -1,13 +1,11 @@
 package handlers
 
 import (
-	"errors"
-
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
-
+	"github.com/italia/developers-italia-api/internal/common"
 	db "github.com/italia/developers-italia-api/internal/database"
 	"github.com/italia/developers-italia-api/internal/models"
+	"github.com/italia/developers-italia-api/internal/requests"
 )
 
 func GetPublishers(ctx *fiber.Ctx) error {
@@ -19,62 +17,54 @@ func GetPublishers(ctx *fiber.Ctx) error {
 }
 
 func GetPublisher(ctx *fiber.Ctx) error {
-	var publisher models.Publisher
+	publisher := models.Publisher{}
 
 	if err := db.Database.First(&publisher, ctx.Params("id")).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"message": err.Error(),
-			})
-		}
-
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+		return common.ServerError(ctx, err) //nolint:wrapcheck
 	}
 
 	return ctx.JSON(&publisher)
 }
 
 func PostPublisher(ctx *fiber.Ctx) error {
-	var publisher models.Publisher
+	publisher := new(models.Publisher)
 
-	if err := ctx.BodyParser(&publisher); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+	if err := ctx.BodyParser(publisher); err != nil {
+		return common.UnprocessableEntity(ctx) //nolint:wrapcheck
+	}
+
+	if err := common.ValidateStruct(*publisher); err != nil {
+		return common.ValidationError(ctx, err) //nolint:wrapcheck
 	}
 
 	if err := db.Database.Create(&publisher).Error; err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+		return common.ServerError(ctx, err) //nolint:wrapcheck
 	}
 
 	return ctx.JSON(&publisher)
 }
 
 func PatchPublisher(ctx *fiber.Ctx) error {
-	var publisher models.Publisher
+	publisherReq := new(requests.Publisher)
 
-	if err := ctx.BodyParser(&publisher); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+	if err := ctx.BodyParser(publisherReq); err != nil {
+		return common.UnprocessableEntity(ctx) //nolint:wrapcheck
 	}
 
-	query := db.Database.First(models.Publisher{}, ctx.Params("id"))
+	if err := common.ValidateStruct(*publisherReq); err != nil {
+		return common.ValidationError(ctx, err) //nolint:wrapcheck
+	}
 
-	if err := query.Updates(&publisher).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"message": err.Error(),
-			})
-		}
+	publisher := models.Publisher{}
 
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+	if err := db.Database.First(&publisher, ctx.Params("id")).Error; err != nil {
+		return err
+	}
+
+	publisher.Name = publisherReq.Name
+
+	if err := db.Database.Updates(&publisher).Error; err != nil {
+		return common.ServerError(ctx, err) //nolint:wrapcheck
 	}
 
 	return ctx.JSON(&publisher)
@@ -83,16 +73,14 @@ func PatchPublisher(ctx *fiber.Ctx) error {
 func DeletePublisher(ctx *fiber.Ctx) error {
 	var publisher models.Publisher
 
-	if err := db.Database.Delete(&publisher, ctx.Params("id")).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"message": err.Error(),
-			})
-		}
+	requestID := ctx.Params("id")
 
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+	if err := db.Database.First(&publisher, requestID).Error; err != nil {
+		return err
+	}
+
+	if err := db.Database.Delete(&publisher, requestID).Error; err != nil {
+		return common.ServerError(ctx, err) //nolint:wrapcheck
 	}
 
 	return ctx.JSON(&publisher)
