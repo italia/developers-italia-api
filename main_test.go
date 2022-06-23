@@ -17,10 +17,11 @@ func TestIndexRoute(t *testing.T) {
 		route string
 
 		// Expected output
-		expectedError bool
-		expectedCode  int
-		expectedBody  string
-		method        string
+		expectedError       bool
+		expectedCode        int
+		expectedBody        string
+		expectedContentType string
+		method              string
 	}{
 		{
 			description:   "publishers get route",
@@ -29,6 +30,7 @@ func TestIndexRoute(t *testing.T) {
 			expectedError: false,
 			expectedCode:  200,
 			expectedBody:  "[]",
+			expectedContentType: "application/json",
 		},
 		{
 			description:   "non existing route",
@@ -36,7 +38,17 @@ func TestIndexRoute(t *testing.T) {
 			method:        "GET",
 			expectedError: false,
 			expectedCode:  404,
-			expectedBody:  "{\"message\":\"Cannot GET /i-dont-exist\"}",
+			expectedBody:  `{"title":"Not Found","status":404}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description:         "publishers get non-existing id",
+			route:               "/publishers/404",
+			method:              "GET",
+			expectedError:       false,
+			expectedCode:        404,
+			expectedBody:        `{"title":"can't get Publisher","detail":"Publisher was not found","status":404}`,
+			expectedContentType: "application/problem+json",
 		},
 	}
 
@@ -68,5 +80,6 @@ func TestIndexRoute(t *testing.T) {
 		assert.Nilf(t, err, test.description)
 
 		assert.Equalf(t, test.expectedBody, string(body), test.description)
+		assert.Equalf(t, test.expectedContentType, res.Header.Get("Content-Type"), test.description)
 	}
 }
