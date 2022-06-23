@@ -7,14 +7,20 @@ ARG GO_VERSION=1.18
 
 FROM golang:${GO_VERSION} as build
 
-WORKDIR /go/src
+WORKDIR /go/src/developers-italia-api
 
 COPY . .
 
-RUN go build
+RUN go mod download
 
-FROM alpine:3
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o app .
 
-COPY --from=build /go/src/developers-italia-api /usr/local/bin/developers-italia-api
+FROM alpine:latest
 
-ENTRYPOINT ["/usr/local/bin/developers-italia-api"]
+WORKDIR /app
+
+COPY --from=build /go/src/developers-italia-api/app .
+
+EXPOSE 3000
+
+CMD ["./app"]
