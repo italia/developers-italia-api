@@ -2,11 +2,17 @@ version: '3.8'
 services:
   api:
     image: italia/developers-italia-api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    networks:
+      - default
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      DATABASE_DSN: host=localhost user=postgres password=postgres dbname=postgres port=5432
+      DATABASE_DSN: host=db user=postgres password=postgres dbname=postgres port=5432
 
   db:
     image: postgres:14.3-alpine
