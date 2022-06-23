@@ -11,8 +11,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    env_file:
-      - .env
+    environment:
+      DATABASE_DSN: host=db user=postgres password=postgres dbname=postgres port=5432
 
   db:
     image: postgres:14.3-alpine
