@@ -3,7 +3,14 @@ info:
   title: Developers Italia API
   version: 1.0.0
   x-summary: Developers Italia API
-  description: The API of Developers Italia
+  description: |
+    The API of Developers Italia
+
+    ### <a name="terms-of-service"></a> Terms of service
+    This API is open to use. While we normally rate limit the service, we reserve to block any
+    potential malicious misuse of the API.
+
+    Be nice.
   license:
     name: Apache
     url: 'https://www.apache.org/licenses/LICENSE-2.0'
@@ -12,8 +19,8 @@ info:
     url: 'https://developers.italia.it/en/contacts'
     name: Developers Italia
   x-api-id: 0f9ca6b0-db47-11ec-96f7-d8bbc146d165
-  # TODO: Create that page
-  termsOfService: https://developers.italia.it/en/api
+  # TODO: merge https://github.com/italia/developers.italia.it/pull/1245
+  termsOfService: https://developers.italia.it/en/api/developers-italia#terms-of-service
 servers:
   - url: 'https://api.developers.italia.it'
     description: The production server
