@@ -7,6 +7,8 @@ import (
 	"github.com/italia/developers-italia-api/internal/common"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+
 	"github.com/italia/developers-italia-api/internal/database"
 	"github.com/italia/developers-italia-api/internal/handlers"
 )
@@ -20,6 +22,9 @@ func main() {
 		Prefork:      true,
 		ErrorHandler: common.CustomErrorHandler,
 	})
+
+	// Automatically recover panics in handlers
+	app.Use(recover.New())
 
 	app.Get("/publishers", handlers.GetPublishers)
 	app.Get("/publishers/:id", handlers.GetPublisher)
