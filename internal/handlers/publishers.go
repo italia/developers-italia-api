@@ -8,6 +8,7 @@ import (
 	"github.com/italia/developers-italia-api/internal/requests"
 )
 
+// GetPublishers returns a list of all publishers.
 func GetPublishers(ctx *fiber.Ctx) error {
 	var publishers []models.Publisher
 
@@ -16,6 +17,7 @@ func GetPublishers(ctx *fiber.Ctx) error {
 	return ctx.JSON(&publishers)
 }
 
+// GetPublisher returns the publisher with the given ID.
 func GetPublisher(ctx *fiber.Ctx) error {
 	publisher := models.Publisher{}
 
@@ -26,6 +28,7 @@ func GetPublisher(ctx *fiber.Ctx) error {
 	return ctx.JSON(&publisher)
 }
 
+// PostPublisher creates a new publisher.
 func PostPublisher(ctx *fiber.Ctx) error {
 	publisher := new(models.Publisher)
 
@@ -44,6 +47,7 @@ func PostPublisher(ctx *fiber.Ctx) error {
 	return ctx.JSON(&publisher)
 }
 
+// PatchPublisher updates the publisher with the given ID.
 func PatchPublisher(ctx *fiber.Ctx) error {
 	publisherReq := new(requests.Publisher)
 
@@ -70,6 +74,7 @@ func PatchPublisher(ctx *fiber.Ctx) error {
 	return ctx.JSON(&publisher)
 }
 
+// DeletePublisher deletes the publisher with the given ID.
 func DeletePublisher(ctx *fiber.Ctx) error {
 	var publisher models.Publisher
 
