@@ -8,23 +8,19 @@ import (
 	"gorm.io/gorm"
 )
 
-//nolint:gochecknoglobals // gorm suggests to do this in the examples
-var Database *gorm.DB
-
-func Init(dsn string) error {
+func Init(dsn string) (*gorm.DB, error) {
 	var err error
 
-	Database, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
 	})
-
 	if err != nil {
-		return fmt.Errorf("can't open database: %w", err)
+		return nil, fmt.Errorf("can't open database: %w", err)
 	}
 
-	if err = Database.AutoMigrate(&models.Publisher{}); err != nil {
-		return fmt.Errorf("can't migrate database: %w", err)
+	if err = database.AutoMigrate(&models.Publisher{}); err != nil {
+		return nil, fmt.Errorf("can't migrate database: %w", err)
 	}
 
-	return nil
+	return database, nil
 }

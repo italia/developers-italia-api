@@ -38,9 +38,7 @@ func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 		return ClientErrorNotFound(ctx, err)
 	}
 
-	// Retrieve the custom status code if it's a fiber.*Error
-	var e *fiber.Error
-	if ok := errors.Is(err, e); ok {
+	if e, ok := err.(*fiber.Error); ok {
 		code = e.Code
 	}
 

@@ -12,22 +12,28 @@ import (
 )
 
 func main() {
-	if err := database.Init(os.Getenv("DATABASE_DSN")); err != nil {
+	app := Setup()
+	if err := app.Listen(":3000"); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func Setup() *fiber.App {
+	db, err := database.Init(os.Getenv("DATABASE_DSN"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	publisherHandler := handlers.NewPublisher(db)
 
 	app := fiber.New(fiber.Config{
 		Prefork:      true,
 		ErrorHandler: common.CustomErrorHandler,
 	})
+	app.Get("/publishers", publisherHandler.GetPublishers)
+	app.Get("/publishers/:id", publisherHandler.GetPublisher)
+	app.Post("/publishers", publisherHandler.PostPublisher)
+	app.Patch("/publishers/:id", publisherHandler.PatchPublisher)
+	app.Delete("/publishers/:id", publisherHandler.DeletePublisher)
 
-	app.Get("/publishers", handlers.GetPublishers)
-	app.Get("/publishers/:id", handlers.GetPublisher)
-	app.Post("/publishers", handlers.PostPublisher)
-	app.Patch("/publishers/:id", handlers.PatchPublisher)
-	app.Delete("/publishers/:id", handlers.DeletePublisher)
-
-	if err := app.Listen(":3000"); err != nil {
-		log.Fatal(err)
-	}
+	return app
 }

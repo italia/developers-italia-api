@@ -3,25 +3,41 @@ package handlers
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/italia/developers-italia-api/internal/common"
-	db "github.com/italia/developers-italia-api/internal/database"
 	"github.com/italia/developers-italia-api/internal/models"
 	"github.com/italia/developers-italia-api/internal/requests"
+	"gorm.io/gorm"
 )
 
+type PublisherInterface interface {
+	GetPublishers(ctx *fiber.Ctx) error
+	GetPublisher(ctx *fiber.Ctx) error
+	PostPublisher(ctx *fiber.Ctx) error
+	PatchPublisher(ctx *fiber.Ctx) error
+	DeletePublisher(ctx *fiber.Ctx) error
+}
+
+type Publisher struct {
+	db *gorm.DB
+}
+
+func NewPublisher(db *gorm.DB) *Publisher {
+	return &Publisher{db: db}
+}
+
 // GetPublishers returns a list of all publishers.
-func GetPublishers(ctx *fiber.Ctx) error {
+func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 	var publishers []models.Publisher
 
-	db.Database.Find(&publishers)
+	p.db.Find(&publishers)
 
 	return ctx.JSON(&publishers)
 }
 
 // GetPublisher returns the publisher with the given ID.
-func GetPublisher(ctx *fiber.Ctx) error {
+func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 	publisher := models.Publisher{}
 
-	if err := db.Database.First(&publisher, ctx.Params("id")).Error; err != nil {
+	if err := p.db.First(&publisher, ctx.Params("id")).Error; err != nil {
 		return common.ServerError(ctx, err) //nolint:wrapcheck
 	}
 
@@ -29,7 +45,7 @@ func GetPublisher(ctx *fiber.Ctx) error {
 }
 
 // PostPublisher creates a new publisher.
-func PostPublisher(ctx *fiber.Ctx) error {
+func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	publisher := new(models.Publisher)
 
 	if err := ctx.BodyParser(publisher); err != nil {
@@ -40,7 +56,7 @@ func PostPublisher(ctx *fiber.Ctx) error {
 		return common.ValidationError(ctx, err) //nolint:wrapcheck
 	}
 
-	if err := db.Database.Create(&publisher).Error; err != nil {
+	if err := p.db.Create(&publisher).Error; err != nil {
 		return common.ServerError(ctx, err) //nolint:wrapcheck
 	}
 
@@ -48,7 +64,7 @@ func PostPublisher(ctx *fiber.Ctx) error {
 }
 
 // PatchPublisher updates the publisher with the given ID.
-func PatchPublisher(ctx *fiber.Ctx) error {
+func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 	publisherReq := new(requests.Publisher)
 
 	if err := ctx.BodyParser(publisherReq); err != nil {
@@ -61,13 +77,14 @@ func PatchPublisher(ctx *fiber.Ctx) error {
 
 	publisher := models.Publisher{}
 
-	if err := db.Database.First(&publisher, ctx.Params("id")).Error; err != nil {
+	if err := p.db.First(&publisher, ctx.Params("id")).Error; err != nil {
 		return err
 	}
 
 	publisher.Name = publisherReq.Name
+	publisher.Name = publisherReq.Name
 
-	if err := db.Database.Updates(&publisher).Error; err != nil {
+	if err := p.db.Updates(&publisher).Error; err != nil {
 		return common.ServerError(ctx, err) //nolint:wrapcheck
 	}
 
@@ -75,16 +92,16 @@ func PatchPublisher(ctx *fiber.Ctx) error {
 }
 
 // DeletePublisher deletes the publisher with the given ID.
-func DeletePublisher(ctx *fiber.Ctx) error {
+func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
 	var publisher models.Publisher
 
 	requestID := ctx.Params("id")
 
-	if err := db.Database.First(&publisher, requestID).Error; err != nil {
+	if err := p.db.First(&publisher, requestID).Error; err != nil {
 		return err
 	}
 
-	if err := db.Database.Delete(&publisher, requestID).Error; err != nil {
+	if err := p.db.Delete(&publisher, requestID).Error; err != nil {
 		return common.ServerError(ctx, err) //nolint:wrapcheck
 	}
 
