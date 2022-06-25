@@ -38,6 +38,7 @@ func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 		return ClientErrorNotFound(ctx, err)
 	}
 
+	//nolint:errorlint
 	if e, ok := err.(*fiber.Error); ok {
 		code = e.Code
 	}
