@@ -24,7 +24,7 @@ func NewPublisher(db *gorm.DB) *Publisher {
 	return &Publisher{db: db}
 }
 
-// GetPublishers returns a list of all publishers.
+// GetPublishers gets the list of all publishers and returns any error encountered.
 func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 	var publishers []models.Publisher
 
