@@ -33,7 +33,7 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 	return ctx.JSON(&publishers)
 }
 
-// GetPublisher returns the publisher with the given ID.
+// GetPublisher gets the publisher with the given ID and returns any error encountered.
 func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 	publisher := models.Publisher{}
 
