@@ -23,6 +23,7 @@ func Setup() *fiber.App {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	publisherHandler := handlers.NewPublisher(db)
 
 	app := fiber.New(fiber.Config{
