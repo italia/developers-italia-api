@@ -3,6 +3,7 @@ module github.com/italia/developers-italia-api
 go 1.18
 
 require (
+	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/gofiber/fiber/v2 v2.34.1
 	gorm.io/driver/postgres v1.3.7
