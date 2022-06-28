@@ -1,5 +1,8 @@
 on:
-  - pull_request
+  push:
+    branch: main
+  pull_request:
+    branch: main
 
 jobs:
   spectral:

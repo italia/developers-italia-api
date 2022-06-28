@@ -1,4 +1,8 @@
-on: [push, pull_request]
+on:
+  push:
+    branch: main
+  pull_request:
+    branch: main
 
 jobs:
   tests:
