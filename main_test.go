@@ -39,6 +39,7 @@ func TestIndexRoute(t *testing.T) {
 			expectedBody:  "{\"message\":\"Cannot GET /i-dont-exist\"}",
 		},
 	}
+
 	os.Setenv("DATABASE_DSN", "file:./test.db")
 	os.Setenv("ENVIRONMENT", "test")
 

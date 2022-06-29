@@ -46,7 +46,7 @@ func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 
 // PostPublisher creates a new publisher.
 func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
-	publisher := new(models.Publisher)
+	publisher := new(requests.Publisher)
 
 	if err := ctx.BodyParser(publisher); err != nil {
 		return common.UnprocessableEntity(ctx) //nolint:wrapcheck

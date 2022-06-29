@@ -1,26 +1,8 @@
-#
-# This is for local development only.
-# See Dockerfile.goreleaser for the image published on release.
-#
+FROM golang:1.18 as base
 
-ARG GO_VERSION=1.18
+FROM base as dev
 
-FROM golang:${GO_VERSION} as build
+RUN curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
 
-WORKDIR /go/src/developers-italia-api
-
-COPY . .
-
-RUN go mod download
-
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o app .
-
-FROM alpine:latest
-
-WORKDIR /app
-
-COPY --from=build /go/src/developers-italia-api/app .
-
-EXPOSE 3000
-
-CMD ["./app"]
+WORKDIR /opt/app/api
+CMD ["air"]
