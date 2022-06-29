@@ -82,7 +82,6 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 	}
 
 	publisher.Name = publisherReq.Name
-	publisher.Name = publisherReq.Name
 
 	if err := p.db.Updates(&publisher).Error; err != nil {
 		return common.ServerError(ctx, err) //nolint:wrapcheck

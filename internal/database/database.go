@@ -1,26 +1,31 @@
 package database
 
 import (
-	"fmt"
+	"log"
 
-	"github.com/italia/developers-italia-api/internal/models"
-	"gorm.io/driver/postgres"
+	"github.com/italia/developers-italia-api/internal/common"
 	"gorm.io/gorm"
 )
 
-func Init(dsn string) (*gorm.DB, error) {
-	var err error
+type Database interface {
+	Init(dsn string) (*gorm.DB, error)
+}
 
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		PrepareStmt: true,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't open database: %w", err)
+//nolintlint:ireturn
+func NewDatabase(env common.Environment) Database {
+	log.Print(env)
+
+	if env.IsTest() {
+		log.Println("using SQLite database")
+
+		return &SQLiteDB{
+			dsn: env.Database,
+		}
 	}
 
-	if err = database.AutoMigrate(&models.Publisher{}); err != nil {
-		return nil, fmt.Errorf("can't migrate database: %w", err)
-	}
+	log.Println("using Postgres database")
 
-	return database, nil
+	return &PostgresDB{
+		dsn: env.Database,
+	}
 }
