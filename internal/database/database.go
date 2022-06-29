@@ -1,30 +1,29 @@
 package database
 
 import (
-	"fmt"
+	"log"
 
-	"github.com/italia/developers-italia-api/internal/models"
-	"gorm.io/driver/postgres"
+	"github.com/italia/developers-italia-api/internal/common"
 	"gorm.io/gorm"
 )
 
-//nolint:gochecknoglobals // gorm suggests to do this in the examples
-var Database *gorm.DB
+type Database interface {
+	Init(dsn string) (*gorm.DB, error)
+}
 
-func Init(dsn string) error {
-	var err error
+//nolintlint:ireturn
+func NewDatabase(env common.Environment) Database {
+	if env.IsTest() {
+		log.Println("using SQLite database")
 
-	Database, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-		PrepareStmt: true,
-	})
-
-	if err != nil {
-		return fmt.Errorf("can't open database: %w", err)
+		return &SQLiteDB{
+			dsn: env.Database,
+		}
 	}
 
-	if err = Database.AutoMigrate(&models.Publisher{}); err != nil {
-		return fmt.Errorf("can't migrate database: %w", err)
-	}
+	log.Println("using Postgres database")
 
-	return nil
+	return &PostgresDB{
+		dsn: env.Database,
+	}
 }
