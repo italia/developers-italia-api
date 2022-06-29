@@ -13,8 +13,6 @@ type Database interface {
 
 //nolintlint:ireturn
 func NewDatabase(env common.Environment) Database {
-	log.Print(env)
-
 	if env.IsTest() {
 		log.Println("using SQLite database")
 
