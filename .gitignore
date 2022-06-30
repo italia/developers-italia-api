@@ -1,4 +1,6 @@
 dist/
 
+test.db
+
 # Compiled binary
 developers-italia-api
