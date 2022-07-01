@@ -36,6 +36,7 @@ func Setup() *fiber.App {
 	}
 
 	publisherHandler := handlers.NewPublisher(gormDB)
+	statusHandler := handlers.NewStatus(gormDB)
 
 	app := fiber.New(fiber.Config{
 		Prefork:      true,
@@ -56,6 +57,8 @@ func Setup() *fiber.App {
 	app.Post("/publishers", publisherHandler.PostPublisher)
 	app.Patch("/publishers/:id", publisherHandler.PatchPublisher)
 	app.Delete("/publishers/:id", publisherHandler.DeletePublisher)
+
+	app.Get("/status", statusHandler.GetStatus)
 
 	return app
 }
