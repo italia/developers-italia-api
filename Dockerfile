@@ -1,8 +1,15 @@
 FROM golang:1.18 as base
 
-FROM base as dev
-
-RUN curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 
 WORKDIR /opt/app/api
+
+ENV AIR_SHA256 3842f9a86304e06f68f61555ce303cb426b450a7be8ee14020cbd149a68008d0
+
+RUN export GO_BINPATH="$(go env GOPATH)/bin" \
+    && echo $GO_BINPATH \
+    && curl -sSfL -o "$GO_BINPATH/air" https://github.com/cosmtrek/air/releases/download/v1.40.2/air_1.40.2_linux_amd64 \
+    && echo "$AIR_SHA256 $GO_BINPATH/air" | sha256sum --check --strict \
+    && chmod +x "$GO_BINPATH/air"
+
 CMD ["air"]

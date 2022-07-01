@@ -12,7 +12,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: dev
     environment:
       DATABASE_DSN: 'host=db user=postgres password=postgres dbname=postgres port=5432'
       ENVIRONMENT: local
