@@ -50,6 +50,17 @@ func TestIndexRoute(t *testing.T) {
 			expectedBody:        `{"title":"can't get Publisher","detail":"Publisher was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
+		{
+			description:         "GET status",
+			route:               "/status",
+			method:              "GET",
+			expectedError:       false,
+			expectedCode:        204,
+			expectedBody:        "",
+			expectedContentType: "",
+			// TODO: test cache headers
+		},
+
 	}
 
 	os.Setenv("DATABASE_DSN", "file:./test.db")
