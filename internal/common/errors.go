@@ -25,7 +25,7 @@ func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 		problemJSON = ProblemJSONError{Status: e.Code, Title: e.Message}
 	}
 
-        //nolint:errorlint
+	//nolint:errorlint
 	switch e := err.(type) {
 	case ProblemJSONError:
 		problemJSON = e
