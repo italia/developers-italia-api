@@ -1,3 +1,8 @@
+#
+# This is for local development only.
+# See Dockerfile.goreleaser for the image published on release.
+#
+
 FROM golang:1.18 as base
 
 SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
