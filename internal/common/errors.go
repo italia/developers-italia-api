@@ -4,25 +4,10 @@ import (
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
-func ServerError(ctx *fiber.Ctx, err error) error {
-	return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"message": err.Error(),
-	})
-}
-
-func UnprocessableEntity(ctx *fiber.Ctx) error {
-	return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-		"message": "Invalid payload provided",
-	})
-}
-
-func ClientErrorNotFound(ctx *fiber.Ctx, err error) error {
-	return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"error": err.Error(),
-	})
+func Error(status int, title string, detail string) ProblemJSONError {
+	return ProblemJSONError{Title: title, Detail: detail, Status: status}
 }
 
 func ValidationError(ctx *fiber.Ctx, errors []*ErrorResponse) error {
@@ -32,18 +17,27 @@ func ValidationError(ctx *fiber.Ctx, errors []*ErrorResponse) error {
 }
 
 func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
-	code := fiber.StatusInternalServerError
+	var problemJSON ProblemJSONError
 
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return ClientErrorNotFound(ctx, err)
+	// Retrieve the custom status code if it's a fiber.*Error
+	var e *fiber.Error
+	if ok := errors.Is(err, e); ok {
+		problemJSON = ProblemJSONError{Status: e.Code, Title: e.Message}
 	}
 
 	//nolint:errorlint
-	if e, ok := err.(*fiber.Error); ok {
-		code = e.Code
+	switch e := err.(type) {
+	case ProblemJSONError:
+		problemJSON = e
+	default:
+		problemJSON = ProblemJSONError{Status: fiber.StatusNotFound, Title: fiber.ErrNotFound.Message}
 	}
 
-	return ctx.Status(code).JSON(fiber.Map{
-		"message": err.Error(),
-	})
+	err = ctx.Status(problemJSON.Status).JSON(problemJSON)
+
+	// Needs to be after the call to JSON(), to override the
+	// automatic Content-Type
+	ctx.Set(fiber.HeaderContentType, "application/problem+json")
+
+	return err
 }

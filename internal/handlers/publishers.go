@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/models"
@@ -28,7 +30,13 @@ func NewPublisher(db *gorm.DB) *Publisher {
 func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 	var publishers []models.Publisher
 
-	p.db.Find(&publishers)
+	if err := p.db.Find(&publishers).Error; err != nil {
+		return common.Error(
+			fiber.StatusInternalServerError,
+			"can't get Publisher",
+			fiber.ErrInternalServerError.Message,
+		)
+	}
 
 	return ctx.JSON(&publishers)
 }
@@ -38,7 +46,11 @@ func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 	publisher := models.Publisher{}
 
 	if err := p.db.First(&publisher, ctx.Params("id")).Error; err != nil {
-		return common.ServerError(ctx, err) //nolint:wrapcheck
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, "can't get Publisher", "Publisher was not found")
+		}
+
+		return common.Error(fiber.StatusInternalServerError, "can't get Publisher", "internal server error")
 	}
 
 	return ctx.JSON(&publisher)
@@ -48,16 +60,16 @@ func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	publisher := new(requests.Publisher)
 
-	if err := ctx.BodyParser(publisher); err != nil {
-		return common.UnprocessableEntity(ctx) //nolint:wrapcheck
+	if err := ctx.BodyParser(&publisher); err != nil {
+		return common.Error(fiber.StatusBadRequest, "can't create Publisher", "invalid json")
 	}
 
 	if err := common.ValidateStruct(*publisher); err != nil {
-		return common.ValidationError(ctx, err) //nolint:wrapcheck
+		return common.Error(fiber.StatusUnprocessableEntity, "can't create Publisher", "invalid format")
 	}
 
 	if err := p.db.Create(&publisher).Error; err != nil {
-		return common.ServerError(ctx, err) //nolint:wrapcheck
+		return common.Error(fiber.StatusInternalServerError, "can't create Publisher", "db error")
 	}
 
 	return ctx.JSON(&publisher)
@@ -68,23 +80,27 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 	publisherReq := new(requests.Publisher)
 
 	if err := ctx.BodyParser(publisherReq); err != nil {
-		return common.UnprocessableEntity(ctx) //nolint:wrapcheck
+		return common.Error(fiber.StatusBadRequest, "can't update Publisher", "invalid json")
 	}
 
 	if err := common.ValidateStruct(*publisherReq); err != nil {
-		return common.ValidationError(ctx, err) //nolint:wrapcheck
+		return common.Error(fiber.StatusUnprocessableEntity, "can't update Publisher", "invalid format")
 	}
 
 	publisher := models.Publisher{}
 
 	if err := p.db.First(&publisher, ctx.Params("id")).Error; err != nil {
-		return err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
+		}
+
+		return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "internal server error")
 	}
 
 	publisher.Name = publisherReq.Name
 
 	if err := p.db.Updates(&publisher).Error; err != nil {
-		return common.ServerError(ctx, err) //nolint:wrapcheck
+		return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "db error")
 	}
 
 	return ctx.JSON(&publisher)
@@ -94,15 +110,13 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
 	var publisher models.Publisher
 
-	requestID := ctx.Params("id")
+	if err := p.db.Delete(&publisher, ctx.Params("id")).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, "can't delete Publisher", "Publisher was not found")
+		}
 
-	if err := p.db.First(&publisher, requestID).Error; err != nil {
-		return err
+		return common.Error(fiber.StatusInternalServerError, "can't delete Publisher", "db error")
 	}
 
-	if err := p.db.Delete(&publisher, requestID).Error; err != nil {
-		return common.ServerError(ctx, err) //nolint:wrapcheck
-	}
-
-	return ctx.JSON(&publisher)
+	return ctx.SendStatus(fiber.StatusNoContent)
 }
