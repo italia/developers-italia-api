@@ -25,7 +25,7 @@ func TestIndexRoute(t *testing.T) {
 	}{
 		{
 			description:   "publishers get route",
-			route:         "/publishers",
+			route:         "/v1/publishers",
 			method:        "GET",
 			expectedError: false,
 			expectedCode:  200,
@@ -34,7 +34,7 @@ func TestIndexRoute(t *testing.T) {
 		},
 		{
 			description:   "non existing route",
-			route:         "/i-dont-exist",
+			route:         "/v1/i-dont-exist",
 			method:        "GET",
 			expectedError: false,
 			expectedCode:  404,
@@ -43,7 +43,7 @@ func TestIndexRoute(t *testing.T) {
 		},
 		{
 			description:         "publishers get non-existing id",
-			route:               "/publishers/404",
+			route:               "/v1/publishers/404",
 			method:              "GET",
 			expectedError:       false,
 			expectedCode:        404,

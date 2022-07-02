@@ -22,7 +22,7 @@ info:
   # TODO: merge https://github.com/italia/developers.italia.it/pull/1245
   termsOfService: https://developers.italia.it/en/api/developers-italia#terms-of-service
 servers:
-  - url: 'https://api.developers.italia.it'
+  - url: 'https://api.developers.italia.it/v1'
     description: The production server
 tags:
   - name: software

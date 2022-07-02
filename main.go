@@ -51,11 +51,14 @@ func Setup() *fiber.App {
 		LimiterMiddleware: limiter.SlidingWindow{},
 	}))
 
-	app.Get("/publishers", publisherHandler.GetPublishers)
-	app.Get("/publishers/:id", publisherHandler.GetPublisher)
-	app.Post("/publishers", publisherHandler.PostPublisher)
-	app.Patch("/publishers/:id", publisherHandler.PatchPublisher)
-	app.Delete("/publishers/:id", publisherHandler.DeletePublisher)
+	//nolint:varnamelen
+	v1 := app.Group("/v1")
+
+	v1.Get("/publishers", publisherHandler.GetPublishers)
+	v1.Get("/publishers/:id", publisherHandler.GetPublisher)
+	v1.Post("/publishers", publisherHandler.PostPublisher)
+	v1.Patch("/publishers/:id", publisherHandler.PatchPublisher)
+	v1.Delete("/publishers/:id", publisherHandler.DeletePublisher)
 
 	return app
 }
