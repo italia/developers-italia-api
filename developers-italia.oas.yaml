@@ -653,56 +653,31 @@ components:
       content:
         application/problem+json:
           schema:
-            type: object
-            properties:
-              errors:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/Error'
     Unauthorized:
       description: Unauthorized
       content:
         application/problem+json:
           schema:
-            type: object
-            properties:
-              errors:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/Error'
     NotFound:
       description: Not found
       content:
         application/problem+json:
           schema:
-            type: object
-            properties:
-              errors:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/Error'
     TooManyRequests:
       description: Too Many Requests
       content:
         application/problem+json:
           schema:
-            type: object
-            properties:
-              errors:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/Error'
     InternalServerError:
       description: Internal Server Error
       content:
         application/problem+json:
           schema:
-            type: object
-            properties:
-              errors:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/Error'
   schemas:
     Software:
       title: Software
