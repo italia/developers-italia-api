@@ -30,21 +30,21 @@ func TestEndpoints(t *testing.T) {
 		expectedContentType string
 	}{
 		{
-			description:   "publishers get route",
-			route:         "/v1/publishers",
-			method:        "GET",
-			expectedError: false,
-			expectedCode:  200,
-			expectedBody:  "[]",
+			description:         "publishers get route",
+			route:               "/v1/publishers",
+			method:              "GET",
+			expectedError:       false,
+			expectedCode:        200,
+			expectedBody:        "[]",
 			expectedContentType: "application/json",
 		},
 		{
-			description:   "non existing route",
-			route:         "/v1/i-dont-exist",
-			method:        "GET",
-			expectedError: false,
-			expectedCode:  404,
-			expectedBody:  `{"title":"Not Found","status":404}`,
+			description:         "non existing route",
+			route:               "/v1/i-dont-exist",
+			method:              "GET",
+			expectedError:       false,
+			expectedCode:        404,
+			expectedBody:        `{"title":"Cannot GET /v1/i-dont-exist","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -68,11 +68,11 @@ func TestEndpoints(t *testing.T) {
 
 		// Publishers
 		{
-			description:         "POST publisher",
-			route:               "/v1/publishers",
-			method:              "POST",
-			body:                `{"name": "New publisher"}`,
-			headers:             map[string][]string{
+			description: "POST publisher",
+			route:       "/v1/publishers",
+			method:      "POST",
+			body:        `{"name": "New publisher"}`,
+			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
@@ -82,11 +82,11 @@ func TestEndpoints(t *testing.T) {
 			expectedContentType: "application/json",
 		},
 		{
-			description:         "POST publisher - wrong token",
-			route:               "/v1/publishers",
-			method:              "POST",
-			body:                `{"name": "New publisher"}`,
-			headers:             map[string][]string{
+			description: "POST publisher - wrong token",
+			route:       "/v1/publishers",
+			method:      "POST",
+			body:        `{"name": "New publisher"}`,
+			headers: map[string][]string{
 				"Authorization": {badToken},
 				"Content-Type":  {"application/json"},
 			},
@@ -115,14 +115,13 @@ func TestEndpoints(t *testing.T) {
 				test.route,
 				strings.NewReader(test.body),
 			)
-			if (test.headers != nil) {
+			if test.headers != nil {
 				req.Header = test.headers
 			}
 
 			res, err := app.Test(req, -1)
 
 			assert.Equalf(t, test.expectedError, err != nil, test.description)
-
 
 			assert.Equalf(t, test.expectedCode, res.StatusCode, test.description)
 
