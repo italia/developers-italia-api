@@ -12,14 +12,13 @@ var (
 	ErrKeyLen = errors.New("PASETO_KEY must be 32 bytes long once base64-decoded")
 )
 
-func Error(status int, title string, detail string) ProblemJSONError {
-	return ProblemJSONError{Title: title, Detail: detail, Status: status}
-}
+func Error(status int, title string, detail string, extra ...any) ProblemJSONError {
+	p := ProblemJSONError{Title: title, Detail: detail, Status: status}
+	if extra != nil {
+		p.Extra = extra
+	}
 
-func ValidationError(ctx *fiber.Ctx, errors []*ErrorResponse) error {
-	return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": errors,
-	})
+	return p
 }
 
 func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
