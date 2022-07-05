@@ -9,6 +9,7 @@ type ProblemJSONError struct {
 	Title  string `json:"title"`
 	Detail string `json:"detail,omitempty"`
 	Status int    `json:"status"`
+	Extra  any    `json:"extra,omitempty"`
 }
 
 func (pj ProblemJSONError) Error() string {

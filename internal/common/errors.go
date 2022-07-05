@@ -1,36 +1,33 @@
 package common
 
 import (
-	"errors"
-
 	"github.com/gofiber/fiber/v2"
 )
 
-func Error(status int, title string, detail string) ProblemJSONError {
-	return ProblemJSONError{Title: title, Detail: detail, Status: status}
-}
+func Error(status int, title string, detail string, extra ...any) ProblemJSONError {
+	p := ProblemJSONError{Title: title, Detail: detail, Status: status}
+	if extra != nil {
+		p.Extra = extra
+	}
 
-func ValidationError(ctx *fiber.Ctx, errors []*ErrorResponse) error {
-	return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		"error": errors,
-	})
+	return p
 }
 
 func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 	var problemJSON ProblemJSONError
 
-	// Retrieve the custom status code if it's a fiber.*Error
-	var e *fiber.Error
-	if ok := errors.Is(err, e); ok {
-		problemJSON = ProblemJSONError{Status: e.Code, Title: e.Message}
-	}
-
 	//nolint:errorlint
-	switch e := err.(type) {
+	switch errType := err.(type) {
+	case *fiber.Error:
+		problemJSON = ProblemJSONError{Status: errType.Code, Title: errType.Message}
 	case ProblemJSONError:
-		problemJSON = e
+		problemJSON = errType
 	default:
-		problemJSON = ProblemJSONError{Status: fiber.StatusNotFound, Title: fiber.ErrNotFound.Message}
+		problemJSON = ProblemJSONError{
+			Status: fiber.StatusInternalServerError,
+			Title:  "Internal Server Error",
+			Detail: errType.Error(),
+		}
 	}
 
 	err = ctx.Status(problemJSON.Status).JSON(problemJSON)
