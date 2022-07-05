@@ -695,11 +695,9 @@ components:
         id: o9ohv7d53cd5o
       type: object
       properties:
-        organizationId:
+        id:
           type: string
         url:
-          type: string
-        email:
           type: string
     Log:
       title: Log

@@ -25,7 +25,7 @@ func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 	default:
 		problemJSON = ProblemJSONError{
 			Status: fiber.StatusInternalServerError,
-			Title:  fiber.ErrInternalServerError.Error(),
+			Title:  fiber.ErrInternalServerError.Message,
 			Detail: errType.Error(),
 		}
 	}
