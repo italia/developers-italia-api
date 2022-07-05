@@ -738,9 +738,10 @@ components:
       type: object
       x-examples:
         example-1:
-          code: x
-          title: x
-          detail: x
+          title: Bad Request
+          detail: Bad Request
+          status: 400
+          instance: /publishers/{publisherId}
       properties:
         code:
           type: string
