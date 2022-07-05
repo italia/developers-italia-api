@@ -24,21 +24,21 @@ func TestIndexRoute(t *testing.T) {
 		method              string
 	}{
 		{
-			description:   "publishers get route",
-			route:         "/v1/publishers",
-			method:        "GET",
-			expectedError: false,
-			expectedCode:  200,
-			expectedBody:  "[]",
+			description:         "publishers get route",
+			route:               "/v1/publishers",
+			method:              "GET",
+			expectedError:       false,
+			expectedCode:        200,
+			expectedBody:        "[]",
 			expectedContentType: "application/json",
 		},
 		{
-			description:   "non existing route",
-			route:         "/v1/i-dont-exist",
-			method:        "GET",
-			expectedError: false,
-			expectedCode:  404,
-			expectedBody:  `{"title":"Not Found","status":404}`,
+			description:         "non existing route",
+			route:               "/v1/i-dont-exist",
+			method:              "GET",
+			expectedError:       false,
+			expectedCode:        404,
+			expectedBody:        `{"title":"Cannot GET /v1/i-dont-exist","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -60,7 +60,6 @@ func TestIndexRoute(t *testing.T) {
 			expectedContentType: "",
 			// TODO: test cache headers
 		},
-
 	}
 
 	os.Setenv("DATABASE_DSN", "file:./test.db")
