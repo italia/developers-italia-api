@@ -13,9 +13,8 @@ type Log struct {
 
 type Publisher struct {
 	gorm.Model
-	OrganizationID string `json:"organizationId"`
-	URL            string `json:"url"`
-	Email          string `json:"email"`
+	ID  string `json:"id"`
+	URL string `json:"url"`
 }
 
 type Software struct {

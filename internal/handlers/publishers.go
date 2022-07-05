@@ -3,6 +3,8 @@ package handlers
 import (
 	"errors"
 
+	"github.com/gofiber/fiber/v2/utils"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/models"
@@ -65,13 +67,12 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	if err := common.ValidateStruct(&publisherReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't create Publisher", "invalid json", err)
+		return common.Error(fiber.StatusUnprocessableEntity, "can't create Publisher", "invalid json", err)
 	}
 
 	publisher := &models.Publisher{
-		OrganizationID: publisherReq.OrganizationID,
-		URL:            publisherReq.URL,
-		Email:          publisherReq.Email,
+		ID:  utils.UUID(),
+		URL: publisherReq.URL,
 	}
 
 	if err := p.db.Create(&publisher).Error; err != nil {
@@ -103,7 +104,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 		return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "internal server error")
 	}
 
-	publisher.Email = publisherReq.Email
+	publisher.URL = publisherReq.URL
 
 	if err := p.db.Updates(&publisher).Error; err != nil {
 		return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "db error")
