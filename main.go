@@ -3,10 +3,11 @@ package main
 import (
 	"log"
 
-	"github.com/caarlos0/env"
+	"github.com/caarlos0/env/v6"
 
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/handlers"
+	"github.com/italia/developers-italia-api/internal/middleware"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
@@ -51,6 +52,14 @@ func Setup() *fiber.App {
 		Max:               envs.MaxRequests,
 		LimiterMiddleware: limiter.SlidingWindow{},
 	}))
+
+	if envs.PasetoKey == nil {
+		log.Printf("PASETO_KEY not set, API will run in read-only mode")
+
+		envs.PasetoKey = middleware.NewRandomPasetoKey()
+	}
+
+	app.Use(middleware.NewPasetoMiddleware(envs))
 
 	//nolint:varnamelen
 	v1 := app.Group("/v1")
