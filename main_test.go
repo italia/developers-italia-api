@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIndexRoute(t *testing.T) {
+func TestEndpoints(t *testing.T) {
 	tests := []struct {
 		description string
 
@@ -54,7 +54,6 @@ func TestIndexRoute(t *testing.T) {
 			description:         "GET status",
 			route:               "/status",
 			method:              "GET",
-			expectedError:       false,
 			expectedCode:        204,
 			expectedBody:        "",
 			expectedContentType: "",
@@ -70,27 +69,26 @@ func TestIndexRoute(t *testing.T) {
 	app := Setup()
 
 	for _, test := range tests {
-		req, _ := http.NewRequest(
-			test.method,
-			test.route,
-			nil,
-		)
+		t.Run(test.description, func(t *testing.T) {
+			req, _ := http.NewRequest(
+				test.method,
+				test.route,
+				nil,
+			)
 
-		res, err := app.Test(req, -1)
+			res, err := app.Test(req, -1)
 
-		assert.Equalf(t, test.expectedError, err != nil, test.description)
+			assert.Equalf(t, test.expectedError, err != nil, test.description)
 
-		if test.expectedError {
-			continue
-		}
 
-		assert.Equalf(t, test.expectedCode, res.StatusCode, test.description)
+			assert.Equalf(t, test.expectedCode, res.StatusCode, test.description)
 
-		body, err := ioutil.ReadAll(res.Body)
+			body, err := ioutil.ReadAll(res.Body)
 
-		assert.Nilf(t, err, test.description)
+			assert.Nilf(t, err, test.description)
 
-		assert.Equalf(t, test.expectedBody, string(body), test.description)
-		assert.Equalf(t, test.expectedContentType, res.Header.Get("Content-Type"), test.description)
+			assert.Equalf(t, test.expectedBody, string(body), test.description)
+			assert.Equalf(t, test.expectedContentType, res.Header.Get("Content-Type"), test.description)
+		})
 	}
 }
