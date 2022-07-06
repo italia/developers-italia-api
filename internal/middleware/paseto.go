@@ -13,12 +13,8 @@ import (
 	"github.com/o1egl/paseto"
 )
 
-const (
-	SymmetricKeyLen = 32
-)
-
 func NewRandomPasetoKey() *common.Base64Key {
-	key := make([]byte, SymmetricKeyLen)
+	key := make([]byte, common.SymmetricKeyLen)
 
 	if _, err := rand.Read(key); err != nil {
 		log.Fatalf("can't generate PASETO key: %s", err.Error())
