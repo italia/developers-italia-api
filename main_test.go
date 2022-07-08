@@ -24,7 +24,6 @@ func TestEndpoints(t *testing.T) {
 		headers map[string][]string
 
 		// Expected output
-		expectedError       bool
 		expectedCode        int
 		expectedBody        string
 		expectedContentType string
@@ -33,7 +32,6 @@ func TestEndpoints(t *testing.T) {
 			description:   "publishers get route",
 			route:         "/v1/publishers",
 			method:        "GET",
-			expectedError: false,
 			expectedCode:  200,
 			expectedBody:  "[]",
 			expectedContentType: "application/json",
@@ -42,7 +40,6 @@ func TestEndpoints(t *testing.T) {
 			description:   "non existing route",
 			route:         "/v1/i-dont-exist",
 			method:        "GET",
-			expectedError: false,
 			expectedCode:  404,
 			expectedBody:  `{"title":"Not Found","status":404}`,
 			expectedContentType: "application/problem+json",
@@ -51,7 +48,6 @@ func TestEndpoints(t *testing.T) {
 			description:         "publishers get non-existing id",
 			route:               "/v1/publishers/404",
 			method:              "GET",
-			expectedError:       false,
 			expectedCode:        404,
 			expectedBody:        `{"title":"can't get Publisher","detail":"Publisher was not found","status":404}`,
 			expectedContentType: "application/problem+json",
@@ -76,7 +72,6 @@ func TestEndpoints(t *testing.T) {
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
-			expectedError:       false,
 			expectedCode:        200,
 			expectedBody:        `{"name":"New publisher"}`,
 			expectedContentType: "application/json",
@@ -90,7 +85,6 @@ func TestEndpoints(t *testing.T) {
 				"Authorization": {badToken},
 				"Content-Type":  {"application/json"},
 			},
-			expectedError:       false,
 			expectedCode:        401,
 			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
@@ -121,17 +115,16 @@ func TestEndpoints(t *testing.T) {
 
 			res, err := app.Test(req, -1)
 
-			assert.Equalf(t, test.expectedError, err != nil, test.description)
+			assert.Nil(t, err)
 
-
-			assert.Equalf(t, test.expectedCode, res.StatusCode, test.description)
+			assert.Equal(t, test.expectedCode, res.StatusCode)
 
 			body, err := ioutil.ReadAll(res.Body)
 
-			assert.Nilf(t, err, test.description)
+			assert.Nil(t, err)
 
-			assert.Equalf(t, test.expectedBody, string(body), test.description)
-			assert.Equalf(t, test.expectedContentType, res.Header.Get("Content-Type"), test.description)
+			assert.Equal(t, test.expectedBody, string(body))
+			assert.Equal(t, test.expectedContentType, res.Header.Get("Content-Type"))
 		})
 	}
 }
