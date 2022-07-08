@@ -115,7 +115,7 @@ func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, 
 				return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
 			}
 
-			return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "internal server error")
+			return common.Error(fiber.StatusInternalServerError, "can't update Publisher", fiber.ErrInternalServerError.Message)
 		}
 
 		gormTrx.Delete(&publisher.URLAddresses)
