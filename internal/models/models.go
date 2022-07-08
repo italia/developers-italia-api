@@ -12,10 +12,6 @@ type Bundle struct {
 }
 
 type Log struct {
-	ID        string `gorm:"primarykey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 type Publisher struct {
