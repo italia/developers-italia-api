@@ -6,6 +6,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+var (
+	ErrAuthentication = errors.New("token authentication failed")
+
+	ErrKeyLen = errors.New("PASETO_KEY must be 32 bytes long once base64-decoded")
+)
+
 func Error(status int, title string, detail string) ProblemJSONError {
 	return ProblemJSONError{Title: title, Detail: detail, Status: status}
 }
@@ -17,20 +23,26 @@ func ValidationError(ctx *fiber.Ctx, errors []*ErrorResponse) error {
 }
 
 func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
-	var problemJSON ProblemJSONError
+	var problemJSON *ProblemJSONError
 
 	// Retrieve the custom status code if it's a fiber.*Error
 	var e *fiber.Error
-	if ok := errors.Is(err, e); ok {
-		problemJSON = ProblemJSONError{Status: e.Code, Title: e.Message}
+	if errors.Is(err, e) {
+		problemJSON = &ProblemJSONError{Status: e.Code, Title: e.Message}
 	}
 
-	//nolint:errorlint
-	switch e := err.(type) {
-	case ProblemJSONError:
-		problemJSON = e
-	default:
-		problemJSON = ProblemJSONError{Status: fiber.StatusNotFound, Title: fiber.ErrNotFound.Message}
+	if errors.Is(err, ErrAuthentication) {
+		problemJSON = &ProblemJSONError{Status: fiber.StatusUnauthorized, Title: err.Error()}
+	}
+
+	if problemJSON == nil {
+		//nolint:errorlint
+		switch e := err.(type) {
+		case ProblemJSONError:
+			problemJSON = &e
+		default:
+			problemJSON = &ProblemJSONError{Status: fiber.StatusNotFound, Title: fiber.ErrNotFound.Message}
+		}
 	}
 
 	err = ctx.Status(problemJSON.Status).JSON(problemJSON)
