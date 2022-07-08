@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Bundle struct {
 	gorm.Model
@@ -8,7 +12,11 @@ type Bundle struct {
 }
 
 type Log struct {
-	gorm.Model
+	ID        uint           `json:"id" gorm:"primaryKey"`
+	Message   string         `json:"message"`
+	CreatedAt time.Time      `json:"createdAt" gorm:"index"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `json:"deletedAt" gorm:"index"`
 }
 
 type Publisher struct {

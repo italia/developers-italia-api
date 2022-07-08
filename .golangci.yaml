@@ -44,6 +44,10 @@ linters-settings:
       # Fiber takes care of unwrapping the error
       - func (*github.com/gofiber/fiber/v2.Ctx)
 
+      # No point in wrapping these
+      - func encoding/json.Marshal(v any)
+      - func encoding/json.UnmarshalJSON(v any)
+
       # Defaults
       - .Errorf(
       - errors.New(

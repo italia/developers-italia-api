@@ -44,7 +44,7 @@ paths:
       operationId: get-status
       responses:
         '204':
-          $ref: "#/components/responses/NoContent"
+          $ref: '#/components/responses/NoContent'
         '400':
           $ref: '#/components/responses/BadRequest'
         '429':
@@ -69,8 +69,8 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Software'
-                  meta:
-                    $ref: '#/components/schemas/Pagination'
+                  links:
+                    $ref: '#/components/schemas/Links'
         '400':
           $ref: '#/components/responses/BadRequest'
         '429':
@@ -227,7 +227,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/Log'
                   meta:
-                    $ref: '#/components/schemas/Pagination'
+                    $ref: '#/components/schemas/Links'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -317,7 +317,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/Bundle'
                   meta:
-                    $ref: '#/components/schemas/Pagination'
+                    $ref: '#/components/schemas/Links'
         '400':
           $ref: '#/components/responses/BadRequest'
         '429':
@@ -450,7 +450,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/Log'
                   meta:
-                    $ref: '#/components/schemas/Pagination'
+                    $ref: '#/components/schemas/Links'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -475,22 +475,27 @@ paths:
             example: 3
             minimum: 1
           in: query
-          name: page
-          description: Page number for use in pagination
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
         - schema:
             type: string
             format: date-time
             example: '2022-06-07T09:56:23Z'
           in: query
           name: from
-          description: Only logs after this time (ISO 8601 datetime)
+          description: Only logs after this time (RFC 3339 datetime)
         - schema:
             type: string
             format: date-time
             example: '2022-06-07T14:56:23Z'
           in: query
           name: to
-          description: Only logs before this time (ISO 8601 datetime)
+          description: Only logs before this time (RFC 3339 datetime)
     post:
       summary: Create Logs
       description: Create Logs
@@ -537,7 +542,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/Publisher'
                   meta:
-                    $ref: '#/components/schemas/Pagination'
+                    $ref: '#/components/schemas/Links'
         '400':
           $ref: '#/components/responses/BadRequest'
         '429':
@@ -705,6 +710,28 @@ components:
       properties:
         id:
           type: string
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the log was created (RFC 3339 datetime)
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the log was updated (RFC 3339 datetime)
+          readOnly: true
+        message:
+          type: string
+        entity:
+          type: string
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - message
     Bundle:
       title: Bundle
       x-stoplight:
@@ -713,23 +740,23 @@ components:
       properties:
         id:
           type: string
-    Pagination:
+    Links:
       type: object
-      x-examples:
-        example-1:
-          pagination:
-            per_page: 200
-            current_page: 3
+      x-examples: {}
       properties:
-        pagination:
+        links:
           type: object
           properties:
-            per_page:
+            prev:
               type: integer
-              format: int32
-            current_page:
+              readOnly: true
+            next:
               type: integer
-              format: int32
+              readOnly: true
+          required:
+            - prev
+            - next
+          readOnly: true
     Error:
       type: object
       x-examples:
