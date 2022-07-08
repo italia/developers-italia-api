@@ -19,16 +19,16 @@ type Log struct {
 }
 
 type Publisher struct {
-	ID          string `gorm:"primarykey"`
-	Email       string `json:"email"`
-	Description string `json:"description"`
-	URL         []URL
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   gorm.DeletedAt `gorm:"index"`
+	ID           string         `gorm:"primarykey"`
+	Email        string         `json:"email"`
+	Description  string         `json:"description"`
+	URLAddresses []URLAddresses `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }
 
-type URL struct {
+type URLAddresses struct {
 	gorm.Model
 	URL         string `json:"url"`
 	PublisherID string
