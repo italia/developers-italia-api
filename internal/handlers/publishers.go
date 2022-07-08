@@ -60,23 +60,25 @@ func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 
 // PostPublisher creates a new publisher.
 func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
-	publisherReq := requests.Publisher{}
+	request := requests.Publisher{}
 
-	if err := ctx.BodyParser(&publisherReq); err != nil {
+	if err := ctx.BodyParser(&request); err != nil {
 		return common.Error(fiber.StatusBadRequest, "can't create Publisher", "invalid json", err)
 	}
 
-	if err := common.ValidateStruct(&publisherReq); err != nil {
+	if err := common.ValidateStruct(&request); err != nil {
 		return common.Error(fiber.StatusUnprocessableEntity, "can't create Publisher", "invalid json", err)
 	}
 
 	publisher := &models.Publisher{
-		ID:  utils.UUID(),
-		URL: publisherReq.URL,
+		ID: utils.UUID(),
+		URL: []models.URL{
+			{URL: request.URL},
+		},
 	}
 
 	if err := p.db.Create(&publisher).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't create Publisher", "db error")
+		return common.Error(fiber.StatusInternalServerError, "can't create Publisher", "db error", err)
 	}
 
 	return ctx.JSON(&publisher)
@@ -104,7 +106,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 		return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "internal server error")
 	}
 
-	publisher.URL = publisherReq.URL
+	// publisher.URL = publisherReq.URL
 
 	if err := p.db.Updates(&publisher).Error; err != nil {
 		return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "db error")
