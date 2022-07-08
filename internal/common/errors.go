@@ -1,9 +1,8 @@
 package common
 
 import (
-	"errors"
-
 	"github.com/gofiber/fiber/v2"
+	"errors"
 )
 
 var (
