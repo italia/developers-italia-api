@@ -86,7 +86,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 
 // PatchPublisher updates the publisher with the given ID.
 func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
-	publisherReq := new(requests.Publisher)
+	publisherReq := new(requests.PublisherUpdate)
 
 	if err := ctx.BodyParser(publisherReq); err != nil {
 		return common.Error(fiber.StatusBadRequest, "can't update Publisher", "invalid json")
@@ -98,19 +98,28 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 
 	publisher := models.Publisher{}
 
-	if err := p.db.First(&publisher, ctx.Params("id")).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
+	p.db.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Model(&models.Publisher{}).Preload("URLAddresses").First(&publisher, ctx.Params("id")).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
+			}
+
+			return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "internal server error")
 		}
 
-		return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "internal server error")
-	}
+		tx.Delete(&publisher.URLAddresses)
 
-	// publisher.URL = publisherReq.URL
+		for _, URLAddress := range publisherReq.URLAddresses {
+			publisher.URLAddresses = append(publisher.URLAddresses, models.URLAddresses{URL: URLAddress.URL})
+		}
 
-	if err := p.db.Updates(&publisher).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "db error")
-	}
+		if err := p.db.Updates(&publisher).Error; err != nil {
+			return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "db error")
+		}
+
+		return nil
+	})
 
 	return ctx.JSON(&publisher)
 }
