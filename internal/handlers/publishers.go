@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2/utils"
 
@@ -72,7 +73,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 
 	publisher := &models.Publisher{
 		ID: utils.UUID(),
-		URL: []models.URL{
+		URLAddresses: []models.URLAddresses{
 			{URL: request.URL},
 		},
 	}
@@ -98,9 +99,18 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 
 	publisher := models.Publisher{}
 
-	p.db.Transaction(func(tx *gorm.DB) error {
+	if err := p.updatePublisher(ctx, publisher, publisherReq); err != nil {
+		return err
+	}
 
-		if err := tx.Model(&models.Publisher{}).Preload("URLAddresses").First(&publisher, ctx.Params("id")).Error; err != nil {
+	return ctx.JSON(&publisher)
+}
+
+func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, req *requests.PublisherUpdate) error {
+	err := p.db.Transaction(func(gormTrx *gorm.DB) error {
+		if err := gormTrx.Model(&models.Publisher{}).
+			Preload("URLAddresses").
+			First(&publisher, ctx.Params("id")).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
 			}
@@ -108,9 +118,9 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 			return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "internal server error")
 		}
 
-		tx.Delete(&publisher.URLAddresses)
+		gormTrx.Delete(&publisher.URLAddresses)
 
-		for _, URLAddress := range publisherReq.URLAddresses {
+		for _, URLAddress := range req.URLAddresses {
 			publisher.URLAddresses = append(publisher.URLAddresses, models.URLAddresses{URL: URLAddress.URL})
 		}
 
@@ -121,7 +131,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 		return nil
 	})
 
-	return ctx.JSON(&publisher)
+	return fmt.Errorf("transaction err: %w", err)
 }
 
 // DeletePublisher deletes the publisher with the given ID.

@@ -7,7 +7,7 @@ type Publisher struct {
 }
 
 type PublisherUpdate struct {
-	URLAddresses []URLAddresses `json:"url_addresses" validate:"required"`
+	URLAddresses []URLAddresses `json:"urlAddresses" validate:"required"`
 	Description  string         `json:"description"`
 	Email        string         `json:"email" validate:"email"`
 }
