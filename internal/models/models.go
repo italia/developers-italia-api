@@ -19,7 +19,7 @@ type Publisher struct {
 	Email        string         `json:"email"`
 	Description  string         `json:"description"`
 	URLAddresses []URLAddresses `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	CreatedAt    time.Time
+	CreatedAt    time.Time       `json:"createdAt" gorm:"index"`
 	UpdatedAt    time.Time
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }
