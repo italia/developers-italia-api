@@ -79,7 +79,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	if err := p.db.Create(&publisher).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't create Publisher", "db error", err)
+		return common.Error(fiber.StatusInternalServerError, "can't create Publisher", "db error")
 	}
 
 	return ctx.JSON(&publisher)

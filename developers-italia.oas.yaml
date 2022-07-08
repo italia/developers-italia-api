@@ -21,7 +21,6 @@ info:
   x-api-id: 0f9ca6b0-db47-11ec-96f7-d8bbc146d165
   # TODO: merge https://github.com/italia/developers.italia.it/pull/1245
   termsOfService: https://developers.italia.it/en/api/developers-italia#terms-of-service
-x-commons:
 servers:
   - url: 'https://api.developers.italia.it/v1'
     description: The production server
@@ -72,6 +71,12 @@ paths:
                       $ref: '#/components/schemas/Software'
                   meta:
                     $ref: '#/components/schemas/Pagination'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       operationId: get-software
       parameters:
         - schema:

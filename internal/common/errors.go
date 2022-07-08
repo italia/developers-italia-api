@@ -15,7 +15,7 @@ var (
 func Error(status int, title string, detail string, extra ...any) ProblemJSONError {
 	p := ProblemJSONError{Title: title, Detail: detail, Status: status}
 	if extra != nil {
-		p.Extra = extra
+		p.ValidationErrors = extra
 	}
 
 	return p

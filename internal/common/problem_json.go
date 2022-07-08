@@ -5,11 +5,11 @@ import (
 )
 
 type ProblemJSONError struct {
-	Code   string `json:"code,omitempty"`
-	Title  string `json:"title"`
-	Detail string `json:"detail,omitempty"`
-	Status int    `json:"status"`
-	Extra  any    `json:"extra,omitempty"`
+	Code             string `json:"code,omitempty"`
+	Title            string `json:"title"`
+	Detail           string `json:"detail,omitempty"`
+	Status           int    `json:"status"`
+	ValidationErrors any    `json:"validation_errors,omitempty"`
 }
 
 func (pj ProblemJSONError) Error() string {
