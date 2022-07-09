@@ -29,18 +29,18 @@ func TestEndpoints(t *testing.T) {
 		expectedContentType string
 	}{
 		{
-			description:         "publishers get route",
-			route:               "/v1/publishers",
-			method:              "GET",
+			description: "publishers get route",
+			route:       "/v1/publishers",
+			method:      "GET",
 
 			expectedCode:        200,
 			expectedBody:        "[]",
 			expectedContentType: "application/json",
 		},
 		{
-			description:         "non existing route",
-			route:               "/v1/i-dont-exist",
-			method:              "GET",
+			description: "non existing route",
+			route:       "/v1/i-dont-exist",
+			method:      "GET",
 
 			expectedCode:        404,
 			expectedBody:        `{"title":"Cannot GET /v1/i-dont-exist","status":404}`,
@@ -69,13 +69,13 @@ func TestEndpoints(t *testing.T) {
 			description: "POST publisher",
 			route:       "/v1/publishers",
 			method:      "POST",
-			body:        `{"name": "New publisher"}`,
+			body:        `{"URL":"https://www.example.com", "email":"example@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        200,
-			expectedBody:        `{"name":"New publisher"}`,
+			expectedBody:        `{"URL":"https://www.example.com", "email":"example@example.com"}`,
 			expectedContentType: "application/json",
 		},
 		{
