@@ -19,17 +19,14 @@ type Publisher struct {
 	Description  string         `json:"description"`
 	URLAddresses []URLAddresses `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	CreatedAt    time.Time      `json:"createdAt" gorm:"index"`
-	UpdatedAt    time.Time      `json:"updated_at"`
+	UpdatedAt    time.Time      `json:"updatedAt"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }
 
 type URLAddresses struct {
 	gorm.Model
 	URL         string `json:"url"`
-	PublisherID string
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time
-	DeletedAt   gorm.DeletedAt `gorm:"index"`
+	PublisherID string `json:"publisherId"`
 }
 
 type Software struct {

@@ -72,7 +72,8 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	publisher := &models.Publisher{
-		ID: utils.UUID(),
+		ID:    utils.UUID(),
+		Email: request.Email,
 		URLAddresses: []models.URLAddresses{
 			{URL: request.URL},
 		},

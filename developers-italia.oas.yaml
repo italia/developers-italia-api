@@ -695,10 +695,33 @@ components:
         id: o9ohv7d53cd5o
       type: object
       properties:
-        id:
-          type: string
         url:
           type: string
+        description:
+          type: string
+        email:
+          type: string
+          format: email
+    PublisherUpdate:
+      title: PublisherUpdate
+      x-stoplight:
+        id: o9ohv7d53cd5o
+      type: object
+      properties:
+        urlAddress:
+          type: array
+          properties:
+            url:
+              type: string
+              format: uri
+              example: http://www.example.com
+        description:
+          type: string
+          required: false
+        email:
+          type: string
+          format: email
+          example: example@example.com
     Log:
       title: Log
       x-stoplight:
