@@ -15,3 +15,7 @@ type PublisherUpdate struct {
 type URLAddresses struct {
 	URL string `json:"url" validate:"required"`
 }
+
+type Log struct {
+	Message string `json:"message" validate:"required"`
+}

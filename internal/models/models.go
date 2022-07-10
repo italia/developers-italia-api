@@ -11,7 +11,13 @@ type Bundle struct {
 	Name string
 }
 
-type Log struct{}
+type Log struct {
+	ID        uint           `json:"id" gorm:"primaryKey"`
+	Message   string         `json:"message"`
+	CreatedAt time.Time      `json:"createdAt" gorm:"index"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `json:"deletedAt" gorm:"index"`
+}
 
 type Publisher struct {
 	ID           string         `gorm:"primarykey"`

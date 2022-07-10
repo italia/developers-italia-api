@@ -38,6 +38,7 @@ func Setup() *fiber.App {
 
 	publisherHandler := handlers.NewPublisher(gormDB)
 	statusHandler := handlers.NewStatus(gormDB)
+	logHandler := handlers.NewLog(gormDB)
 
 	app := fiber.New(fiber.Config{
 		Prefork:      true,
@@ -69,6 +70,12 @@ func Setup() *fiber.App {
 	v1.Post("/publishers", publisherHandler.PostPublisher)
 	v1.Patch("/publishers/:id", publisherHandler.PatchPublisher)
 	v1.Delete("/publishers/:id", publisherHandler.DeletePublisher)
+
+	v1.Get("/logs", logHandler.GetLogs)
+	v1.Get("/logs/:id", logHandler.GetLog)
+	v1.Post("/logs", logHandler.PostLog)
+	v1.Patch("/logs/:id", logHandler.PatchLog)
+	v1.Delete("/logs/:id", logHandler.DeleteLog)
 
 	app.Get("/status", statusHandler.GetStatus)
 
