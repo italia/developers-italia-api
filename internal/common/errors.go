@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	ErrAuthentication = errors.New("token authentication failed")
+	ErrAuthentication  = errors.New("token authentication failed")
+	ErrInvalidDateTime = errors.New("invalid date time format (RFC 3339 needed)")
 
 	ErrKeyLen = errors.New("PASETO_KEY must be 32 bytes long once base64-decoded")
 )

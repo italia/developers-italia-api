@@ -18,7 +18,9 @@ require (
 	github.com/aead/chacha20poly1305 v0.0.0-20201124145622-1a5aba2a8b29 // indirect
 	github.com/aead/poly1305 v0.0.0-20180717145839-3fee0db0b635 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/iancoleman/strcase v0.0.0-20180726023541-3605ed457bf7 // indirect
 	github.com/o1egl/paseto v1.0.0
+	github.com/pilagod/gorm-cursor-paginator/v2 v2.3.0
 )
 
 require (
