@@ -22,7 +22,13 @@ func (d *PostgresDB) Init(dsn string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("can't open database: %w", err)
 	}
 
-	if err = database.AutoMigrate(&models.Publisher{}, &models.CodeHosting{}, &models.Log{}); err != nil {
+	if err = database.AutoMigrate(
+		&models.Publisher{},
+		&models.CodeHosting{},
+		&models.Log{},
+		&models.Software{},
+		&models.SoftwareURL{},
+	); err != nil {
 		return nil, fmt.Errorf("can't migrate database: %w", err)
 	}
 

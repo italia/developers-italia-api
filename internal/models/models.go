@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -12,11 +13,15 @@ type Bundle struct {
 }
 
 type Log struct {
-	ID        uint           `json:"id" gorm:"primaryKey"`
-	Message   string         `json:"message"`
+	ID        string         `json:"id" gorm:"primaryKey"`
+	Message   string         `json:"message" gorm:"not null"`
 	CreatedAt time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `json:"deletedAt" gorm:"index"`
+
+	// Entity this Log entry is about (fe. Publisher, Software, etc.)
+	EntityID   string `json:"-"`
+	EntityType string `json:"-"`
 }
 
 type Publisher struct {
@@ -36,9 +41,27 @@ type CodeHosting struct {
 }
 
 type Software struct {
-	ID        string `gorm:"primarykey"`
-	Name      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID            string         `json:"id" gorm:"primarykey"`
+	URLs          []SoftwareURL  `json:"urls"`
+	PubliccodeYml string         `json:"publiccodeYml"`
+	Logs          []Log          `json:"-" gorm:"polymorphic:Entity;"`
+	CreatedAt     time.Time      `json:"createdAt" gorm:"index"`
+	UpdatedAt     time.Time      `json:"updatedAt"`
+	DeletedAt     gorm.DeletedAt `json:"deletedAt" gorm:"index"`
+}
+
+func (Software) TableName() string {
+	// Don't use GORM's default pluralized form ("softwares")
+	return "software"
+}
+
+type SoftwareURL struct {
+	gorm.Model
+	ID         string `gorm:"primarykey"`
+	URL        string `gorm:"uniqueIndex"`
+	SoftwareID string
+}
+
+func (su SoftwareURL) MarshalJSON() ([]byte, error) {
+	return ([]byte)(fmt.Sprintf(`"%s"`, su.URL)), nil
 }
