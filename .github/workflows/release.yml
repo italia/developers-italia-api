@@ -26,6 +26,13 @@ jobs:
         # For TagBody, TagSubject or TagContents fields in goreleaser's templates
         run: git fetch --force --tags
       -
+        # FIXME: goreleaser should already take care of the login
+        # (see https://github.com/goreleaser/goreleaser/blame/02a3486d4ba59505113a57b438ae567351ed3dab/scripts/entrypoint.sh#L17)
+        # but it doesn't work for some reason.
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u docker --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      -
         uses: goreleaser/goreleaser-action@v2
         with:
           version: v1.9.2
