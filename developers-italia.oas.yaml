@@ -740,7 +740,6 @@ components:
               example: http://www.example.com
         description:
           type: string
-          required: false
         email:
           type: string
           format: email
