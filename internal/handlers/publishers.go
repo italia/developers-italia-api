@@ -74,7 +74,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	publisher := &models.Publisher{
 		ID:    utils.UUID(),
 		Email: request.Email,
-		URLAddresses: []models.URLAddresses{
+		CodeHosting: []models.CodeHosting{
 			{URL: request.URL},
 		},
 	}
@@ -110,7 +110,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, req *requests.PublisherUpdate) error {
 	err := p.db.Transaction(func(gormTrx *gorm.DB) error {
 		if err := gormTrx.Model(&models.Publisher{}).
-			Preload("URLAddresses").
+			Preload("CodeHosting").
 			First(&publisher, ctx.Params("id")).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
@@ -119,20 +119,20 @@ func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, 
 			return common.Error(fiber.StatusInternalServerError, "can't update Publisher", fiber.ErrInternalServerError.Message)
 		}
 
-		gormTrx.Delete(&publisher.URLAddresses)
+		gormTrx.Delete(&publisher.CodeHosting)
 
-		for _, URLAddress := range req.URLAddresses {
-			publisher.URLAddresses = append(publisher.URLAddresses, models.URLAddresses{URL: URLAddress.URL})
+		for _, URLAddress := range req.CodeHosting {
+			publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{URL: URLAddress.URL})
 		}
 
 		if err := p.db.Updates(&publisher).Error; err != nil {
-			return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "db error")
+			return common.Error(fiber.StatusUnprocessableEntity, "can't update Publisher", err.Error())
 		}
 
 		return nil
 	})
 
-	return fmt.Errorf("transaction err: %w", err)
+	return fmt.Errorf("update publisher error: %w", err)
 }
 
 // DeletePublisher deletes the publisher with the given ID.

@@ -20,18 +20,18 @@ type Log struct {
 }
 
 type Publisher struct {
-	ID           string         `gorm:"primarykey"`
-	Email        string         `json:"email"`
-	Description  string         `json:"description"`
-	URLAddresses []URLAddresses `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	CreatedAt    time.Time      `json:"createdAt" gorm:"index"`
-	UpdatedAt    time.Time      `json:"updatedAt"`
-	DeletedAt    gorm.DeletedAt `gorm:"index"`
+	ID          string         `gorm:"primarykey"`
+	Email       string         `json:"email"`
+	Description string         `json:"description"`
+	CodeHosting []CodeHosting  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique" json:"codeHosting"`
+	CreatedAt   time.Time      `json:"createdAt" gorm:"index"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
 
-type URLAddresses struct {
+type CodeHosting struct {
 	gorm.Model
-	URL         string `json:"url"`
+	URL         string `json:"url" gorm:"not null"`
 	PublisherID string `json:"publisherId"`
 }
 

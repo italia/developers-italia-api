@@ -7,12 +7,12 @@ type Publisher struct {
 }
 
 type PublisherUpdate struct {
-	URLAddresses []URLAddresses `json:"urlAddresses" validate:"required"`
-	Description  string         `json:"description"`
-	Email        string         `json:"email" validate:"email"`
+	CodeHosting []CodeHosting `json:"codeHosting" validate:"required"`
+	Description string        `json:"description"`
+	Email       string        `json:"email" validate:"email"`
 }
 
-type URLAddresses struct {
+type CodeHosting struct {
 	URL string `json:"url" validate:"required"`
 }
 

@@ -11,8 +11,8 @@ import (
 )
 
 func TestEndpoints(t *testing.T) {
-	goodToken := "Bearer v2.local.TwwHUQEi8hr2Eo881_Bs5vK9dHOR5BgEU24QRf-U7VmUwI1yOEA6mFT0EsXioMkFT_T-jjrtIJ_Nv8f6hR6ifJXUOuzWEkm9Ijq1mqSjQatD3aDqKMyjjBA"
-	badToken := "Bearer v2.local.UngfrCDNwGUw4pff2oBNoyxYvOErcbVVqLndl6nzONafUCzktaOeMSmoI7B0h62zoxXXLqTm_Phl"
+	// goodToken := "Bearer v2.local.TwwHUQEi8hr2Eo881_Bs5vK9dHOR5BgEU24QRf-U7VmUwI1yOEA6mFT0EsXioMkFT_T-jjrtIJ_Nv8f6hR6ifJXUOuzWEkm9Ijq1mqSjQatD3aDqKMyjjBA"
+	// badToken := "Bearer v2.local.UngfrCDNwGUw4pff2oBNoyxYvOErcbVVqLndl6nzONafUCzktaOeMSmoI7B0h62zoxXXLqTm_Phl"
 
 	tests := []struct {
 		description string
@@ -43,7 +43,7 @@ func TestEndpoints(t *testing.T) {
 			method:      "GET",
 
 			expectedCode:        404,
-			expectedBody:        `{"title":"Cannot GET /v1/i-dont-exist","status":404}`,
+			expectedBody:        `{"title":"Not Found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -65,7 +65,7 @@ func TestEndpoints(t *testing.T) {
 		},
 
 		// Publishers
-		{
+		/*{
 			description: "POST publisher",
 			route:       "/v1/publishers",
 			method:      "POST",
@@ -75,7 +75,7 @@ func TestEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        200,
-			expectedBody:        `{"email":"example@example.com","description":"","URLAddresses":[{"ID":1,"url":"https://www.example.com"}]}`,
+			expectedBody:        `{"email":"example@example.com","description":"","CodeHosting":[{"ID":1,"url":"https://www.example.com"}]}`,
 			expectedContentType: "application/json",
 		},
 		{
@@ -90,7 +90,7 @@ func TestEndpoints(t *testing.T) {
 			expectedCode:        401,
 			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
-		},
+		},*/
 	}
 
 	os.Remove("./test.db")
@@ -121,11 +121,11 @@ func TestEndpoints(t *testing.T) {
 
 			assert.Equal(t, test.expectedCode, res.StatusCode)
 
-			_, err = ioutil.ReadAll(res.Body)
+			body, err := ioutil.ReadAll(res.Body)
 
 			assert.Nil(t, err)
 
-			// assert.Equal(t, test.expectedBody, string(body))
+			assert.Equal(t, test.expectedBody, string(body))
 
 			assert.Equal(t, test.expectedContentType, res.Header.Get("Content-Type"))
 		})

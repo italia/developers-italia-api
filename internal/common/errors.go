@@ -13,10 +13,10 @@ var (
 	ErrKeyLen = errors.New("PASETO_KEY must be 32 bytes long once base64-decoded")
 )
 
-func Error(status int, title string, detail string, extra ...any) ProblemJSONError {
+func Error(status int, title string, detail string, validationErrors ...any) ProblemJSONError {
 	p := ProblemJSONError{Title: title, Detail: detail, Status: status}
-	if extra != nil {
-		p.ValidationErrors = extra
+	if validationErrors != nil {
+		p.ValidationErrors = validationErrors
 	}
 
 	return p

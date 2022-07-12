@@ -731,7 +731,7 @@ components:
         id: o9ohv7d53cd5o
       type: object
       properties:
-        urlAddress:
+        codeHosting:
           type: array
           properties:
             url:
