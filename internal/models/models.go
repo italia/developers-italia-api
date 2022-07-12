@@ -7,7 +7,7 @@ import (
 )
 
 type Bundle struct {
-	gorm.Model
+	ID   string `gorm:"primarykey"`
 	Name string
 }
 
@@ -20,11 +20,25 @@ type Log struct {
 }
 
 type Publisher struct {
+	ID          string         `gorm:"primarykey"`
+	Email       string         `json:"email"`
+	Description string         `json:"description"`
+	CodeHosting []CodeHosting  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique" json:"codeHosting"`
+	CreatedAt   time.Time      `json:"createdAt" gorm:"index"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
+}
+
+type CodeHosting struct {
 	gorm.Model
-	Name string `json:"name"`
+	URL         string `json:"url" gorm:"not null"`
+	PublisherID string `json:"publisherId"`
 }
 
 type Software struct {
-	gorm.Model
-	Name string
+	ID        string `gorm:"primarykey"`
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }

@@ -41,7 +41,6 @@ func Setup() *fiber.App {
 	logHandler := handlers.NewLog(gormDB)
 
 	app := fiber.New(fiber.Config{
-		Prefork:      true,
 		ErrorHandler: common.CustomErrorHandler,
 	})
 

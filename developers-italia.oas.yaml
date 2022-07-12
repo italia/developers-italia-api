@@ -302,10 +302,6 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/Log'
-            examples:
-              example-1:
-                value:
-                  - id: string
   /bundles:
     get:
       summary: List all Bundles
@@ -649,7 +645,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/Publisher'
+              $ref: '#/components/schemas/PublisherUpdate'
     delete:
       summary: Delete a Publisher
       description: Delete a Publisher by its id
@@ -722,8 +718,32 @@ components:
         id: o9ohv7d53cd5o
       type: object
       properties:
-        id:
+        url:
           type: string
+        description:
+          type: string
+        email:
+          type: string
+          format: email
+    PublisherUpdate:
+      title: PublisherUpdate
+      x-stoplight:
+        id: o9ohv7d53cd5o
+      type: object
+      properties:
+        codeHosting:
+          type: array
+          properties:
+            url:
+              type: string
+              format: uri
+              example: http://www.example.com
+        description:
+          type: string
+        email:
+          type: string
+          format: email
+          example: example@example.com
     Log:
       title: Log
       x-stoplight:
@@ -771,9 +791,11 @@ components:
           properties:
             prev:
               type: integer
+              format: int64
               readOnly: true
             next:
               type: integer
+              format: int64
               readOnly: true
           required:
             - prev
@@ -783,9 +805,10 @@ components:
       type: object
       x-examples:
         example-1:
-          code: x
-          title: x
-          detail: x
+          title: Bad Request
+          detail: Bad Request
+          status: 400
+          instance: /publishers/{publisherId}
       properties:
         code:
           type: string
