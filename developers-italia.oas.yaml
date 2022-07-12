@@ -100,6 +100,8 @@ paths:
       description: Create a new Software
       tags:
         - software
+      security:
+        - bearerAuth: []
       operationId: post-software
       responses:
         '200':
@@ -158,6 +160,8 @@ paths:
       description: Update a Software by its id
       tags:
         - software
+      security:
+        - bearerAuth: []
       operationId: patch-software-softwareId
       responses:
         '200':
@@ -187,6 +191,8 @@ paths:
       description: Delete a Sofware by its id
       tags:
         - software
+      security:
+        - bearerAuth: []
       operationId: delete-software-softwareId
       responses:
         '204':
@@ -272,6 +278,8 @@ paths:
       description: Create Logs for a Software by its id
       tags:
         - logs
+      security:
+        - bearerAuth: []
       operationId: post-software-softwareId-logs
       responses:
         '204':
@@ -326,6 +334,8 @@ paths:
       description: Create a Bundle
       tags:
         - bundles
+      security:
+        - bearerAuth: []
       operationId: post-bundles
       responses:
         '200':
@@ -384,6 +394,8 @@ paths:
       description: Update a Bundle by its id
       tags:
         - bundles
+      security:
+        - bearerAuth: []
       operationId: patch-bundle-bundleId
       responses:
         '200':
@@ -413,6 +425,8 @@ paths:
       description: Delete a Bundle by its id
       tags:
         - bundles
+      security:
+        - bearerAuth: []
       operationId: delete-bundle-bundleId
       responses:
         '204':
@@ -497,6 +511,8 @@ paths:
       description: Create Logs
       tags:
         - logs
+      security:
+        - bearerAuth: []
       operationId: post-logs
       responses:
         '204':
@@ -551,6 +567,8 @@ paths:
       description: Create a new Publisher
       tags:
         - publishers
+      security:
+        - bearerAuth: []
       operationId: post-publishers
       responses:
         '200':
@@ -602,6 +620,8 @@ paths:
       description: Update a Publisher by its id
       tags:
         - publishers
+      security:
+        - bearerAuth: []
       operationId: patch-publishers-publisherId
       responses:
         '200':
@@ -631,6 +651,8 @@ paths:
       description: Delete a Publisher by its id
       tags:
         - publishers
+      security:
+        - bearerAuth: []
       operationId: delete-publishers-publisherId
       responses:
         '204':
@@ -800,8 +822,7 @@ components:
         - title
         - detail
   securitySchemes:
-    API Key - 1:
-      name: API Key
-      type: apiKey
-      in: header
-      description: ''
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: PASETO
