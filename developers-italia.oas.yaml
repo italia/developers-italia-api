@@ -792,9 +792,11 @@ components:
           properties:
             prev:
               type: integer
+              format: int64
               readOnly: true
             next:
               type: integer
+              format: int64
               readOnly: true
           required:
             - prev
