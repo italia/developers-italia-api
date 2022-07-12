@@ -294,10 +294,6 @@ paths:
               type: array
               items:
                 $ref: '#/components/schemas/Log'
-            examples:
-              example-1:
-                value:
-                  - id: string
   /bundles:
     get:
       summary: List all Bundles
@@ -629,7 +625,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/Publisher'
+              $ref: '#/components/schemas/PublisherUpdate'
     delete:
       summary: Delete a Publisher
       description: Delete a Publisher by its id
