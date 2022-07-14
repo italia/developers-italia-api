@@ -169,7 +169,9 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 		)
 	}
 
-	stmt := p.db.Where("entity_id = ? AND entity_type = 'Software'", software.ID)
+	stmt := p.db.
+		Where(map[string]interface{}{"entity_type": models.Software{}.TableName()}).
+		Where("entity_id = ?", software.ID)
 
 	paginator := general.NewPaginator(ctx)
 
@@ -222,7 +224,7 @@ func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error {
 		ID:         utils.UUIDv4(),
 		Message:    logReq.Message,
 		EntityID:   software.ID,
-		EntityType: "Software",
+		EntityType: models.Software{}.TableName(),
 	}
 
 	if err := p.db.Create(&log).Error; err != nil {
