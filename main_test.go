@@ -37,7 +37,7 @@ func TestEndpoints(t *testing.T) {
 			method:      "GET",
 
 			expectedCode:        200,
-			expectedBody:        "{\"data\":[]}",
+			expectedBody:        `{"data":[]}`,
 			expectedContentType: "application/json",
 		},
 		{
@@ -136,7 +136,6 @@ func TestEndpoints(t *testing.T) {
 			assert.Equal(t, test.expectedCode, res.StatusCode)
 
 			body, err := ioutil.ReadAll(res.Body)
-			assert.Nil(t, err)
 
 			assert.Nil(t, err)
 
