@@ -139,7 +139,6 @@ func TestEndpoints(t *testing.T) {
 			assert.Equal(t, test.expectedCode, res.StatusCode)
 
 			body, err := ioutil.ReadAll(res.Body)
-			assert.Nil(t, err)
 
 			assert.Nil(t, err)
 
