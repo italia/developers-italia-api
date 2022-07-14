@@ -9,8 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gofiber/fiber/v2"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,7 +29,6 @@ func TestEndpoints(t *testing.T) {
 		expectedCode        int
 		expectedBody        string
 		expectedContentType string
-		expectedData        fiber.Map
 		validateFunc        func(t *testing.T, data interface{})
 	}{
 		{
