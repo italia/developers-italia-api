@@ -49,8 +49,7 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error {
 		return common.Error(
 			fiber.StatusInternalServerError,
 			"can't get Software",
-			result.Error.Error(),
-			// fiber.ErrInternalServerError.Message,
+			fiber.ErrInternalServerError.Message,
 		)
 	}
 
@@ -69,8 +68,7 @@ func (p *Software) GetSoftware(ctx *fiber.Ctx) error {
 		return common.Error(
 			fiber.StatusInternalServerError,
 			"can't get Software",
-			// fiber.ErrInternalServerError.Message,
-			err.Error(),
+			fiber.ErrInternalServerError.Message,
 		)
 	}
 
