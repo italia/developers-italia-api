@@ -40,7 +40,7 @@ func TestEndpoints(t *testing.T) {
 			method:      "GET",
 
 			expectedCode:        200,
-			expectedBody:        "{\"data\":[]}",
+			expectedBody:        `{"data":[]}`,
 			expectedContentType: "application/json",
 		},
 		{
