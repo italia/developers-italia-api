@@ -48,7 +48,7 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 	publisher := models.Publisher{}
 
-	if err := p.db.First(&publisher, ctx.Params("id")).Error; err != nil {
+	if err := p.db.First(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't get Publisher", "Publisher was not found")
 		}
@@ -72,7 +72,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	publisher := &models.Publisher{
-		ID:    utils.UUID(),
+		ID:    utils.UUIDv4(),
 		Email: request.Email,
 		CodeHosting: []models.CodeHosting{
 			{URL: request.URL},
@@ -111,7 +111,7 @@ func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, 
 	err := p.db.Transaction(func(gormTrx *gorm.DB) error {
 		if err := gormTrx.Model(&models.Publisher{}).
 			Preload("CodeHosting").
-			First(&publisher, ctx.Params("id")).Error; err != nil {
+			First(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
 			}
@@ -139,7 +139,7 @@ func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, 
 func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
 	var publisher models.Publisher
 
-	if err := p.db.Delete(&publisher, ctx.Params("id")).Error; err != nil {
+	if err := p.db.Delete(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't delete Publisher", "Publisher was not found")
 		}
