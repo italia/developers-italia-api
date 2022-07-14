@@ -1,4 +1,4 @@
-package requests
+package common
 
 type Publisher struct {
 	URL         string `json:"url" validate:"required"`

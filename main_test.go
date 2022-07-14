@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -11,8 +13,8 @@ import (
 )
 
 func TestEndpoints(t *testing.T) {
-	// goodToken := "Bearer v2.local.TwwHUQEi8hr2Eo881_Bs5vK9dHOR5BgEU24QRf-U7VmUwI1yOEA6mFT0EsXioMkFT_T-jjrtIJ_Nv8f6hR6ifJXUOuzWEkm9Ijq1mqSjQatD3aDqKMyjjBA"
-	// badToken := "Bearer v2.local.UngfrCDNwGUw4pff2oBNoyxYvOErcbVVqLndl6nzONafUCzktaOeMSmoI7B0h62zoxXXLqTm_Phl"
+	goodToken := "Bearer v2.local.TwwHUQEi8hr2Eo881_Bs5vK9dHOR5BgEU24QRf-U7VmUwI1yOEA6mFT0EsXioMkFT_T-jjrtIJ_Nv8f6hR6ifJXUOuzWEkm9Ijq1mqSjQatD3aDqKMyjjBA"
+	badToken := "Bearer v2.local.UngfrCDNwGUw4pff2oBNoyxYvOErcbVVqLndl6nzONafUCzktaOeMSmoI7B0h62zoxXXLqTm_Phl"
 
 	tests := []struct {
 		description string
@@ -25,8 +27,9 @@ func TestEndpoints(t *testing.T) {
 
 		// Expected output
 		expectedCode        int
-		expectedBody        any
+		expectedBody        string
 		expectedContentType string
+		validateFunc        func(t *testing.T, data interface{})
 	}{
 		{
 			description: "publishers get route",
@@ -34,7 +37,7 @@ func TestEndpoints(t *testing.T) {
 			method:      "GET",
 
 			expectedCode:        200,
-			expectedBody:        "[]",
+			expectedBody:        `{"data":[]}`,
 			expectedContentType: "application/json",
 		},
 		{
@@ -47,11 +50,12 @@ func TestEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			description:         "publishers get non-existing id",
-			route:               "/v1/publishers/404",
-			method:              "GET",
-			expectedCode:        404,
-			expectedBody:        `{"title":"can't get Publisher","detail":"Publisher was not found","status":404}`,
+			description:  "publishers get non-existing id",
+			route:        "/v1/publishers/404",
+			method:       "GET",
+			expectedCode: 404,
+			expectedBody: `{"title":"can't get Publisher","detail":"Publisher was not found","status":404}`,
+
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -65,7 +69,7 @@ func TestEndpoints(t *testing.T) {
 		},
 
 		// Publishers
-		/*{
+		{
 			description: "POST publisher",
 			route:       "/v1/publishers",
 			method:      "POST",
@@ -74,8 +78,19 @@ func TestEndpoints(t *testing.T) {
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
-			expectedCode:        200,
-			expectedBody:        `{"email":"example@example.com","description":"","CodeHosting":[{"ID":1,"url":"https://www.example.com"}]}`,
+			expectedCode: 200,
+			validateFunc: func(t *testing.T, data interface{}) {
+				f, ok := data.(map[string]interface{})
+				if !ok {
+					t.Error(t, fmt.Errorf("expected map[string]interface{}, got %T", data))
+				}
+				fMap := f["data"].(map[string]interface{})
+				codeHost := fMap["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHost))
+				codeHostElement := codeHost[0].(map[string]interface{})
+				assert.Equal(t, codeHostElement["url"], "https://www.example.com")
+				assert.Equal(t, fMap["email"], "example@example.com")
+			},
 			expectedContentType: "application/json",
 		},
 		{
@@ -90,7 +105,7 @@ func TestEndpoints(t *testing.T) {
 			expectedCode:        401,
 			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
-		},*/
+		},
 	}
 
 	os.Remove("./test.db")
@@ -116,7 +131,6 @@ func TestEndpoints(t *testing.T) {
 			}
 
 			res, err := app.Test(req, -1)
-
 			assert.Nil(t, err)
 
 			assert.Equal(t, test.expectedCode, res.StatusCode)
@@ -125,7 +139,16 @@ func TestEndpoints(t *testing.T) {
 
 			assert.Nil(t, err)
 
-			assert.Equal(t, test.expectedBody, string(body))
+			if test.validateFunc != nil {
+				var bodyMap interface{}
+				err = json.Unmarshal(body, &bodyMap)
+				assert.Nil(t, err)
+				test.validateFunc(t, bodyMap)
+			}
+
+			if test.expectedBody != "" {
+				assert.Equal(t, test.expectedBody, string(body))
+			}
 
 			assert.Equal(t, test.expectedContentType, res.Header.Get("Content-Type"))
 		})
