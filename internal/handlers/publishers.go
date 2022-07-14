@@ -9,7 +9,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/models"
-	"github.com/italia/developers-italia-api/internal/requests"
 	"gorm.io/gorm"
 )
 
@@ -41,7 +40,7 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 		)
 	}
 
-	return ctx.JSON(&publishers)
+	return ctx.JSON(common.NewResponse(publishers))
 }
 
 // GetPublisher gets the publisher with the given ID and returns any error encountered.
@@ -61,7 +60,7 @@ func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 
 // PostPublisher creates a new publisher.
 func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
-	request := requests.Publisher{}
+	request := common.Publisher{}
 
 	if err := ctx.BodyParser(&request); err != nil {
 		return common.Error(fiber.StatusBadRequest, "can't create Publisher", "invalid json", err)
@@ -83,12 +82,12 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 		return common.Error(fiber.StatusInternalServerError, "can't create Publisher", "db error")
 	}
 
-	return ctx.JSON(&publisher)
+	return ctx.JSON(common.NewResponse(publisher))
 }
 
 // PatchPublisher updates the publisher with the given ID.
 func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
-	publisherReq := new(requests.PublisherUpdate)
+	publisherReq := new(common.PublisherUpdate)
 
 	if err := ctx.BodyParser(publisherReq); err != nil {
 		return common.Error(fiber.StatusBadRequest, "can't update Publisher", "invalid json")
@@ -107,7 +106,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 	return ctx.JSON(&publisher)
 }
 
-func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, req *requests.PublisherUpdate) error {
+func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, req *common.PublisherUpdate) error {
 	err := p.db.Transaction(func(gormTrx *gorm.DB) error {
 		if err := gormTrx.Model(&models.Publisher{}).
 			Preload("CodeHosting").

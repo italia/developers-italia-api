@@ -7,7 +7,6 @@ import (
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/handlers/general"
 	"github.com/italia/developers-italia-api/internal/models"
-	"github.com/italia/developers-italia-api/internal/requests"
 	"gorm.io/gorm"
 )
 
@@ -81,7 +80,7 @@ func (p *Log) GetLog(ctx *fiber.Ctx) error {
 
 // PostLog creates a new log.
 func (p *Log) PostLog(ctx *fiber.Ctx) error {
-	logReq := new(requests.Log)
+	logReq := new(common.Log)
 
 	if err := ctx.BodyParser(&logReq); err != nil {
 		return common.Error(fiber.StatusBadRequest, "can't create Log", "invalid json")
@@ -102,7 +101,7 @@ func (p *Log) PostLog(ctx *fiber.Ctx) error {
 
 // PatchLog updates the log with the given ID.
 func (p *Log) PatchLog(ctx *fiber.Ctx) error {
-	logReq := new(requests.Log)
+	logReq := new(common.Log)
 
 	if err := ctx.BodyParser(logReq); err != nil {
 		return common.Error(fiber.StatusBadRequest, "can't update Log", "invalid json")
