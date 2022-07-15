@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/go-playground/validator/v10 v10.11.0
+	github.com/go-testfixtures/testfixtures/v3 v3.8.0
 	github.com/gofiber/contrib/paseto v0.0.0-20220621082844-83549332c36e
 	github.com/gofiber/fiber/v2 v2.34.1
 	github.com/stretchr/testify v1.7.5
@@ -40,7 +41,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.15.7 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
-	github.com/mattn/go-sqlite3 v1.14.12 // indirect
+	github.com/mattn/go-sqlite3 v1.14.13
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
