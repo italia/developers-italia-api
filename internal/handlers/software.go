@@ -8,7 +8,6 @@ import (
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/handlers/general"
 	"github.com/italia/developers-italia-api/internal/models"
-	"github.com/italia/developers-italia-api/internal/requests"
 	"gorm.io/gorm"
 )
 
@@ -77,7 +76,7 @@ func (p *Software) GetSoftware(ctx *fiber.Ctx) error {
 
 // PostSoftware creates a new software.
 func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
-	softwareReq := new(requests.Software)
+	softwareReq := new(common.Software)
 
 	if err := ctx.BodyParser(&softwareReq); err != nil {
 		return common.Error(fiber.StatusBadRequest, "can't create Software", "invalid json")
@@ -106,7 +105,7 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 
 // PatchSoftware updates the software with the given ID.
 func (p *Software) PatchSoftware(ctx *fiber.Ctx) error {
-	softwareReq := new(requests.Software)
+	softwareReq := new(common.Software)
 
 	if err := ctx.BodyParser(softwareReq); err != nil {
 		return common.Error(fiber.StatusBadRequest, "can't update Software", "invalid json")
