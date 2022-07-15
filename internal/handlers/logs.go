@@ -197,7 +197,7 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 
 // PostSoftwareLog creates a new log associated to a Software with the given ID and returns any error encountered.
 func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error {
-	logReq := new(requests.Log)
+	logReq := new(common.Log)
 
 	if err := ctx.BodyParser(&logReq); err != nil {
 		return common.Error(fiber.StatusBadRequest, "can't create Log", "invalid json")
