@@ -2,6 +2,8 @@ dist/
 tmp/
 
 test.db
+test.db-shm
+test.db-wal
 
 # Compiled binary
 developers-italia-api
