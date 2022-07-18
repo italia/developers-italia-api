@@ -37,6 +37,7 @@ func Setup() *fiber.App {
 	}
 
 	publisherHandler := handlers.NewPublisher(gormDB)
+	softwareHandler := handlers.NewSoftware(gormDB)
 	statusHandler := handlers.NewStatus(gormDB)
 	logHandler := handlers.NewLog(gormDB)
 
@@ -70,11 +71,19 @@ func Setup() *fiber.App {
 	v1.Patch("/publishers/:id", publisherHandler.PatchPublisher)
 	v1.Delete("/publishers/:id", publisherHandler.DeletePublisher)
 
+	v1.Get("/software", softwareHandler.GetAllSoftware)
+	v1.Get("/software/:id", softwareHandler.GetSoftware)
+	v1.Post("/software", softwareHandler.PostSoftware)
+	v1.Patch("/software/:id", softwareHandler.PatchSoftware)
+	v1.Delete("/software/:id", softwareHandler.DeleteSoftware)
+
 	v1.Get("/logs", logHandler.GetLogs)
 	v1.Get("/logs/:id", logHandler.GetLog)
 	v1.Post("/logs", logHandler.PostLog)
 	v1.Patch("/logs/:id", logHandler.PatchLog)
 	v1.Delete("/logs/:id", logHandler.DeleteLog)
+	v1.Get("/software/:id/logs", logHandler.GetSoftwareLogs)
+	v1.Post("/software/:id/logs", logHandler.PostSoftwareLog)
 
 	app.Get("/status", statusHandler.GetStatus)
 

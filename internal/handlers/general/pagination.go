@@ -14,8 +14,7 @@ type PaginationLinks paginator.Cursor
 
 func NewPaginator(ctx *fiber.Ctx) *paginator.Paginator {
 	paginator := paginator.New(&paginator.Config{
-		Rules: []paginator.Rule{{Key: "ID"}, {Key: "CreatedAt"}},
-		Keys:  []string{},
+		Keys:  []string{"ID", "CreatedAt"},
 		Limit: DefaultLimitCount,
 		Order: paginator.ASC,
 	})

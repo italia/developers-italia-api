@@ -57,6 +57,12 @@ linters-settings:
       - .WithMessage(
       - .WithMessagef(
       - .WithStack(
+  funlen:
+    # Increase the number of lines, considering funlen counts comments as well
+    # (https://github.com/ultraware/funlen/issues/12)
+    #
+    # default: 60
+    lines: 80
 
 linters:
   enable-all: true

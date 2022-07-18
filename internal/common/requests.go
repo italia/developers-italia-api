@@ -16,6 +16,10 @@ type CodeHosting struct {
 	URL string `json:"url" validate:"required"`
 }
 
+type Software struct {
+	URLs []string `json:"urls" validate:"required,gt=1"`
+}
+
 type Log struct {
-	Message string `json:"message" validate:"required"`
+	Message string `json:"message" validate:"required,gt=1"`
 }
