@@ -91,7 +91,7 @@ func (p *Log) PostLog(ctx *fiber.Ctx) error {
 	}
 
 	if err := common.ValidateStruct(*logReq); err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format")
+		return common.Error(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format", err)
 	}
 
 	log := models.Log{ID: utils.UUIDv4(), Message: logReq.Message}
