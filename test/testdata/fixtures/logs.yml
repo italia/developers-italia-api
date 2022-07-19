@@ -1,16 +1,22 @@
 - id: 2dfb2bc2-042d-11ed-9338-d8bbc146d165
   created_at: 2010-01-01 23:59:59
   updated_at: 2010-12-31 23:59:59
+  entity_id: c353756e-8597-4e46-a99b-7da2e141603b
+  entity_type: software
   message: A log message
 
 - id: 12f30d9e-042e-11ed-8ddc-d8bbc146d165
   created_at: 2010-01-15 23:59:59
   updated_at: 2010-12-31 23:59:59
+  entity_id: c353756e-8597-4e46-a99b-7da2e141603b
+  entity_type: software
   message: A log message
 
 - id: 18a70362-042e-11ed-b793-d8bbc146d165
   created_at: 2010-01-30 23:59:59
   updated_at: 2010-12-31 23:59:59
+  entity_id: c353756e-8597-4e46-a99b-7da2e141603b
+  entity_type: software
   message: A log message
 
 - id: 4f95b0d0-042e-11ed-8253-d8bbc146d165

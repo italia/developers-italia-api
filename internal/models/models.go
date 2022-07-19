@@ -47,7 +47,7 @@ type Software struct {
 	Logs          []Log          `json:"-" gorm:"polymorphic:Entity;"`
 	CreatedAt     time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt     time.Time      `json:"updatedAt"`
-	DeletedAt     gorm.DeletedAt `json:"deletedAt" gorm:"index"`
+	DeletedAt     gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 func (Software) TableName() string {

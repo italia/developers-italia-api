@@ -41,7 +41,7 @@ func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 		case ProblemJSONError:
 			problemJSON = &e
 		default:
-			problemJSON = &ProblemJSONError{Status: fiber.StatusNotFound, Title: fiber.ErrNotFound.Message}
+			problemJSON = &ProblemJSONError{Status: fiber.StatusNotFound, Title: fiber.ErrNotFound.Message, Detail: e.Error()}
 		}
 	}
 

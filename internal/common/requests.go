@@ -17,7 +17,8 @@ type CodeHosting struct {
 }
 
 type Software struct {
-	URLs []string `json:"urls" validate:"required,gt=1"`
+	URLs          []string `json:"urls" validate:"required,gt=0"`
+	PubliccodeYml string   `json:"publiccodeYml" validate:"required"`
 }
 
 type Log struct {

@@ -149,7 +149,7 @@ func TestApi(t *testing.T) {
 			query:       "GET /v1/i-dont-exist",
 
 			expectedCode:        404,
-			expectedBody:        `{"title":"Not Found","status":404}`,
+			expectedBody:        `{"title":"Not Found","detail":"Cannot GET /v1/i-dont-exist","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 	}
@@ -209,6 +209,708 @@ func TestPublishersEndpoints(t *testing.T) {
 	runTestCases(t, tests)
 }
 
+func TestSoftwareEndpoints(t *testing.T) {
+	tests := []TestCase{
+		// GET /software
+		{
+			query:    "GET /v1/software",
+			fixtures: []string{"software.yml", "software_urls.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 25, len(data))
+
+				// Default pagination size is 25, so there's another page and
+				// next cursor should be present
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Equal(t, "?page[after]=WyJjMzUzNzU2ZS04NTk3LTRlNDYtYTk5Yi03ZGEyZTE0MTYwM2IiLCIyMDE0LTA1LTAxVDAwOjAwOjAwWiJd", links["next"])
+
+				assert.IsType(t, map[string]interface{}{}, data[0])
+				firstSoftware := data[0].(map[string]interface{})
+				assert.NotEmpty(t, firstSoftware["publiccodeYml"])
+
+				assert.IsType(t, []interface{}{}, firstSoftware["urls"])
+				assert.Greater(t, len(firstSoftware["urls"].([]interface{})), 0)
+
+				match, err := regexp.MatchString(UUID_REGEXP, firstSoftware["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, firstSoftware["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, firstSoftware["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range firstSoftware {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml"}, key)
+				}
+			},
+		},
+		{
+			description: "GET with page[size] query param",
+			query:       "GET /v1/software?page[size]=2",
+			fixtures:    []string{"software.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 2, len(data))
+
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Equal(t, "?page[after]=WyIxMjQyODBkNy03NTUyLTRmZmUtOTM5Zi1mNDY2OTdjYzBlOGEiLCIyMDE1LTA0LTI2VDAwOjAwOjAwWiJd", links["next"])
+			},
+		},
+		// TODO
+		// {
+		// 	description: "GET with invalid format for page[size] query param",
+		// 	query:    "GET /v1/software?page[size]=NOT_AN_INT",
+		// 	fixtures: []string{"software.yml"},
+
+		// 	expectedCode:        422,
+		// 	expectedContentType: "application/json",
+		// },
+		// TODO
+		// {
+		// 	description: "GET with page[size] bigger than the max of 100",
+		// 	query:    "GET /v1/software?page[size]=200",
+		// 	fixtures: []string{"software.yml", "software_urls.yml"},
+
+		// 	expectedCode:        422,
+		// 	expectedContentType: "application/json",
+		// },
+		{
+			description: `GET with "page[after]" query param`,
+			query:       "GET /v1/software?page[after]=WyJjMzUzNzU2ZS04NTk3LTRlNDYtYTk5Yi03ZGEyZTE0MTYwM2IiLCIyMDE0LTA1LTAxVDAwOjAwOjAwWiJd",
+			fixtures:    []string{"software.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 5, len(data))
+
+				links := response["links"].(map[string]interface{})
+				assert.Equal(t, "?page[before]=WyJjNWRlYzZmYS04YTAxLTQ4ODEtOWU3ZC0xMzI3NzBkNDIxNGQiLCIyMDE1LTAyLTI1VDAwOjAwOjAwWiJd", links["prev"])
+				assert.Nil(t, links["next"])
+			},
+		},
+		{
+			description: `GET with invalid "page[after]" query param`,
+			query:       "GET /v1/software?page[after]=NOT_A_VALID_CURSOR",
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Software`, response["title"])
+				assert.Equal(t, "wrong cursor format in page[after] or page[before]", response["detail"])
+			},
+		},
+		{
+			description: "GET with page[before] query param",
+			query:       "GET /v1/software?page[before]=WyJjNWRlYzZmYS04YTAxLTQ4ODEtOWU3ZC0xMzI3NzBkNDIxNGQiLCIyMDE1LTAyLTI1VDAwOjAwOjAwWiJd",
+			fixtures:    []string{"software.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 25, len(data))
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Equal(t, "?page[after]=WyJjMzUzNzU2ZS04NTk3LTRlNDYtYTk5Yi03ZGEyZTE0MTYwM2IiLCIyMDE0LTA1LTAxVDAwOjAwOjAwWiJd", links["next"])
+			},
+		},
+		{
+			description: `GET with invalid "page[before]" query param`,
+			query:       "GET /v1/software?page[before]=NOT_A_VALID_CURSOR",
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Software`, response["title"])
+				assert.Equal(t, "wrong cursor format in page[after] or page[before]", response["detail"])
+			},
+		},
+		{
+			description: `GET with "from" query param`,
+			query:       "GET /v1/software?from=2015-04-01T09:56:23Z",
+			fixtures:    []string{"software.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 7, len(data))
+			},
+		},
+		{
+			description: `GET with invalid "from" query param`,
+			query:       "GET /v1/software?from=3",
+			fixtures:    []string{"software.yml"},
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Software`, response["title"])
+				assert.Equal(t, "invalid date time format (RFC 3339 needed)", response["detail"])
+			},
+		},
+		{
+			description: `GET with "to" query param`,
+			query:       "GET /v1/software?to=2014-11-01T09:56:23Z",
+			fixtures:    []string{"software.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 13, len(data))
+			},
+		},
+		{
+			description: `GET with invalid "to" query param`,
+			query:       "GET /v1/software?to=3",
+			fixtures:    []string{"software.yml"},
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Software`, response["title"])
+				assert.Equal(t, "invalid date time format (RFC 3339 needed)", response["detail"])
+			},
+		},
+
+		// GET /software/:id
+		{
+			description:         "Non-existent software",
+			query:               "GET /v1/software/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			expectedCode:        404,
+			expectedBody:        `{"title":"can't get Software","detail":"Software was not found","status":404}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			query:               "GET /v1/software/e7576e7f-9dcf-4979-b9e9-d8cdcad3b60e",
+			fixtures:            []string{"software.yml", "software_urls.yml"},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.NotEmpty(t, response["publiccodeYml"])
+
+				assert.IsType(t, []interface{}{}, response["urls"])
+				assert.Greater(t, len(response["urls"].([]interface{})), 0)
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml"}, key)
+				}
+			},
+		},
+
+		// POST /software
+		{
+			query: "POST /v1/software",
+			body:  `{"publiccodeYml": "-", "urls": ["https://software.example.org"]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["urls"])
+				assert.Equal(t, len(response["urls"].([]interface{})), 1)
+
+				// TODO: check urls content
+				assert.NotEmpty(t, response["publiccodeYml"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				// TODO: check the record was actually created in the database
+				// TODO: check there are no dangling software_urls
+			},
+		},
+		{
+			description: "POST software - wrong token",
+			query:       "POST /v1/software",
+			body:        `{"publiccodeYml":  "-", "urls": ["https://software.example.org"]}`,
+			headers: map[string][]string{
+				"Authorization": {badToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        401,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			query: "POST /v1/software with invalid JSON",
+			body:  `INVALID_JSON`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Software`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: make this pass
+		// {
+		// 	descrption: "POST /v1/software with JSON with extra fields",
+		// 	query: "POST /v1/software",
+		// 	body: `{"publiccodeYml": "-", EXTRA_FIELD: "extra field not in schema"}`,
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 		"Content-Type":  {"application/json"},
+		// 	},
+		// 	expectedCode:        422,
+		// 	expectedContentType: "application/problem+json",
+		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
+		// 		assert.Equal(t, `can't create Software`, response["title"])
+		// 		assert.Equal(t, "invalid json", response["detail"])
+		// 	},
+		// },
+		{
+			description: "POST /v1/software with validation errors",
+			query:       "POST /v1/software",
+			body:        `{"message": ""}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Software`, response["title"])
+				assert.Equal(t, "invalid format", response["detail"])
+				assert.NotNil(t, response["validationErrors"])
+			},
+		},
+		{
+			description: "POST /v1/software with empty body",
+			query:       "POST /v1/software",
+			body:        "",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Software`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: enforce this?
+		// {
+		// 	query: "POST /v1/software with no Content-Type",
+		// 	body:  "",
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 	},
+		// 	expectedCode:        404,
+		// }
+
+		// PATCH /software/:id
+		{
+			description: "PATCH non-existing software",
+			query:       "PATCH /v1/software/NO_SUCH_SOFTWARE",
+			body:        ``,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedBody:        `{"title":"can't update Software","detail":"Software was not found","status":404}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:  `{"publiccodeYml": "publiccodedata", "urls": ["https://software.example.org", "https://sofware-old.example.com", "https://software-old.example.org"]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			fixtures: []string{"software.yml", "software_urls.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["urls"])
+				assert.Equal(t, len(response["urls"].([]interface{})), 3)
+				// TODO: check urls content
+
+				assert.Equal(t, "publiccodedata", response["publiccodeYml"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH software - wrong token",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        ``,
+			headers: map[string][]string{
+				"Authorization": {badToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        401,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description: "PATCH /v1/software with invalid JSON",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `INVALID_JSON`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't update Software`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: make this pass
+		// {
+		// 	description: "PATCH /v1/software with JSON with extra fields",
+		// 	query: "PATCH /v1/software",
+		// 	body: `{"publiccodeYml": "-", EXTRA_FIELD: "extra field not in schema"}`,
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 		"Content-Type":  {"application/json"},
+		// 	},
+		// 	expectedCode:        422,
+		// 	expectedContentType: "application/problem+json",
+		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
+		// 		assert.Equal(t, `can't create Software`, response["title"])
+		// 		assert.Equal(t, "invalid json", response["detail"])
+		// 	},
+		// },
+		{
+			description: "POST /v1/software with validation errors",
+			query:       "POST /v1/software",
+			body:        `{"message": ""}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Software`, response["title"])
+				assert.Equal(t, "invalid format", response["detail"])
+				assert.NotNil(t, response["validationErrors"])
+			},
+		},
+		{
+			description: "POST /v1/software with empty body",
+			query:       "POST /v1/software",
+			body:        "",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Software`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: enforce this?
+		// {
+		// 	query: "POST /v1/software with no Content-Type",
+		// 	body:  "",
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 	},
+		// 	expectedCode:        404,
+		// }
+
+		// DELETE /software/:id
+		{
+			description:         "Delete non-existent software",
+			query:               "GET /v1/software/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			expectedCode:        404,
+			expectedBody:        `{"title":"can't get Software","detail":"Software was not found","status":404}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description: "DELETE software with bad authentication",
+			query:       "DELETE /v1/software/11e101c4-f989-4cc4-a665-63f9f34e83f6",
+			fixtures:    []string{"software.yml", "software_urls.yml"},
+			headers: map[string][]string{
+				"Authorization": {badToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        401,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			query:    "DELETE /v1/software/11e101c4-f989-4cc4-a665-63f9f34e83f6",
+			fixtures: []string{"software.yml", "software_urls.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        204,
+			expectedBody:        "",
+			expectedContentType: "application/json",
+		},
+
+		// GET /software/:id/logs
+		{
+			query:    "GET /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			fixtures: []string{"software.yml", "logs.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 3, len(data))
+
+				// Default pagination size is 25, so all this software's logs fit into a page
+				// and cursors should be empty
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Nil(t, links["next"])
+
+				assert.IsType(t, map[string]interface{}{}, data[0])
+				firstLog := data[0].(map[string]interface{})
+				assert.NotEmpty(t, firstLog["message"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, firstLog["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, firstLog["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, firstLog["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range firstLog {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "message", "entity"}, key)
+				}
+
+				// TODO assert.NotEmpty(t, firstLog["entity"])
+			},
+		},
+		{
+			description: "GET /v1/software/:id/logs for non existing software",
+			query:       "GET /v1/software/NO_SUCH_SOFTWARE/logs",
+			fixtures:    []string{"software.yml", "logs.yml"},
+
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Software`, response["title"])
+				assert.Equal(t, "Software was not found", response["detail"])
+			},
+		},
+		{
+			description: "GET with page[size] query param",
+			query:       "GET /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs?page[size]=2",
+			fixtures:    []string{"logs.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 2, len(data))
+
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Equal(t, "?page[after]=WyIxOGE3MDM2Mi0wNDJlLTExZWQtYjc5My1kOGJiYzE0NmQxNjUiLCIyMDEwLTAxLTMwVDIzOjU5OjU5WiJd", links["next"])
+			},
+		},
+
+		// POST /software/:id/logs
+		{
+			description: "POST /v1/software/:id/logs for non existing software",
+			query:       "POST /v1/software/NO_SUCH_SOFTWARE/logs",
+			fixtures:    []string{"software.yml", "logs.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Log`, response["title"])
+				assert.Equal(t, "Software was not found", response["detail"])
+			},
+		},
+		{
+			query:    "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			body:     `{"message": "New software log from test suite"}`,
+			fixtures: []string{"software.yml", "logs.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "New software log from test suite", response["message"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				// TODO: check the record was actually created in the database
+			},
+		},
+		{
+			description: "POST software log - wrong token",
+			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			body:        `{"message": "new log"}`,
+			headers: map[string][]string{
+				"Authorization": {badToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        401,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description: "POST /v1/logs with invalid JSON",
+			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			body:        `INVALID_JSON`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Log`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: make this pass
+		// {
+		// 	description: "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs with JSON with extra fields",
+		// 	body: `{"message": "new log", EXTRA_FIELD: "extra field not in schema"}`,
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 		"Content-Type":  {"application/json"},
+		// 	},
+		// 	expectedCode:        422,
+		// 	expectedContentType: "application/problem+json",
+		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
+		// 		assert.Equal(t, `can't create Log`, response["title"])
+		// 		assert.Equal(t, "invalid json", response["detail"])
+		// 	},
+		// },
+		{
+			description: "POST /v1/logs with validation errors",
+			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			body:        `{"message": ""}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Log`, response["title"])
+				assert.Equal(t, "invalid format", response["detail"])
+				assert.NotNil(t, response["validationErrors"])
+			},
+		},
+		{
+			description: "POST /v1/logs with empty body",
+			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			body:        "",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Log`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: enforce this?
+		// {
+		// 	query: "POST /v1/logs with no Content-Type",
+		// 	body:  "",
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 	},
+		// 	expectedCode:        404,
+		// },
+	}
+
+	runTestCases(t, tests)
+}
+
 func TestLogsEndpoints(t *testing.T) {
 	tests := []TestCase{
 		// GET /logs
@@ -234,7 +936,6 @@ func TestLogsEndpoints(t *testing.T) {
 
 				assert.IsType(t, map[string]interface{}{}, data[0])
 				firstLog := data[0].(map[string]interface{})
-				assert.NotEmpty(t, firstLog["id"])
 				assert.NotEmpty(t, firstLog["message"])
 
 				match, err := regexp.MatchString(UUID_REGEXP, firstLog["id"].(string))
@@ -438,8 +1139,9 @@ func TestLogsEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			query: "POST /v1/logs with invalid JSON",
-			body:  `INVALID_JSON`,
+			description: "POST /v1/logs with invalid JSON",
+			query:       "POST /v1/logs",
+			body:        `INVALID_JSON`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -467,8 +1169,9 @@ func TestLogsEndpoints(t *testing.T) {
 		// 	},
 		// },
 		{
-			query: "POST /v1/logs with validation errors",
-			body:  `{"message": ""}`,
+			description: "POST /v1/logs with validation errors",
+			query:       "POST /v1/logs",
+			body:        `{"message": ""}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -482,8 +1185,9 @@ func TestLogsEndpoints(t *testing.T) {
 			},
 		},
 		{
-			query: "POST /v1/logs with empty body",
-			body:  "",
+			description: "POST /v1/logs with empty body",
+			query:       "POST /v1/logs",
+			body:        "",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
