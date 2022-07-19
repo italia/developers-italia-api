@@ -219,6 +219,7 @@ paths:
       description: List all Logs for a Software by its id
       tags:
         - logs
+        - software
       operationId: get-software-softwareId-logs
       responses:
         '200':
@@ -232,33 +233,33 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Log'
-                  meta:
+                  links:
                     $ref: '#/components/schemas/Links'
-        '400':
-          $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       parameters:
         - schema:
             type: integer
             format: int32
+            default: 25
             example: 100
             minimum: 1
+            maximum: 100
           in: query
-          name: limit
+          name: page[size]
           description: Limit the amount of results
         - schema:
-            type: integer
-            format: int32
-            example: 3
-            minimum: 1
+            type: string
           in: query
-          name: page
-          description: Page number for use in pagination
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
         - schema:
             type: string
             format: date-time
@@ -278,6 +279,7 @@ paths:
       description: Create Logs for a Software by its id
       tags:
         - logs
+        - software
       security:
         - bearerAuth: []
       operationId: post-software-softwareId-logs
@@ -288,12 +290,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       requestBody:
         required: true
         content:
@@ -320,7 +318,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Bundle'
-                  meta:
+                  links:
                     $ref: '#/components/schemas/Links'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -459,16 +457,10 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Log'
-                  meta:
+                  links:
                     $ref: '#/components/schemas/Links'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       operationId: get-logs
       parameters:
         - schema:
@@ -476,14 +468,13 @@ paths:
             format: int32
             example: 100
             minimum: 1
+            maximum: 100
+            default: 25
           in: query
-          name: limit
+          name: page[size]
           description: Limit the amount of results
         - schema:
-            type: integer
-            format: int32
-            example: 3
-            minimum: 1
+            type: string
           in: query
           name: 'page[before]'
           description: Only results before this cursor
@@ -515,26 +506,26 @@ paths:
         - bearerAuth: []
       operationId: post-logs
       responses:
-        '204':
-          $ref: '#/components/responses/NoContent'
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Log'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/Log'
+              $ref: '#/components/schemas/Log'
   /publishers:
     get:
       summary: List all Publishers
@@ -553,7 +544,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Publisher'
-                  meta:
+                  links:
                     $ref: '#/components/schemas/Links'
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -689,6 +680,12 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Error'
+    UnprocessableEntity:
+      description: Unprocessable Entity
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
     TooManyRequests:
       description: Too Many Requests
       content:
@@ -769,6 +766,7 @@ components:
           type: string
         entity:
           type: string
+          readOnly: true
       required:
         - id
         - createdAt
@@ -786,21 +784,18 @@ components:
       type: object
       x-examples: {}
       properties:
-        links:
-          type: object
-          properties:
-            prev:
-              type: integer
-              format: int64
-              readOnly: true
-            next:
-              type: integer
-              format: int64
-              readOnly: true
-          required:
-            - prev
-            - next
+        prev:
+          type: string
           readOnly: true
+          nullable: true
+        next:
+          type: string
+          readOnly: true
+          nullable: true
+      required:
+        - prev
+        - next
+      readOnly: true
     Error:
       type: object
       x-examples:
