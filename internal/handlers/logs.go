@@ -39,7 +39,7 @@ func (p *Log) GetLogs(ctx *fiber.Ctx) error {
 	stmt, err := general.Clauses(ctx, stmt, "message")
 	if err != nil {
 		return common.Error(
-			fiber.StatusBadRequest,
+			fiber.StatusUnprocessableEntity,
 			"can't get Logs",
 			err.Error(),
 		)
@@ -50,7 +50,7 @@ func (p *Log) GetLogs(ctx *fiber.Ctx) error {
 	result, cursor, err := paginator.Paginate(stmt, &logs)
 	if err != nil {
 		return common.Error(
-			fiber.StatusBadRequest,
+			fiber.StatusUnprocessableEntity,
 			"can't get Logs",
 			"wrong cursor format in page[after] or page[before]",
 		)
@@ -178,7 +178,7 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 	result, cursor, err := paginator.Paginate(stmt, &logs)
 	if err != nil {
 		return common.Error(
-			fiber.StatusBadRequest,
+			fiber.StatusUnprocessableEntity,
 			"can't get Software",
 			"wrong cursor format in page[after] or page[before]",
 		)
@@ -204,7 +204,7 @@ func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error {
 	}
 
 	if err := common.ValidateStruct(*logReq); err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format")
+		return common.Error(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format", err)
 	}
 
 	software := models.Software{}

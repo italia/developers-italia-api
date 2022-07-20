@@ -17,7 +17,7 @@ type Log struct {
 	Message   string         `json:"message" gorm:"not null"`
 	CreatedAt time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt time.Time      `json:"updatedAt"`
-	DeletedAt gorm.DeletedAt `json:"deletedAt" gorm:"index"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// Entity this Log entry is about (fe. Publisher, Software, etc.)
 	EntityID   string `json:"-"`

@@ -11,6 +11,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
+	_ "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/italia/developers-italia-api/internal/database"
 )
@@ -49,10 +50,12 @@ func Setup() *fiber.App {
 	app.Use(recover.New())
 
 	// Use Fiber Rate API Limiter
-	app.Use(limiter.New(limiter.Config{
-		Max:               envs.MaxRequests,
-		LimiterMiddleware: limiter.SlidingWindow{},
-	}))
+	if !envs.IsTest() {
+		app.Use(limiter.New(limiter.Config{
+			Max:               envs.MaxRequests,
+			LimiterMiddleware: limiter.SlidingWindow{},
+		}))
+	}
 
 	if envs.PasetoKey == nil {
 		log.Printf("PASETO_KEY not set, API will run in read-only mode")
