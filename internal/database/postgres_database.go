@@ -24,10 +24,12 @@ func (d *PostgresDB) Init(dsn string) (*gorm.DB, error) {
 
 	if err = database.AutoMigrate(
 		&models.Publisher{},
+		&models.Event{},
 		&models.CodeHosting{},
 		&models.Log{},
 		&models.Software{},
 		&models.SoftwareURL{},
+		&models.Webhook{},
 	); err != nil {
 		return nil, fmt.Errorf("can't migrate database: %w", err)
 	}

@@ -20,3 +20,8 @@ type Software struct {
 type Log struct {
 	Message string `json:"message" validate:"required,gt=1"`
 }
+
+type Webhook struct {
+	URL    string `json:"url" validate:"required,url"`
+	Secret string `json:"secret"`
+}
