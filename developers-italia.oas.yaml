@@ -49,8 +49,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
   /software:
     get:
       summary: List all software
@@ -326,8 +324,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       operationId: get-bundles
     post:
       summary: Create a Bundle
@@ -352,8 +348,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       requestBody:
         required: true
         content:
@@ -386,8 +380,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       operationId: get-bundle-bundleId
     patch:
       summary: Update a Bundle
@@ -412,8 +404,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       requestBody:
         required: true
         content:
@@ -439,8 +429,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
   /logs:
     get:
       summary: List all Logs
@@ -559,8 +547,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       operationId: get-publishers
     post:
       summary: Create a new Publisher
@@ -585,8 +571,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
   '/publishers/{publisherId}':
     parameters:
       - schema:
@@ -612,8 +596,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       operationId: get-publishers-publisherId
     patch:
       summary: Update a Publisher
@@ -638,8 +620,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       requestBody:
         required: true
         content:
@@ -665,8 +645,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 components:
   responses:
     NoContent:
