@@ -71,12 +71,10 @@ paths:
                       $ref: '#/components/schemas/Software'
                   links:
                     $ref: '#/components/schemas/Links'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       operationId: get-software
       parameters:
         - schema:
@@ -84,17 +82,35 @@ paths:
             format: int32
             example: 100
             minimum: 1
+            maximum: 100
+            default: 25
           in: query
-          name: limit
+          name: page[size]
           description: Limit the amount of results
         - schema:
-            type: integer
-            format: int32
-            example: 3
-            minimum: 1
+            type: string
           in: query
-          name: page
-          description: Page number for use in pagination
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only software created after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only software created before this time (RFC 3339 datetime)
     post:
       summary: Create a new Software
       description: Create a new Software
@@ -114,12 +130,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       requestBody:
         required: true
         content:
@@ -146,14 +158,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Software'
-        '400':
-          $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       operationId: get-software-softwareId
     patch:
       summary: Update a Software
@@ -178,8 +186,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
       requestBody:
         required: true
         content:
@@ -197,16 +203,12 @@ paths:
       responses:
         '204':
           $ref: '#/components/responses/NoContent'
-        '400':
-          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
   '/software/{softwareId}/logs':
     parameters:
       - schema:
@@ -290,6 +292,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -297,9 +301,7 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/Log'
+              $ref: '#/components/schemas/Log'
   /bundles:
     get:
       summary: List all Bundles
@@ -707,8 +709,25 @@ components:
       properties:
         id:
           type: string
-        publiccode:
+          readOnly: true
+        publiccodeYml:
           type: string
+        urls:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the log was created (RFC 3339 datetime)
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the log was updated (RFC 3339 datetime)
+          readOnly: true
     Publisher:
       title: Publisher
       x-stoplight:

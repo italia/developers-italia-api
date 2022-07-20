@@ -199,18 +199,10 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error {
 	logReq := new(common.Log)
 
-	if err := ctx.BodyParser(&logReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't create Log", "invalid json")
-	}
-
-	if err := common.ValidateStruct(*logReq); err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format", err)
-	}
-
 	software := models.Software{}
 	if err := p.db.First(&software, "id = ?", ctx.Params("id")).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "can't get Software", "Software was not found")
+			return common.Error(fiber.StatusNotFound, "can't create Log", "Software was not found")
 		}
 
 		return common.Error(
@@ -218,6 +210,14 @@ func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error {
 			"can't get Software",
 			fiber.ErrInternalServerError.Message,
 		)
+	}
+
+	if err := ctx.BodyParser(&logReq); err != nil {
+		return common.Error(fiber.StatusBadRequest, "can't create Log", "invalid json")
+	}
+
+	if err := common.ValidateStruct(*logReq); err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format", err)
 	}
 
 	log := models.Log{
