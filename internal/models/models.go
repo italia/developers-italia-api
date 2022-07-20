@@ -65,3 +65,8 @@ type SoftwareURL struct {
 func (su SoftwareURL) MarshalJSON() ([]byte, error) {
 	return ([]byte)(fmt.Sprintf(`"%s"`, su.URL)), nil
 }
+
+type Webhook struct {
+	gorm.Model
+	URL string
+}
