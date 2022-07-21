@@ -520,7 +520,17 @@ func TestSoftwareEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Software`, response["title"])
 				assert.Equal(t, "invalid format", response["detail"])
-				assert.NotNil(t, response["validationErrors"])
+
+				assert.IsType(t, []interface{}{}, response["validationErrors"])
+
+				validationErrors := response["validationErrors"].([]interface{})
+				assert.Equal(t, len(validationErrors), 2)
+
+				firstValidationError := validationErrors[0].(map[string]interface{})
+
+				for key := range firstValidationError {
+					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+				}
 			},
 		},
 		{
@@ -648,7 +658,17 @@ func TestSoftwareEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Software`, response["title"])
 				assert.Equal(t, "invalid format", response["detail"])
-				assert.NotNil(t, response["validationErrors"])
+
+				assert.IsType(t, []interface{}{}, response["validationErrors"])
+
+				validationErrors := response["validationErrors"].([]interface{})
+				assert.Equal(t, len(validationErrors), 2)
+
+				firstValidationError := validationErrors[0].(map[string]interface{})
+
+				for key := range firstValidationError {
+					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+				}
 			},
 		},
 		{
@@ -879,7 +899,17 @@ func TestSoftwareEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
 				assert.Equal(t, "invalid format", response["detail"])
-				assert.NotNil(t, response["validationErrors"])
+
+				assert.IsType(t, []interface{}{}, response["validationErrors"])
+
+				validationErrors := response["validationErrors"].([]interface{})
+				assert.Equal(t, len(validationErrors), 1)
+
+				firstValidationError := validationErrors[0].(map[string]interface{})
+
+				for key := range firstValidationError {
+					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+				}
 			},
 		},
 		{
@@ -1181,7 +1211,17 @@ func TestLogsEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
 				assert.Equal(t, "invalid format", response["detail"])
-				assert.NotNil(t, response["validationErrors"])
+
+				assert.IsType(t, []interface{}{}, response["validationErrors"])
+
+				validationErrors := response["validationErrors"].([]interface{})
+				assert.Equal(t, len(validationErrors), 1)
+
+				firstValidationError := validationErrors[0].(map[string]interface{})
+
+				for key := range firstValidationError {
+					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+				}
 			},
 		},
 		{

@@ -91,7 +91,7 @@ func (p *Log) PostLog(ctx *fiber.Ctx) error {
 	}
 
 	if err := common.ValidateStruct(*logReq); err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format", err)
+		return common.ErrorWithValidationErrors(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format", err)
 	}
 
 	log := models.Log{ID: utils.UUIDv4(), Message: logReq.Message}
@@ -112,7 +112,7 @@ func (p *Log) PatchLog(ctx *fiber.Ctx) error {
 	}
 
 	if err := common.ValidateStruct(*logReq); err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, "can't update Log", "invalid format")
+		return common.ErrorWithValidationErrors(fiber.StatusUnprocessableEntity, "can't update Log", "invalid format", err)
 	}
 
 	log := models.Log{}
@@ -217,7 +217,7 @@ func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error {
 	}
 
 	if err := common.ValidateStruct(*logReq); err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format", err)
+		return common.ErrorWithValidationErrors(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format", err)
 	}
 
 	log := models.Log{
