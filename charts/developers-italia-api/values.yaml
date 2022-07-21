@@ -93,7 +93,7 @@ maxRequests:
 # from 'pasetoKey' and 'postgres'.
 useExistingSecret:
 
-# -- Paseto Key.
+# -- Base64 encoded Paseto Key.
 pasetoKey: ""
 
 # -- External PostgreSQL connection parameters.

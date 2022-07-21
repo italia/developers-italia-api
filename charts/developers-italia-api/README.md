@@ -28,7 +28,7 @@ The API of Developers Italia
 | maxRequests | int | `nil` | Max number of requests. |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
-| pasetoKey | string | `""` | Paseto Key. |
+| pasetoKey | string | `""` | Base64 encoded Paseto Key. |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
 | postgres | object | `{"database":"developers_italia_api","host":"","password":"","port":5432,"user":""}` | External PostgreSQL connection parameters. |
