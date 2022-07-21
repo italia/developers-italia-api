@@ -28,6 +28,7 @@ func (d *PostgresDB) Init(dsn string) (*gorm.DB, error) {
 		&models.Log{},
 		&models.Software{},
 		&models.SoftwareURL{},
+		&models.Webhook{},
 	); err != nil {
 		return nil, fmt.Errorf("can't migrate database: %w", err)
 	}

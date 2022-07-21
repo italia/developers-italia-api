@@ -8,6 +8,7 @@ import (
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/handlers"
 	"github.com/italia/developers-italia-api/internal/middleware"
+	"github.com/italia/developers-italia-api/internal/models"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
@@ -40,6 +41,7 @@ func Setup() *fiber.App {
 	softwareHandler := handlers.NewSoftware(gormDB)
 	statusHandler := handlers.NewStatus(gormDB)
 	logHandler := handlers.NewLog(gormDB)
+	publisherWebhookHandler := handlers.NewWebhook[models.Publisher](gormDB)
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: common.CustomErrorHandler,
@@ -86,6 +88,8 @@ func Setup() *fiber.App {
 	v1.Delete("/logs/:id", logHandler.DeleteLog)
 	v1.Get("/software/:id/logs", logHandler.GetSoftwareLogs)
 	v1.Post("/software/:id/logs", logHandler.PostSoftwareLog)
+
+	v1.Get("/publishers/:id/webhooks", publisherWebhookHandler.GetResourceWebhooks)
 
 	app.Get("/status", statusHandler.GetStatus)
 

@@ -7,6 +7,11 @@ import (
 	"gorm.io/gorm"
 )
 
+type Model interface {
+	TableName() string
+	Uuid() string
+}
+
 type Bundle struct {
 	ID   string `gorm:"primarykey"`
 	Name string
@@ -34,6 +39,14 @@ type Publisher struct {
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
 
+func (Publisher) TableName() string {
+	return "publishers"
+}
+
+func (publisher Publisher) Uuid() string {
+	return publisher.ID
+}
+
 type CodeHosting struct {
 	gorm.Model
 	URL         string `json:"url" gorm:"not null"`
@@ -53,6 +66,10 @@ type Software struct {
 func (Software) TableName() string {
 	// Don't use GORM's default pluralized form ("softwares")
 	return "software"
+}
+
+func (software Software) Uuid() string {
+	return software.ID
 }
 
 type SoftwareURL struct {
