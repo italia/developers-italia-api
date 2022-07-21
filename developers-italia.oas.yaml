@@ -681,8 +681,6 @@ components:
   schemas:
     Software:
       title: Software
-      x-stoplight:
-        id: g73zfvx7rmc20
       type: object
       properties:
         id:
@@ -708,8 +706,6 @@ components:
           readOnly: true
     Publisher:
       title: Publisher
-      x-stoplight:
-        id: o9ohv7d53cd5o
       type: object
       properties:
         url:
@@ -721,8 +717,6 @@ components:
           format: email
     PublisherUpdate:
       title: PublisherUpdate
-      x-stoplight:
-        id: o9ohv7d53cd5o
       type: object
       properties:
         codeHosting:
@@ -740,8 +734,6 @@ components:
           example: example@example.com
     Log:
       title: Log
-      x-stoplight:
-        id: 17yfpqsmi2dy1
       type: object
       properties:
         id:
@@ -771,8 +763,6 @@ components:
         - message
     Bundle:
       title: Bundle
-      x-stoplight:
-        id: vjkub0yybmkka
       type: object
       properties:
         id:
