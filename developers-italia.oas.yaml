@@ -727,11 +727,13 @@ components:
       properties:
         codeHosting:
           type: array
-          properties:
-            url:
-              type: string
-              format: uri
-              example: http://www.example.com
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                format: uri
+                example: http://www.example.com
         description:
           type: string
         email:
