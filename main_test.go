@@ -131,6 +131,9 @@ func runTestCases(t *testing.T, tests []TestCase) {
 				assert.Nil(t, err)
 
 				test.validateFunc(t, bodyMap)
+				if t.Failed() {
+					log.Printf("\nAPI response:\n%s\n", body)
+				}
 			}
 
 			if test.expectedBody != "" {
