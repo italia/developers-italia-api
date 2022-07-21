@@ -797,20 +797,48 @@ components:
       type: object
       x-examples:
         example-1:
-          title: Bad Request
-          detail: Bad Request
+          title: Can't create Software
+          detail: Invalid JSON
           status: 400
-          instance: /publishers/{publisherId}
+        example-2:
+          title: Can't create Log
+          detail: Validation error
+          status: 422
+          validationErrors:
+            - field: message
+              rule: required
+              providedValue: ''
       properties:
-        code:
-          type: string
-          description: Application-specific error code
         title:
           type: string
           description: 'Short, human-readable summary of the problem'
         detail:
           type: string
           description: Human-readable explanation of the problem
+        validationErrors:
+          type: array
+          description: List of validation errors, returned by endpoints that validate input data (eg. POST, PATCH, etc.)
+          items:
+            type: object
+            description: Details of the occurred validation error
+            properties:
+              field:
+                type: string
+                description: Field name with a validation error
+                example: name
+              rule:
+                type: string
+                description: Rule that makes the provided field invalid
+                example: required
+              providedValue:
+                type: string
+                description: |
+                  The invalid value provided
+                example: '""'
+            required:
+              - field
+              - rule
+              - providedValue
       required:
         - title
         - detail

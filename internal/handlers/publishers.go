@@ -63,11 +63,13 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	request := common.Publisher{}
 
 	if err := ctx.BodyParser(&request); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't create Publisher", "invalid json", err)
+		return common.Error(fiber.StatusBadRequest, "can't create Publisher", "invalid json")
 	}
 
 	if err := common.ValidateStruct(&request); err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, "can't create Publisher", "invalid json", err)
+		return common.ErrorWithValidationErrors(
+			fiber.StatusUnprocessableEntity, "can't create Publisher", "invalid json", err,
+		)
 	}
 
 	publisher := &models.Publisher{
@@ -94,7 +96,9 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 	}
 
 	if err := common.ValidateStruct(*publisherReq); err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, "can't update Publisher", "invalid format", err)
+		return common.ErrorWithValidationErrors(
+			fiber.StatusUnprocessableEntity, "can't update Publisher", "invalid format", err,
+		)
 	}
 
 	publisher := models.Publisher{}

@@ -92,7 +92,9 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 	}
 
 	if err := common.ValidateStruct(*softwareReq); err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, "can't create Software", "invalid format", err)
+		return common.ErrorWithValidationErrors(
+			fiber.StatusUnprocessableEntity, "can't create Software", "invalid format", err,
+		)
 	}
 
 	softwareURLs := []models.SoftwareURL{}
@@ -132,7 +134,9 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error {
 	}
 
 	if err := common.ValidateStruct(*softwareReq); err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, "can't update Software", "invalid format", err)
+		return common.ErrorWithValidationErrors(
+			fiber.StatusUnprocessableEntity, "can't update Software", "invalid format", err,
+		)
 	}
 
 	softwareURLs := []models.SoftwareURL{}
