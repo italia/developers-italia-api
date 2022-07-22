@@ -1,7 +1,7 @@
 on:
   push:
     tags:
-      - '*'
+      - v*
 
 permissions:
   # To upload archives as GitHub Releases

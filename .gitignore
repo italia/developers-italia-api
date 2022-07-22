@@ -7,3 +7,6 @@ test.db-wal
 
 # Compiled binary
 /developers-italia-api
+
+# Helm chart package
+/developers-italia-api-*.tgz
