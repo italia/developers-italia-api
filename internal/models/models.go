@@ -84,6 +84,15 @@ func (su SoftwareURL) MarshalJSON() ([]byte, error) {
 }
 
 type Webhook struct {
-	gorm.Model
-	URL string
+	ID        string         `gorm:"primarykey"`
+	URL       string         `json:"url" gorm:"uniqueIndex"`
+	Secret    string         `json:"-"`
+	CreatedAt time.Time      `json:"createdAt" gorm:"index"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+
+	// TODO: composite unique index
+	// Entity this Webhook is for (fe. Publisher, Software, etc.)
+	EntityID   string `json:"-"`
+	EntityType string `json:"-"`
 }

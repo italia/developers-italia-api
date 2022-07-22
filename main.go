@@ -89,7 +89,8 @@ func Setup() *fiber.App {
 	v1.Get("/software/:id/logs", logHandler.GetSoftwareLogs)
 	v1.Post("/software/:id/logs", logHandler.PostSoftwareLog)
 
-	v1.Get("/publishers/:id/webhooks", publisherWebhookHandler.GetResourceWebhooks)
+	v1.Get("/publishers/webhooks", publisherWebhookHandler.GetResourceWebhooks)
+	v1.Get("/publishers/:id/webhooks", publisherWebhookHandler.GetSingleResourceWebhooks)
 
 	app.Get("/status", statusHandler.GetStatus)
 

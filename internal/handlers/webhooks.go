@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
-	// "github.com/gofiber/fiber/v2/utils"
+	"github.com/gofiber/fiber/v2/utils"
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/handlers/general"
 	"github.com/italia/developers-italia-api/internal/models"
@@ -151,8 +151,41 @@ func NewWebhook[T models.Model](db *gorm.DB) *Webhook[T] {
 // 	return ctx.SendStatus(fiber.StatusNoContent)
 // }
 
-// TODO GetSoftwareWebhooks gets the webhooks associated to a Software with the given ID and returns any error encountered.
+// GetResourceWebhooks gets the webhooks associated to resources (fe. Publishers)
+// and returns any error encountered.
 func (p *Webhook[T]) GetResourceWebhooks(ctx *fiber.Ctx) error {
+	var webhooks []models.Webhook
+
+	webhooks = append(webhooks, models.Webhook{})
+
+	var resource T
+
+	stmt := p.db.Where(map[string]interface{}{"entity_type": resource.TableName()})
+
+	paginator := general.NewPaginator(ctx)
+
+	result, cursor, err := paginator.Paginate(stmt, &webhooks)
+	if err != nil {
+		return common.Error(
+			fiber.StatusUnprocessableEntity,
+			"can't get Webhooks",
+			"wrong cursor format in page[after] or page[before]",
+		)
+	}
+
+	if result.Error != nil {
+		return common.Error(
+			fiber.StatusInternalServerError,
+			"can't get Webhooks",
+			fiber.ErrInternalServerError.Message,
+		)
+	}
+
+	return ctx.JSON(fiber.Map{"data": &webhooks, "links": general.PaginationLinks(cursor)})
+}
+
+// GetSingleResourceWebhooks gets the webhooks associated to a resource with the given ID and returns any error encountered.
+func (p *Webhook[T]) GetSingleResourceWebhooks(ctx *fiber.Ctx) error {
 	var webhooks []models.Webhook
 
 	webhooks = append(webhooks, models.Webhook{})
@@ -197,41 +230,31 @@ func (p *Webhook[T]) GetResourceWebhooks(ctx *fiber.Ctx) error {
 	return ctx.JSON(fiber.Map{"data": &webhooks, "links": general.PaginationLinks(cursor)})
 }
 
-// PostSoftwareWebhook creates a new webhook associated to a Software with the given ID and returns any error encountered.
-// func (p *Webhook) PostSoftwareWebhook(ctx *fiber.Ctx) error {
-// 	webhookReq := new(common.Webhook)
+// PostResourceWebhook creates a new webhook associated to all Software and
+// returns any error encountered.
+func (p *Webhook[T]) PostResourceWebhook(ctx *fiber.Ctx) error {
+	webhookReq := new(common.Webhook)
 
-// 	software := models.Software{}
-// 	if err := p.db.First(&software, "id = ?", ctx.Params("id")).Error; err != nil {
-// 		if errors.Is(err, gorm.ErrRecordNotFound) {
-// 			return common.Error(fiber.StatusNotFound, "can't create Webhook", "Software was not found")
-// 		}
+	var resource T
 
-// 		return common.Error(
-// 			fiber.StatusInternalServerError,
-// 			"can't get Software",
-// 			fiber.ErrInternalServerError.Message,
-// 		)
-// 	}
+	if err := ctx.BodyParser(&webhookReq); err != nil {
+		return common.Error(fiber.StatusBadRequest, "can't create Webhook", "invalid json")
+	}
 
-// 	if err := ctx.BodyParser(&webhookReq); err != nil {
-// 		return common.Error(fiber.StatusBadRequest, "can't create Webhook", "invalid json")
-// 	}
+	if err := common.ValidateStruct(*webhookReq); err != nil {
+		return common.ErrorWithValidationErrors(fiber.StatusUnprocessableEntity, "can't create Webhook", "invalid format", err)
+	}
 
-// 	if err := common.ValidateStruct(*webhookReq); err != nil {
-// 		return common.ErrorWithValidationErrors(fiber.StatusUnprocessableEntity, "can't create Webhook", "invalid format", err)
-// 	}
+	webhook := models.Webhook{
+		ID:         utils.UUIDv4(),
+		URL:        webhookReq.URL,
+		Secret:     webhookReq.Secret,
+		EntityType: resource.TableName(),
+	}
 
-// 	webhook := models.Webhook{
-// 		ID:         utils.UUIDv4(),
-// 		Message:    webhookReq.Message,
-// 		EntityID:   software.ID,
-// 		EntityType: models.Software{}.TableName(),
-// 	}
+	if err := p.db.Create(&webhook).Error; err != nil {
+		return common.Error(fiber.StatusInternalServerError, "can't create Webhook", "db error")
+	}
 
-// 	if err := p.db.Create(&webhook).Error; err != nil {
-// 		return common.Error(fiber.StatusInternalServerError, "can't create Webhook", "db error")
-// 	}
-
-// 	return ctx.JSON(&webhook)
-// }
+	return ctx.JSON(&webhook)
+}
