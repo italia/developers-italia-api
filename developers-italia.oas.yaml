@@ -19,8 +19,7 @@ info:
     url: 'https://developers.italia.it/en/contacts'
     name: Developers Italia
   x-api-id: 0f9ca6b0-db47-11ec-96f7-d8bbc146d165
-  # TODO: merge https://github.com/italia/developers.italia.it/pull/1245
-  termsOfService: https://developers.italia.it/en/api/developers-italia#terms-of-service
+  termsOfService: 'https://developers.italia.it/en/api/developers-italia#terms-of-service'
 servers:
   - url: 'https://api.developers.italia.it/v1'
     description: The production server
@@ -33,6 +32,8 @@ tags:
     description: Operations on logs
   - name: publishers
     description: Operations on publishers
+  - name: webhooks
+    description: Operations on webhooks
   - name: monitor
     description: Monitoring operations on the API
 paths:
@@ -40,7 +41,8 @@ paths:
     get:
       summary: Get the API status
       description: Get the API status
-      tags: [monitor]
+      tags:
+        - monitor
       operationId: get-status
       responses:
         '204':
@@ -83,7 +85,7 @@ paths:
             maximum: 100
             default: 25
           in: query
-          name: page[size]
+          name: 'page[size]'
           description: Limit the amount of results
         - schema:
             type: string
@@ -248,7 +250,7 @@ paths:
             minimum: 1
             maximum: 100
           in: query
-          name: page[size]
+          name: 'page[size]'
           description: Limit the amount of results
         - schema:
             type: string
@@ -300,6 +302,199 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Log'
+
+  '/software/webhooks':
+    get:
+      summary: List all Webhooks for Software
+      description: List all Webhooks
+      tags:
+        - webhooks
+        - software
+      security:
+        - bearerAuth: []
+      operationId: get-software-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+            default: 25
+            example: 100
+            minimum: 1
+            maximum: 100
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only webhooks created after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only webhooks created before this time (RFC 3339 datetime)
+    post:
+      summary: Create Webhook for Software
+      description: Create Webhook for Software
+      tags:
+        - webhooks
+        - software
+      security:
+        - bearerAuth: []
+      operationId: post-software-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+  '/software/{softwareId}/webhooks':
+    parameters:
+      - schema:
+          type: string
+        name: softwareId
+        in: path
+        required: true
+    get:
+      summary: List all Webhooks for a Software
+      description: List all Webhooks
+      tags:
+        - webhooks
+        - software
+      security:
+        - bearerAuth: []
+      operationId: get-software-softwareId-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+            default: 25
+            example: 100
+            minimum: 1
+            maximum: 100
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only webhooks created after this time (ISO 8601 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only webhooks created before this time (ISO 8601 datetime)
+    post:
+      summary: Create Webhook for a Software
+      description: Create Webhook for a Software by its id
+      tags:
+        - webhooks
+        - software
+      security:
+        - bearerAuth: []
+      operationId: post-software-softwareId-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
   /bundles:
     get:
       summary: List all Bundles
@@ -461,7 +656,7 @@ paths:
             maximum: 100
             default: 25
           in: query
-          name: page[size]
+          name: 'page[size]'
           description: Limit the amount of results
         - schema:
             type: string
@@ -638,6 +833,272 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+
+  '/publishers/webhooks':
+    get:
+      summary: List all Webhooks for Publishers
+      description: List all Webhooks
+      tags:
+        - webhooks
+        - publishers
+      security:
+        - bearerAuth: []
+      operationId: get-publishers-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+            default: 25
+            example: 100
+            minimum: 1
+            maximum: 100
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only webhooks created after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only webhooks created before this time (RFC 3339 datetime)
+    post:
+      summary: Create Webhook for Publishers
+      description: Create Webhook for Publishers
+      tags:
+        - webhooks
+        - publishers
+      security:
+        - bearerAuth: []
+      operationId: post-publishers-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+  '/publishers/{publisherId}/webhooks':
+    parameters:
+      - schema:
+          type: string
+        name: publisherId
+        in: path
+        required: true
+    get:
+      summary: List all Webhooks for a Publisher
+      description: List all Webhooks
+      tags:
+        - webhooks
+        - publishers
+      security:
+        - bearerAuth: []
+      operationId: get-publishers-publisherId-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      parameters:
+        - schema:
+            type: integer
+            format: int32
+            default: 25
+            example: 100
+            minimum: 1
+            maximum: 100
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only webhooks created after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only webhooks created before this time (RFC 3339 datetime)
+    post:
+      summary: Create Webhook for a Publisher
+      description: Create Webhook for a Publisher by its id
+      tags:
+        - webhooks
+        - publishers
+      security:
+        - bearerAuth: []
+      operationId: post-publishers-publisherId-webhooks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+  '/webhooks/{webhookId}':
+    parameters:
+      - schema:
+          type: string
+        name: webhookId
+        in: path
+        required: true
+    get:
+      summary: Get a Webhook
+      description: Get a Webhook from its id
+      tags:
+        - webhooks
+      security:
+        - bearerAuth: []
+      operationId: get-webhook-webhookId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    patch:
+      summary: Update a Webhook
+      description: Update a Webhook by its id
+      tags:
+        - webhooks
+      security:
+        - bearerAuth: []
+      operationId: patch-webhooks-webhookId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+    delete:
+      summary: Delete a Webhook
+      description: Delete a Webhook by its id
+      tags:
+        - webhooks
+      security:
+        - bearerAuth: []
+      operationId: delete-webhooks-webhookId
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
 components:
   responses:
     NoContent:
@@ -727,7 +1188,7 @@ components:
               url:
                 type: string
                 format: uri
-                example: http://www.example.com
+                example: 'http://www.example.com'
         description:
           type: string
         email:
@@ -785,6 +1246,36 @@ components:
         - prev
         - next
       readOnly: true
+    Webhook:
+      type: object
+      x-examples:
+        example-1:
+          id: 49801a99-8e97-4153-8913-8e7d9bdc749e
+          url: https://example.org/endpoint
+          createdAt: '2022-03-07T10:00:11Z'
+          updatedAt: '2022-06-07T14:56:23Z'
+      properties:
+        id:
+          type: string
+          description: 'Unique identifier of the webhook'
+          readOnly: true
+        url:
+          type: string
+          description: URL receiving the webhook payload
+        createdAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the log was created (RFC 3339 datetime)
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the log was updated (RFC 3339 datetime)
+          readOnly: true
+      required:
+        - url
     Error:
       type: object
       x-examples:
@@ -809,7 +1300,7 @@ components:
           description: Human-readable explanation of the problem
         validationErrors:
           type: array
-          description: List of validation errors, returned by endpoints that validate input data (eg. POST, PATCH, etc.)
+          description: 'List of validation errors, returned by endpoints that validate input data (eg. POST, PATCH, etc.)'
           items:
             type: object
             description: Details of the occurred validation error

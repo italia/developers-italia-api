@@ -7,6 +7,11 @@ import (
 	"gorm.io/gorm"
 )
 
+type Model interface {
+	TableName() string
+	UUID() string
+}
+
 type Bundle struct {
 	ID   string `gorm:"primarykey"`
 	Name string
@@ -34,6 +39,18 @@ type Publisher struct {
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
 
+func (Publisher) TableName() string {
+	return "publishers"
+}
+
+func (p Publisher) UUID() string {
+	return p.ID
+}
+
+func (p Publisher) AfterSave(tx *gorm.DB) error {
+	return nil
+}
+
 type CodeHosting struct {
 	gorm.Model
 	URL         string `json:"url" gorm:"not null"`
@@ -55,6 +72,10 @@ func (Software) TableName() string {
 	return "software"
 }
 
+func (software Software) UUID() string {
+	return software.ID
+}
+
 type SoftwareURL struct {
 	gorm.Model
 	ID         string `gorm:"primarykey"`
@@ -64,4 +85,18 @@ type SoftwareURL struct {
 
 func (su SoftwareURL) MarshalJSON() ([]byte, error) {
 	return ([]byte)(fmt.Sprintf(`"%s"`, su.URL)), nil
+}
+
+type Webhook struct {
+	ID        string         `gorm:"primarykey"`
+	URL       string         `json:"url" gorm:"uniqueIndex"`
+	Secret    string         `json:"-"`
+	CreatedAt time.Time      `json:"createdAt" gorm:"index"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+
+	// TODO: composite unique index
+	// Entity this Webhook is for (fe. Publisher, Software, etc.)
+	EntityID   string `json:"-"`
+	EntityType string `json:"-"`
 }
