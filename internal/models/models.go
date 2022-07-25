@@ -9,7 +9,7 @@ import (
 
 type Model interface {
 	TableName() string
-	Uuid() string
+	UUID() string
 }
 
 type Bundle struct {
@@ -43,8 +43,12 @@ func (Publisher) TableName() string {
 	return "publishers"
 }
 
-func (publisher Publisher) Uuid() string {
-	return publisher.ID
+func (p Publisher) UUID() string {
+	return p.ID
+}
+
+func (p Publisher) AfterSave(tx *gorm.DB) error {
+	return nil
 }
 
 type CodeHosting struct {
@@ -68,7 +72,7 @@ func (Software) TableName() string {
 	return "software"
 }
 
-func (software Software) Uuid() string {
+func (software Software) UUID() string {
 	return software.ID
 }
 

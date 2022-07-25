@@ -396,82 +396,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Webhook'
-  '/software/webhooks/{webhookId}':
-    parameters:
-      - schema:
-          type: string
-        name: webhookId
-        in: path
-        required: true
-    get:
-      summary: Get a Webhook
-      description: Get a Webhook from its id
-      tags:
-        - webhooks
-        - software
-      security:
-        - bearerAuth: []
-      operationId: get-software-webhook-webhookId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Webhook'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-    patch:
-      summary: Update a Webhook
-      description: Update a Webhook by its id
-      tags:
-        - webhooks
-        - software
-      security:
-        - bearerAuth: []
-      operationId: patch-software-webhooks-webhookId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Webhook'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      requestBody:
-        required: true
-        content:
-          application/merge-patch+json:
-            schema:
-              $ref: '#/components/schemas/Webhook'
-    delete:
-      summary: Delete a Webhook
-      description: Delete a Webhook by its id
-      tags:
-        - webhooks
-        - software
-      security:
-        - bearerAuth: []
-      operationId: delete-software-webhooks-webhookId
-      responses:
-        '204':
-          $ref: '#/components/responses/NoContent'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-
   '/software/{softwareId}/webhooks':
     parameters:
       - schema:
@@ -571,86 +495,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Webhook'
-  '/software/{softwareId}/webhooks/{webhookId}':
-    parameters:
-      - schema:
-          type: string
-        name: softwareId
-        in: path
-        required: true
-      - schema:
-          type: string
-        name: webhookId
-        in: path
-        required: true
-    get:
-      summary: Get a Webhook
-      description: Get a Webhook from its id
-      tags:
-        - webhooks
-        - software
-      security:
-        - bearerAuth: []
-      operationId: get-software-softwareId-webhooks-webhookId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Webhook'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-    patch:
-      summary: Update a Webhook
-      description: Update a Webhook by its id
-      tags:
-        - webhooks
-        - software
-      security:
-        - bearerAuth: []
-      operationId: patch-software-softwareId-webhooks-webhookId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Webhook'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      requestBody:
-        required: true
-        content:
-          application/merge-patch+json:
-            schema:
-              $ref: '#/components/schemas/Webhook'
-    delete:
-      summary: Delete a Webhook
-      description: Delete a Webhook by its id
-      tags:
-        - webhooks
-        - software
-      security:
-        - bearerAuth: []
-      operationId: delete-software-softwareId-webhooks-webhookId
-      responses:
-        '204':
-          $ref: '#/components/responses/NoContent'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
   /bundles:
     get:
       summary: List all Bundles
@@ -1083,82 +927,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Webhook'
-  '/publishers/webhooks/{webhookId}':
-    parameters:
-      - schema:
-          type: string
-        name: webhookId
-        in: path
-        required: true
-    get:
-      summary: Get a Webhook
-      description: Get a Webhook from its id
-      tags:
-        - webhooks
-        - publishers
-      security:
-        - bearerAuth: []
-      operationId: get-publishers-webhooks-webhookId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Webhook'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-    patch:
-      summary: Update a Webhook
-      description: Update a Webhook by its id
-      tags:
-        - webhooks
-        - publishers
-      security:
-        - bearerAuth: []
-      operationId: patch-publishers-webhooks-webhookId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Webhook'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      requestBody:
-        required: true
-        content:
-          application/merge-patch+json:
-            schema:
-              $ref: '#/components/schemas/Webhook'
-    delete:
-      summary: Delete a Webhook
-      description: Delete a Webhook by its id
-      tags:
-        - webhooks
-        - publishers
-      security:
-        - bearerAuth: []
-      operationId: delete-publishers-webhooks-webhookId
-      responses:
-        '204':
-          $ref: '#/components/responses/NoContent'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-
   '/publishers/{publisherId}/webhooks':
     parameters:
       - schema:
@@ -1258,13 +1026,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Webhook'
-  '/publishers/{publisherId}/webhooks/{webhookId}':
+  '/webhooks/{webhookId}':
     parameters:
-      - schema:
-          type: string
-        name: publisherId
-        in: path
-        required: true
       - schema:
           type: string
         name: webhookId
@@ -1275,10 +1038,9 @@ paths:
       description: Get a Webhook from its id
       tags:
         - webhooks
-        - publishers
       security:
         - bearerAuth: []
-      operationId: get-publishers-publisherId-webhooks-webhookId
+      operationId: get-webhook-webhookId
       responses:
         '200':
           description: OK
@@ -1295,10 +1057,9 @@ paths:
       description: Update a Webhook by its id
       tags:
         - webhooks
-        - publishers
       security:
         - bearerAuth: []
-      operationId: patch-publishers-publisherId-webhooks-webhookId
+      operationId: patch-webhooks-webhookId
       responses:
         '200':
           description: OK
@@ -1325,10 +1086,9 @@ paths:
       description: Delete a Webhook by its id
       tags:
         - webhooks
-        - publishers
       security:
         - bearerAuth: []
-      operationId: delete-publishers-publisherId-webhooks-webhookId
+      operationId: delete-webhooks-webhookId
       responses:
         '204':
           $ref: '#/components/responses/NoContent'
@@ -1338,6 +1098,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+
 components:
   responses:
     NoContent:

@@ -26,6 +26,6 @@ type Log struct {
 }
 
 type Webhook struct {
-	URL       string `json:"url" validate:"required,url"`
-	Secret    string `json:"secret"`
+	URL    string `json:"url" validate:"required,url"`
+	Secret string `json:"secret"`
 }
