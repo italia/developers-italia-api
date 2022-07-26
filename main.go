@@ -87,7 +87,7 @@ func Setup() *fiber.App {
 	v1.Get("/software/:id/logs", logHandler.GetSoftwareLogs)
 	v1.Post("/software/:id/logs", logHandler.PostSoftwareLog)
 
-	app.Get("/status", statusHandler.GetStatus)
+	v1.Get("/status", statusHandler.GetStatus)
 
 	return app
 }

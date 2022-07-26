@@ -1259,7 +1259,7 @@ func TestLogsEndpoints(t *testing.T) {
 func TestStatusEndpoints(t *testing.T) {
 	tests := []TestCase{
 		{
-			query:               "GET /status",
+			query:               "GET /v1/status",
 			expectedCode:        204,
 			expectedBody:        "",
 			expectedContentType: "",
