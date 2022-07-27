@@ -1,7 +1,7 @@
 on:
   push:
     tags:
-      - chart-*
+      - helm/*
 
 permissions:
   packages: write
@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Get version
         id: get_version
-        run: echo "::set-output name=version::${GITHUB_REF_NAME#chart-}"
+        run: echo "::set-output name=version::${GITHUB_REF_NAME#helm/}"
       - name: Push chart to GitHub Container Registry
         uses: appany/helm-oci-chart-releaser@v1.0.0
         with:
