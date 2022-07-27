@@ -90,21 +90,11 @@ maxRequests:
 
 # -- (string) Name of existing Kubernetes secret containing keys 'databaseDSN'
 # and 'pasetoKey'. If not provided, a secret will be generated using values
-# from 'pasetoKey' and 'postgres'.
+# from 'databaseDSN' and 'pasetoKey'.
 useExistingSecret:
+
+# -- Database connection string, e.g. "host= port=5432 dbname= user= password= sslmode=require".
+databaseDSN: ""
 
 # -- Base64 encoded Paseto Key.
 pasetoKey: ""
-
-# -- External PostgreSQL connection parameters.
-postgres:
-  # -- Name of PostgreSQL databse.
-  database: developers_italia_api
-  # -- Host.
-  host: ""
-  # -- User name.
-  user: ""
-  # -- Password.
-  password: ""
-  # -- Port.
-  port: 5432
