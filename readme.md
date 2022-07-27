@@ -14,7 +14,7 @@ Developers Italia API will use:
 # [Documentation](#documentation)
 
 ### Development
-The application uses [https://github.com/cosmtrek/air](Air) for live-reloading of the application in development environment.
+The application uses [https://github.com/cosmtrek/air](Air) for live-reloading in the development environment.
 We use Docker and docker-compose to bring up the developer environment, **just clone the repo** and:
 
 Build the container:
