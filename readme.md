@@ -24,7 +24,7 @@ docker compose up
 
 Wait until the Docker logs explicitly say the API is up and you can use its endpoints at http://localhost:3000/v1.
 Docker compose will bring up API and PostgreSQL containers.
-The application will automatically reload after a changes has been applied.
+The application will automatically reload after a change is made.
 
 ### Contributing
 
