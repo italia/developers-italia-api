@@ -1,21 +1,14 @@
 # developers-italia-api for the software catalog of Developers Italia
 API for the developers.italia.it public software collection
 
-## Table of Contents
-#### [Requirements](#requirements)
-#### [Description](#description)
-#### [Documentation](#documentation)
-
 # [Description](#description)
 
 Developers Italia API is a RESTful API that provides information about the catalog of Free and Open Source software aimed to Public Administrations.
 
 # [Requirements](#requirements)
-Developers Italia API requires the following:
-- [Docker](https://www.docker.com/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-
-Eventually, you can install a SQL Viewer / Manage tool to inspect the database.
+Developers Italia API will use:
+- [PostgreSQL](https://https://www.postgresql.org/)
+- [Go with Fiber framework](https://gofiber.io)
 
 
 # [Documentation](#documentation)
@@ -41,7 +34,7 @@ TODO
 
 ### License
 
-Copyright (c) 2022 - Presidenza del Consiglio dei Ministri
+Copyright © 2022 - Presidenza del Consiglio dei Ministri
 
 The source code is released under the AGPL version 3 license.
 
