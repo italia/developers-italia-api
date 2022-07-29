@@ -2,34 +2,48 @@ package common
 
 import (
 	"errors"
+	"reflect"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
 
+const tagPosition = 2
+
 type ValidationError struct {
-	FailedField string `json:"field"`
-	Tag         string `json:"rule"`
-	Value       string `json:"providedValue"`
+	Field string `json:"field"`
+	Rule  string `json:"rule"`
+	Value string `json:"value,omitempty"`
 }
 
-func ValidateStruct(s interface{}) []ValidationError {
+func ValidateStruct(validateStruct interface{}) []ValidationError {
 	validate := validator.New()
+	// https://github.com/go-playground/validator/issues/258#issuecomment-257281334
+	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		return strings.SplitN(fld.Tag.Get("json"), ",", tagPosition)[0]
+	})
 
 	var validationErrors []ValidationError
 
-	if err := validate.Struct(s); err != nil {
+	if err := validate.Struct(validateStruct); err != nil {
 		var ve validator.ValidationErrors
 		if ok := errors.As(err, &ve); !ok {
 			return nil
 		}
 
 		for _, err := range ve {
-			var element ValidationError
+			var value string
+			value, ok := err.Value().(string)
 
-			element.FailedField = err.StructNamespace()
-			element.Tag = err.Tag()
-			element.Value = err.Param()
-			validationErrors = append(validationErrors, element)
+			if !ok {
+				value = ""
+			}
+
+			validationErrors = append(validationErrors, ValidationError{
+				Field: err.Field(),
+				Rule:  err.Tag(),
+				Value: value,
+			})
 		}
 	}
 
