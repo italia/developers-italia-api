@@ -32,7 +32,13 @@ func NewPublisher(db *gorm.DB) *Publisher {
 func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 	var publishers []models.Publisher
 
-	if err := p.db.Find(&publishers).Error; err != nil {
+	stmt := p.db
+
+	if all := ctx.Query("all", ""); all == "" {
+		stmt = stmt.Scopes(models.Active)
+	}
+
+	if err := stmt.Find(&publishers).Error; err != nil {
 		return common.Error(
 			fiber.StatusInternalServerError,
 			"can't get Publisher",

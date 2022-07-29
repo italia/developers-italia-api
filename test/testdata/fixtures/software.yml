@@ -119,3 +119,10 @@
   publiccode_yml: "-"
   created_at: '2015-07-10T00:00:00+00:00'
   updated_at: '2015-07-10T00:00:00+00:00'
+
+# Software with active: false
+- id: 7fc258a8-28e0-443c-a889-5e835ce4a378
+  publiccode_yml: "-"
+  active: false
+  created_at: '2015-07-15T00:00:00+00:00'
+  updated_at: '2015-07-15T00:00:00+00:00'
