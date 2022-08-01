@@ -201,7 +201,8 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/json",
 		},
 		{
-			query: "POST /v1/publishers - INVALID PAYLOAD",
+			description: "POST publishers with invalid payload",
+			query: "POST /v1/publishers",
 			body:  `{"URL":"https://www.example.com", "email":"error"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
