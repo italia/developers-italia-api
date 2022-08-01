@@ -196,6 +196,17 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/json",
 		},
 		{
+			query: "POST /v1/publishers - INVALID PAYLOAD",
+			body:  `{"URL":"https://www.example.com", "email":"error"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid json","status":422,"validationErrors":[{"field":"email","rule":"email","value":"error"}]}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
 			description: "POST publisher - wrong token",
 			query:       "POST /v1/publishers",
 			body:        `{"name": "New publisher"}`,
@@ -467,6 +478,17 @@ func TestSoftwareEndpoints(t *testing.T) {
 				// TODO: check the record was actually created in the database
 				// TODO: check there are no dangling software_urls
 			},
+		},
+		{
+			query: "POST /v1/software - wrong payload",
+			body:  `{"publiccodeYml": "-"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Software","detail":"invalid format","status":422,"validationErrors":[{"field":"urls","rule":"required"}]}`,
 		},
 		{
 			description: "POST software - wrong token",
@@ -1158,6 +1180,17 @@ func TestLogsEndpoints(t *testing.T) {
 
 				// TODO: check the record was actually created in the database
 			},
+		},
+		{
+			query: "POST /v1/logs - Invalid paylod",
+			body:  `{"a": "b"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        "",
 		},
 		{
 			description: "POST log - wrong token",
