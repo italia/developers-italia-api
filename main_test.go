@@ -104,13 +104,20 @@ func runTestCases(t *testing.T, tests []TestCase) {
 
 			query := strings.Split(test.query, " ")
 
-			u, _ := url.Parse(query[1])
+			u, err := url.Parse(query[1])
+			if err != nil {
+				assert.Fail(t, err.Error())
+			}
 
-			req, _ := http.NewRequest(
+			req, err := http.NewRequest(
 				query[0],
 				query[1],
 				strings.NewReader(test.body),
 			)
+			if err != nil {
+				assert.Fail(t, err.Error())
+			}
+
 			if test.headers != nil {
 				req.Header = test.headers
 			}
@@ -134,9 +141,7 @@ func runTestCases(t *testing.T, tests []TestCase) {
 				if t.Failed() {
 					log.Printf("\nAPI response:\n%s\n", body)
 				}
-			}
-
-			if test.expectedBody != "" {
+			} else {
 				assert.Equal(t, test.expectedBody, string(body))
 			}
 
@@ -738,6 +743,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -970,9 +976,8 @@ func TestLogsEndpoints(t *testing.T) {
 	tests := []TestCase{
 		// GET /logs
 		{
-			query:    "GET /v1/logs",
-			fixtures: []string{"logs.yml"},
-
+			query:               "GET /v1/logs",
+			fixtures:            []string{"logs.yml"},
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
@@ -1034,7 +1039,6 @@ func TestLogsEndpoints(t *testing.T) {
 		// 	description: "GET with invalid format for page[size] query param",
 		// 	query:    "GET /v1/logs?page[size]=NOT_AN_INT",
 		// 	fixtures: []string{"logs.yml"},
-
 		// 	expectedCode:        422,
 		// 	expectedContentType: "application/json",
 		// },
@@ -1147,18 +1151,17 @@ func TestLogsEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description:  "Non-existent log",
-			query:        "GET /v1/logs/eea19c82-0449-11ed-bd84-d8bbc146d165",
-			expectedCode: 404,
-			expectedBody: `{"title":"can't get Log","detail":"Log was not found","status":404}`,
-
+			description:         "Non-existent log",
+			query:               "GET /v1/logs/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			expectedCode:        404,
+			expectedBody:        `{"title":"can't get Log","detail":"Log was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
-
 		// POST /logs
 		{
-			query: "POST /v1/logs",
-			body:  `{"message": "New log from test suite"}`,
+			description: "POST with valid body",
+			query:       "POST /v1/logs",
+			body:        `{"message": "New log from test suite"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1180,6 +1183,18 @@ func TestLogsEndpoints(t *testing.T) {
 
 				// TODO: check the record was actually created in the database
 			},
+		},
+		{
+			description: "POST log - wrong payload",
+			query:       "POST /v1/logs",
+			body:        `{"wrong": "payload"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Log","detail":"invalid format","status":422,"validationErrors":[{"field":"message","rule":"required"}]}`,
 		},
 		{
 			description: "POST log - wrong token",
