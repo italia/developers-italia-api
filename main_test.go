@@ -1182,17 +1182,6 @@ func TestLogsEndpoints(t *testing.T) {
 			},
 		},
 		{
-			query: "POST /v1/logs - Invalid paylod",
-			body:  `{"a": "b"}`,
-			headers: map[string][]string{
-				"Authorization": {goodToken},
-				"Content-Type":  {"application/json"},
-			},
-			expectedCode:        422,
-			expectedContentType: "application/problem+json",
-			expectedBody:        "",
-		},
-		{
 			description: "POST log - wrong token",
 			query:       "POST /v1/logs",
 			body:        `{"message": "new log"}`,
