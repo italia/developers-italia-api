@@ -485,7 +485,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
-			query: "POST /v1/software - wrong payload",
+			description: "POST software with invalid payload",
+			query: "POST /v1/software",
 			body:  `{"publiccodeYml": "-"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
