@@ -15,6 +15,7 @@ services:
     environment:
       DATABASE_DSN: 'host=db user=postgres password=postgres dbname=postgres port=5432'
       ENVIRONMENT: local
+      PASETO_KEY: 'dGVzdC1wYXNldG8ta2V5LWRvbnQtdXNlLWluLXByb2Q='
 
   db:
     image: postgres:14.3-alpine
