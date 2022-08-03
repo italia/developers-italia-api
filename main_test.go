@@ -184,7 +184,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/publishers",
-			body:  `{"URL":"https://www.example.com", "email":"example@example.com"}`,
+			body:  `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -202,14 +202,14 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST publishers with invalid payload",
-			query: "POST /v1/publishers",
-			body:  `{"URL":"https://www.example.com", "email":"error"}`,
+			query:       "POST /v1/publishers",
+			body:        `{"URL":"https://www.example.com", "email":"error"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        422,
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid json","status":422,"validationErrors":[{"field":"email","rule":"email","value":"error"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"codeHosting","rule":"required"},{"field":"email","rule":"email","value":"error"}]}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -487,8 +487,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST software with invalid payload",
-			query: "POST /v1/software",
-			body:  `{"publiccodeYml": "-"}`,
+			query:       "POST /v1/software",
+			body:        `{"publiccodeYml": "-"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
