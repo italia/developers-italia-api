@@ -68,16 +68,17 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 
 	if err := common.ValidateStruct(&request); err != nil {
 		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't create Publisher", "invalid json", err,
+			fiber.StatusUnprocessableEntity, "can't create Publisher", "invalid format", err,
 		)
 	}
 
 	publisher := &models.Publisher{
 		ID:    utils.UUIDv4(),
 		Email: request.Email,
-		CodeHosting: []models.CodeHosting{
-			{URL: request.URL},
-		},
+	}
+
+	for _, URLAddress := range request.CodeHosting {
+		publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{URL: URLAddress.URL})
 	}
 
 	if err := p.db.Create(&publisher).Error; err != nil {
@@ -89,7 +90,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 
 // PatchPublisher updates the publisher with the given ID.
 func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
-	publisherReq := new(common.PublisherUpdate)
+	publisherReq := new(common.Publisher)
 
 	if err := ctx.BodyParser(publisherReq); err != nil {
 		return common.Error(fiber.StatusBadRequest, "can't update Publisher", "invalid json")
@@ -110,7 +111,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 	return ctx.JSON(&publisher)
 }
 
-func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, req *common.PublisherUpdate) error {
+func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, req *common.Publisher) error {
 	err := p.db.Transaction(func(gormTrx *gorm.DB) error {
 		if err := gormTrx.Model(&models.Publisher{}).
 			Preload("CodeHosting").

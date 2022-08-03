@@ -549,6 +549,12 @@ paths:
       security:
         - bearerAuth: []
       operationId: post-publishers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Publisher'
       responses:
         '200':
           description: OK
@@ -560,8 +566,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
   '/publishers/{publisherId}':
@@ -618,7 +622,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/PublisherUpdate'
+              $ref: '#/components/schemas/Publisher'
     delete:
       summary: Delete a Publisher
       description: Delete a Publisher by its id
@@ -706,17 +710,6 @@ components:
           readOnly: true
     Publisher:
       title: Publisher
-      type: object
-      properties:
-        url:
-          type: string
-        description:
-          type: string
-        email:
-          type: string
-          format: email
-    PublisherUpdate:
-      title: PublisherUpdate
       type: object
       properties:
         codeHosting:
