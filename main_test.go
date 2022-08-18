@@ -233,8 +233,9 @@ func TestSoftwareEndpoints(t *testing.T) {
 	tests := []TestCase{
 		// GET /software
 		{
-			query:    "GET /v1/software",
-			fixtures: []string{"software.yml", "software_urls.yml"},
+			description: "GET the first page on software",
+			query:       "GET /v1/software",
+			fixtures:    []string{"software.yml", "software_urls.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -269,7 +270,87 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Nil(t, err)
 
 				for key := range firstSoftware {
-					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml"}, key)
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml", "active"}, key)
+				}
+			},
+		},
+		{
+			description: "GET all the software, except the non active ones",
+			query:       "GET /v1/software?page[size]=100",
+			fixtures:    []string{"software.yml", "software_urls.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 30, len(data))
+
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Nil(t, links["next"])
+
+				assert.IsType(t, map[string]interface{}{}, data[0])
+				firstSoftware := data[0].(map[string]interface{})
+				assert.NotEmpty(t, firstSoftware["publiccodeYml"])
+
+				assert.IsType(t, []interface{}{}, firstSoftware["urls"])
+				assert.Greater(t, len(firstSoftware["urls"].([]interface{})), 0)
+
+				match, err := regexp.MatchString(UUID_REGEXP, firstSoftware["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, firstSoftware["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, firstSoftware["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range firstSoftware {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml", "active"}, key)
+				}
+			},
+		},
+		{
+			description: "GET all software, including non active",
+			query:       "GET /v1/software?all=true&page[size]=100",
+			fixtures:    []string{"software.yml", "software_urls.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 31, len(data))
+
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Nil(t, links["next"])
+
+				assert.IsType(t, map[string]interface{}{}, data[0])
+				firstSoftware := data[0].(map[string]interface{})
+				assert.NotEmpty(t, firstSoftware["publiccodeYml"])
+
+				assert.IsType(t, []interface{}{}, firstSoftware["urls"])
+				assert.Greater(t, len(firstSoftware["urls"].([]interface{})), 0)
+
+				match, err := regexp.MatchString(UUID_REGEXP, firstSoftware["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, firstSoftware["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, firstSoftware["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range firstSoftware {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml", "active"}, key)
 				}
 			},
 		},
@@ -449,7 +530,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Nil(t, err)
 
 				for key := range response {
-					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml"}, key)
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml", "active"}, key)
 				}
 			},
 		},
