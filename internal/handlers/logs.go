@@ -34,9 +34,7 @@ func NewLog(db *gorm.DB) *Log {
 func (p *Log) GetLogs(ctx *fiber.Ctx) error {
 	var logs []models.Log
 
-	stmt := p.db.Begin()
-
-	stmt, err := general.Clauses(ctx, stmt, "message")
+	stmt, err := general.Clauses(ctx, p.db, "message")
 	if err != nil {
 		return common.Error(
 			fiber.StatusUnprocessableEntity,
