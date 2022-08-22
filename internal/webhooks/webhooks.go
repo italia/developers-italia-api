@@ -21,7 +21,7 @@ func DispatchWebhooks(event models.Event, gorm *gorm.DB) error {
 
 	// When entity_id == '', the webhook is meant for any event occurred in any
 	// resource of that type (fe. Publishers, Software)
-	stmt := gorm.Debug().
+	stmt := gorm.
 		Where(
 			"entity_type = ? AND (entity_id = '' OR entity_id = ?)",
 			event.EntityType,
