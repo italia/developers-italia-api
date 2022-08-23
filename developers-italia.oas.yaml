@@ -19,8 +19,7 @@ info:
     url: 'https://developers.italia.it/en/contacts'
     name: Developers Italia
   x-api-id: 0f9ca6b0-db47-11ec-96f7-d8bbc146d165
-  # TODO: merge https://github.com/italia/developers.italia.it/pull/1245
-  termsOfService: https://developers.italia.it/en/api/developers-italia#terms-of-service
+  termsOfService: 'https://developers.italia.it/en/api/developers-italia#terms-of-service'
 servers:
   - url: 'https://api.developers.italia.it/v1'
     description: The production server
@@ -40,7 +39,8 @@ paths:
     get:
       summary: Get the API status
       description: Get the API status
-      tags: [monitor]
+      tags:
+        - monitor
       operationId: get-status
       responses:
         '204':
@@ -52,7 +52,7 @@ paths:
   /software:
     get:
       summary: List all software
-      description: This endpoint allows you to list all software
+      description: This endpoint allows you to list all the active Software
       tags:
         - software
       responses:
@@ -76,6 +76,12 @@ paths:
       operationId: get-software
       parameters:
         - schema:
+            type: boolean
+            default: false
+          in: query
+          name: all
+          description: 'Show all software, even the one with "active" set to false'
+        - schema:
             type: integer
             format: int32
             example: 100
@@ -83,7 +89,7 @@ paths:
             maximum: 100
             default: 25
           in: query
-          name: page[size]
+          name: 'page[size]'
           description: Limit the amount of results
         - schema:
             type: string
@@ -248,7 +254,7 @@ paths:
             minimum: 1
             maximum: 100
           in: query
-          name: page[size]
+          name: 'page[size]'
           description: Limit the amount of results
         - schema:
             type: string
@@ -461,7 +467,7 @@ paths:
             maximum: 100
             default: 25
           in: query
-          name: page[size]
+          name: 'page[size]'
           description: Limit the amount of results
         - schema:
             type: string
@@ -519,7 +525,7 @@ paths:
   /publishers:
     get:
       summary: List all Publishers
-      description: List all Publishers
+      description: List all active Publishers
       tags:
         - publishers
       responses:
@@ -541,6 +547,13 @@ paths:
         '429':
           $ref: '#/components/responses/TooManyRequests'
       operationId: get-publishers
+      parameters:
+        - schema:
+            type: boolean
+            default: false
+          in: query
+          name: all
+          description: 'Show all publishers, even the one with "active" set to false'
     post:
       summary: Create a new Publisher
       description: Create a new Publisher
@@ -549,6 +562,12 @@ paths:
       security:
         - bearerAuth: []
       operationId: post-publishers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Publisher'
       responses:
         '200':
           description: OK
@@ -560,8 +579,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
   '/publishers/{publisherId}':
@@ -618,7 +635,7 @@ paths:
         content:
           application/merge-patch+json:
             schema:
-              $ref: '#/components/schemas/PublisherUpdate'
+              $ref: '#/components/schemas/Publisher'
     delete:
       summary: Delete a Publisher
       description: Delete a Publisher by its id
@@ -692,6 +709,13 @@ components:
           type: array
           items:
             type: string
+        active:
+          type: boolean
+          description: >
+            Whether this Software is active or not. This is useful to temporarly disable
+            software (fe. when the repository is empty or there's something malicious going on,
+            but the problem is expected to be fixed in the near future) without removing it.
+          default: true
         createdAt:
           type: string
           format: date-time
@@ -708,17 +732,6 @@ components:
       title: Publisher
       type: object
       properties:
-        url:
-          type: string
-        description:
-          type: string
-        email:
-          type: string
-          format: email
-    PublisherUpdate:
-      title: PublisherUpdate
-      type: object
-      properties:
         codeHosting:
           type: array
           items:
@@ -727,13 +740,20 @@ components:
               url:
                 type: string
                 format: uri
-                example: http://www.example.com
+                example: 'http://www.example.com'
         description:
           type: string
         email:
           type: string
           format: email
           example: example@example.com
+        active:
+          type: boolean
+          description: >
+            Whether this Publisher is active or not. This is useful to temporarly disable
+            publishers (fe. when they are not complying with some rule, but the problem is
+            expected to be fixed in the near future) without removing them.
+          default: true
     Log:
       title: Log
       type: object
@@ -809,7 +829,7 @@ components:
           description: Human-readable explanation of the problem
         validationErrors:
           type: array
-          description: List of validation errors, returned by endpoints that validate input data (eg. POST, PATCH, etc.)
+          description: 'List of validation errors, returned by endpoints that validate input data (eg. POST, PATCH, etc.)'
           items:
             type: object
             description: Details of the occurred validation error

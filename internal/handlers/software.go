@@ -31,7 +31,7 @@ func NewSoftware(db *gorm.DB) *Software {
 func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error {
 	var software []models.Software
 
-	stmt := p.db.Begin().Preload("URLs")
+	stmt := p.db.Preload("URLs")
 
 	stmt, err := general.Clauses(ctx, stmt, "")
 	if err != nil {
@@ -40,6 +40,10 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error {
 			"can't get Software",
 			err.Error(),
 		)
+	}
+
+	if all := ctx.Query("all", ""); all == "" {
+		stmt = stmt.Scopes(models.Active)
 	}
 
 	paginator := general.NewPaginator(ctx)
@@ -106,6 +110,7 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 		ID:            utils.UUIDv4(),
 		URLs:          softwareURLs,
 		PubliccodeYml: softwareReq.PubliccodeYml,
+		Active:        softwareReq.Active,
 	}
 
 	if err := p.db.Create(&software).Error; err != nil {
@@ -146,6 +151,7 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error {
 
 	software.URLs = softwareURLs
 	software.PubliccodeYml = softwareReq.PubliccodeYml
+	software.Active = softwareReq.Active
 
 	if err := p.db.Updates(&software).Error; err != nil {
 		return common.Error(fiber.StatusInternalServerError, "can't update Software", "db error")
