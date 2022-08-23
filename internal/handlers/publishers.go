@@ -32,7 +32,7 @@ func NewPublisher(db *gorm.DB) *Publisher {
 func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 	var publishers []models.Publisher
 
-	stmt := p.db
+	stmt := p.db.Preload("CodeHosting")
 
 	if all := ctx.Query("all", ""); all == "" {
 		stmt = stmt.Scopes(models.Active)
