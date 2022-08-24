@@ -3,6 +3,9 @@ package webhooks
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -28,7 +31,7 @@ func DispatchWebhooks(event models.Event, gorm *gorm.DB) error {
 			event.EntityID,
 		)
 
-	if err := stmt.Select("url").Find(&webhooks).Error; err != nil {
+	if err := stmt.Select("url, secret").Find(&webhooks).Error; err != nil {
 		return fmt.Errorf("error finding webhooks for %s: %w", subject, err)
 	}
 
@@ -40,14 +43,25 @@ func DispatchWebhooks(event models.Event, gorm *gorm.DB) error {
 		return fmt.Errorf("error marshaling event JSON for %s: %w", subject, err)
 	}
 
+	signature := ""
+
 	for _, webhook := range webhooks {
-		go post(webhook.URL, jsonBody)
+		if webhook.Secret != "" && signature == "" {
+			h := hmac.New(sha256.New, []byte(webhook.Secret))
+
+			// This can't fail
+			_, _ = h.Write(jsonBody)
+
+			signature = hex.EncodeToString(h.Sum(nil))
+		}
+
+		go post(webhook.URL, jsonBody, signature)
 	}
 
 	return nil
 }
 
-func post(url string, body []byte) {
+func post(url string, body []byte, signature string) {
 	client := http.DefaultClient
 
 	req, err := http.NewRequestWithContext(
@@ -61,6 +75,11 @@ func post(url string, body []byte) {
 	}
 
 	req.Header.Set("User-Agent", "DevelopersItaliaAPI-Webhook/1.0")
+	req.Header.Set("Content-Type", "application/json")
+
+	if signature != "" {
+		req.Header.Set("X-Webhook-Signature", signature)
+	}
 
 	response, err := client.Do(req)
 	if err != nil {
