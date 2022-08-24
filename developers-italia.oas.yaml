@@ -401,6 +401,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Webhook'
+      callbacks:
+        create:
+          $ref: '#/components/callbacks/ResourceCreate'
+        update:
+          $ref: '#/components/callbacks/ResourceUpdate'
+        delete:
+          $ref: '#/components/callbacks/ResourceDelete'
   '/software/{softwareId}/webhooks':
     parameters:
       - schema:
@@ -500,6 +507,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Webhook'
+      callbacks:
+        create:
+          $ref: '#/components/callbacks/ResourceCreate'
+        update:
+          $ref: '#/components/callbacks/ResourceUpdate'
+        delete:
+          $ref: '#/components/callbacks/ResourceDelete'
   /bundles:
     get:
       summary: List all Bundles
@@ -942,6 +956,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Webhook'
+      callbacks:
+        create:
+          $ref: '#/components/callbacks/ResourceCreate'
+        update:
+          $ref: '#/components/callbacks/ResourceUpdate'
+        delete:
+          $ref: '#/components/callbacks/ResourceDelete'
   '/publishers/{publisherId}/webhooks':
     parameters:
       - schema:
@@ -1041,6 +1062,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Webhook'
+      callbacks:
+        create:
+          $ref: '#/components/callbacks/ResourceCreate'
+        update:
+          $ref: '#/components/callbacks/ResourceUpdate'
+        delete:
+          $ref: '#/components/callbacks/ResourceDelete'
   '/webhooks/{webhookId}':
     parameters:
       - schema:
@@ -1114,6 +1142,83 @@ paths:
         '429':
           $ref: '#/components/responses/TooManyRequests'
 components:
+  callbacks:
+    ResourceCreate:
+      '{$request.body#/url}':
+        post:
+          description: TODO
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    event:
+                      type: string
+                      description: TODO
+                      enum: [create]
+                    subject:
+                      type: string
+                      description: TODO
+                      example: "/software/0000-1111-2222-3333"
+                  required:
+                    - event
+                    - subject
+          responses:
+            '200':
+              description: Callback successfully processed
+    ResourceUpdate:
+      '{$request.body#/url}':
+        post:
+          description: TODO
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    event:
+                      type: string
+                      description: TODO
+                      enum: [update]
+                    subject:
+                      type: string
+                      description: TODO
+                      example: "/software/0000-1111-2222-3333"
+                  required:
+                    - event
+                    - subject
+          responses:
+            '200':
+              description: Callback successfully processed
+    ResourceDelete:
+      '{$request.body#/url}':
+        post:
+          description: TODO
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    event:
+                      type: string
+                      description: TODO
+                      enum: [delete]
+                    subject:
+                      type: string
+                      description: TODO
+                      example: "/software/0000-1111-2222-3333"
+                  required:
+                    - event
+                    - subject
+          responses:
+            '200':
+              description: Callback successfully processed
+
   responses:
     NoContent:
       description: No Content
