@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/italia/developers-italia-api/internal/models"
@@ -83,7 +84,24 @@ func post(url string, body []byte, signature string) {
 
 	response, err := client.Do(req)
 	if err != nil {
+		//nolint:godox // need to implement this in the future
+		// TODO: Replace this and send anonymous failure metrics to a monitoring
+		// system instead.
+		// (https://github.com/italia/developers-italia-api/issues/73)
+		log.Printf("error while dispatching webhook %s: %s", url, err.Error())
+
 		return
 	}
+
+	if response.StatusCode < 200 || response.StatusCode > 299 {
+		//nolint:godox // need to implement this in the future
+		// TODO: Replace this and send anonymous failure metrics to a monitoring
+		// system instead.
+		// (https://github.com/italia/developers-italia-api/issues/73)
+		log.Printf("error while dispatching webhook %s: got HTTP %d", url, response.StatusCode)
+
+		return
+	}
+
 	defer response.Body.Close()
 }
