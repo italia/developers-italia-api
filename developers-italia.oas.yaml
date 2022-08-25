@@ -43,7 +43,8 @@ paths:
       description: Get the API status
       tags:
         - monitor
-      operationId: get-status
+      security: []
+      operationId: show-status
       responses:
         '204':
           $ref: '#/components/responses/NoContent'
@@ -64,9 +65,12 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
                 properties:
                   data:
                     type: array
+                    minItems: 0
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/Software'
                   links:
@@ -75,7 +79,7 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-      operationId: get-software
+      operationId: list-software
       parameters:
         - schema:
             type: boolean
@@ -95,11 +99,17 @@ paths:
           description: Limit the amount of results
         - schema:
             type: string
+            minLength: 1
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[before]'
           description: Only results before this cursor
         - schema:
             type: string
+            minLength: 1
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[after]'
           description: Only results after this cursor
@@ -124,7 +134,7 @@ paths:
         - software
       security:
         - bearerAuth: []
-      operationId: post-software
+      operationId: create-software
       responses:
         '200':
           description: OK
@@ -149,6 +159,8 @@ paths:
     parameters:
       - schema:
           type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
         name: softwareId
         in: path
         required: true
@@ -168,7 +180,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-      operationId: get-software-softwareId
+      operationId: show-software-softwareId
     patch:
       summary: Update a Software
       description: Update a Software by its id
@@ -176,7 +188,7 @@ paths:
         - software
       security:
         - bearerAuth: []
-      operationId: patch-software-softwareId
+      operationId: update-software-softwareId
       responses:
         '200':
           description: OK
@@ -205,7 +217,7 @@ paths:
         - software
       security:
         - bearerAuth: []
-      operationId: delete-software-softwareId
+      operationId: remove-software-softwareId
       responses:
         '204':
           $ref: '#/components/responses/NoContent'
@@ -219,6 +231,8 @@ paths:
     parameters:
       - schema:
           type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
         name: softwareId
         in: path
         required: true
@@ -228,7 +242,7 @@ paths:
       tags:
         - logs
         - software
-      operationId: get-software-softwareId-logs
+      operationId: list-software-softwareId-logs
       responses:
         '200':
           description: OK
@@ -236,9 +250,12 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
                 properties:
                   data:
                     type: array
+                    minItems: 0
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/Log'
                   links:
@@ -260,11 +277,15 @@ paths:
           description: Limit the amount of results
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[before]'
           description: Only results before this cursor
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[after]'
           description: Only results after this cursor
@@ -290,7 +311,7 @@ paths:
         - software
       security:
         - bearerAuth: []
-      operationId: post-software-softwareId-logs
+      operationId: create-software-softwareId-logs
       responses:
         '204':
           $ref: '#/components/responses/NoContent'
@@ -317,7 +338,7 @@ paths:
         - software
       security:
         - bearerAuth: []
-      operationId: get-software-webhooks
+      operationId: list-software-webhooks
       responses:
         '200':
           description: OK
@@ -325,9 +346,12 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
                 properties:
                   data:
                     type: array
+                    minItems: 0
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/Webhook'
                   links:
@@ -349,11 +373,15 @@ paths:
           description: Limit the amount of results
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[before]'
           description: Only results before this cursor
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[after]'
           description: Only results after this cursor
@@ -379,7 +407,7 @@ paths:
         - software
       security:
         - bearerAuth: []
-      operationId: post-software-webhooks
+      operationId: create-software-webhooks
       responses:
         '200':
           description: OK
@@ -412,6 +440,8 @@ paths:
     parameters:
       - schema:
           type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
         name: softwareId
         in: path
         required: true
@@ -423,7 +453,7 @@ paths:
         - software
       security:
         - bearerAuth: []
-      operationId: get-software-softwareId-webhooks
+      operationId: list-software-softwareId-webhooks
       responses:
         '200':
           description: OK
@@ -431,9 +461,12 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
                 properties:
                   data:
                     type: array
+                    minItems: 0
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/Webhook'
                   links:
@@ -455,11 +488,15 @@ paths:
           description: Limit the amount of results
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[before]'
           description: Only results before this cursor
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[after]'
           description: Only results after this cursor
@@ -485,7 +522,7 @@ paths:
         - software
       security:
         - bearerAuth: []
-      operationId: post-software-softwareId-webhooks
+      operationId: create-software-softwareId-webhooks
       responses:
         '200':
           description: OK
@@ -527,9 +564,12 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
                 properties:
                   data:
                     type: array
+                    minItems: 0
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/Bundle'
                   links:
@@ -538,7 +578,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-      operationId: get-bundles
+      operationId: list-bundles
     post:
       summary: Create a Bundle
       description: Create a Bundle
@@ -546,7 +586,7 @@ paths:
         - bundles
       security:
         - bearerAuth: []
-      operationId: post-bundles
+      operationId: create-bundles
       responses:
         '200':
           description: OK
@@ -573,6 +613,8 @@ paths:
     parameters:
       - schema:
           type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
         name: bundleId
         in: path
         required: true
@@ -594,7 +636,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-      operationId: get-bundle-bundleId
+      operationId: show-bundle-bundleId
     patch:
       summary: Update a Bundle
       description: Update a Bundle by its id
@@ -602,7 +644,7 @@ paths:
         - bundles
       security:
         - bearerAuth: []
-      operationId: patch-bundle-bundleId
+      operationId: update-bundle-bundleId
       responses:
         '200':
           description: OK
@@ -631,7 +673,7 @@ paths:
         - bundles
       security:
         - bearerAuth: []
-      operationId: delete-bundle-bundleId
+      operationId: remove-bundle-bundleId
       responses:
         '204':
           $ref: '#/components/responses/NoContent'
@@ -656,16 +698,19 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
                 properties:
                   data:
                     type: array
+                    minItems: 0
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/Log'
                   links:
                     $ref: '#/components/schemas/Links'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-      operationId: get-logs
+      operationId: list-logs
       parameters:
         - schema:
             type: integer
@@ -679,11 +724,15 @@ paths:
           description: Limit the amount of results
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[before]'
           description: Only results before this cursor
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[after]'
           description: Only results after this cursor
@@ -708,7 +757,7 @@ paths:
         - logs
       security:
         - bearerAuth: []
-      operationId: post-logs
+      operationId: create-logs
       responses:
         '200':
           description: OK
@@ -743,9 +792,12 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
                 properties:
                   data:
                     type: array
+                    minItems: 0
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/Publisher'
                   links:
@@ -754,7 +806,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-      operationId: get-publishers
+      operationId: list-publishers
       parameters:
         - schema:
             type: boolean
@@ -769,7 +821,7 @@ paths:
         - publishers
       security:
         - bearerAuth: []
-      operationId: post-publishers
+      operationId: create-publishers
       requestBody:
         required: true
         content:
@@ -793,6 +845,8 @@ paths:
     parameters:
       - schema:
           type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
         name: publisherId
         in: path
         required: true
@@ -814,7 +868,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-      operationId: get-publishers-publisherId
+      operationId: show-publishers-publisherId
     patch:
       summary: Update a Publisher
       description: Update a Publisher by its id
@@ -822,7 +876,7 @@ paths:
         - publishers
       security:
         - bearerAuth: []
-      operationId: patch-publishers-publisherId
+      operationId: update-publishers-publisherId
       responses:
         '200':
           description: OK
@@ -851,7 +905,7 @@ paths:
         - publishers
       security:
         - bearerAuth: []
-      operationId: delete-publishers-publisherId
+      operationId: remove-publishers-publisherId
       responses:
         '204':
           $ref: '#/components/responses/NoContent'
@@ -872,7 +926,7 @@ paths:
         - publishers
       security:
         - bearerAuth: []
-      operationId: get-publishers-webhooks
+      operationId: list-publishers-webhooks
       responses:
         '200':
           description: OK
@@ -880,9 +934,12 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
                 properties:
                   data:
                     type: array
+                    minItems: 0
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/Webhook'
                   links:
@@ -904,11 +961,15 @@ paths:
           description: Limit the amount of results
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[before]'
           description: Only results before this cursor
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[after]'
           description: Only results after this cursor
@@ -934,7 +995,7 @@ paths:
         - publishers
       security:
         - bearerAuth: []
-      operationId: post-publishers-webhooks
+      operationId: create-publishers-webhooks
       responses:
         '200':
           description: OK
@@ -967,6 +1028,8 @@ paths:
     parameters:
       - schema:
           type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
         name: publisherId
         in: path
         required: true
@@ -978,7 +1041,7 @@ paths:
         - publishers
       security:
         - bearerAuth: []
-      operationId: get-publishers-publisherId-webhooks
+      operationId: list-publishers-publisherId-webhooks
       responses:
         '200':
           description: OK
@@ -986,9 +1049,12 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
                 properties:
                   data:
                     type: array
+                    minItems: 0
+                    maxItems: 100
                     items:
                       $ref: '#/components/schemas/Webhook'
                   links:
@@ -1010,11 +1076,15 @@ paths:
           description: Limit the amount of results
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[before]'
           description: Only results before this cursor
         - schema:
             type: string
+            maxLength: 255
+            pattern: '.*'
           in: query
           name: 'page[after]'
           description: Only results after this cursor
@@ -1040,7 +1110,7 @@ paths:
         - publishers
       security:
         - bearerAuth: []
-      operationId: post-publishers-publisherId-webhooks
+      operationId: create-publishers-publisherId-webhooks
       responses:
         '200':
           description: OK
@@ -1073,6 +1143,8 @@ paths:
     parameters:
       - schema:
           type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
         name: webhookId
         in: path
         required: true
@@ -1083,7 +1155,7 @@ paths:
         - webhooks
       security:
         - bearerAuth: []
-      operationId: get-webhook-webhookId
+      operationId: show-webhook-webhookId
       responses:
         '200':
           description: OK
@@ -1102,7 +1174,7 @@ paths:
         - webhooks
       security:
         - bearerAuth: []
-      operationId: patch-webhooks-webhookId
+      operationId: update-webhooks-webhookId
       responses:
         '200':
           description: OK
@@ -1131,7 +1203,7 @@ paths:
         - webhooks
       security:
         - bearerAuth: []
-      operationId: delete-webhooks-webhookId
+      operationId: remove-webhooks-webhookId
       responses:
         '204':
           $ref: '#/components/responses/NoContent'
@@ -1153,6 +1225,7 @@ components:
               application/json:
                 schema:
                   type: object
+                  additionalProperties: false
                   properties:
                     event:
                       type: string
@@ -1160,13 +1233,15 @@ components:
                       enum: [create]
                     subject:
                       type: string
+                      pattern: '.*'
+                      maxLength: 255
                       description: The resource the event occurred on
                       example: "/software/0000-1111-2222-3333"
                   required:
                     - event
                     - subject
           responses:
-            '200':
+            '204':
               description: Callback successfully processed
     ResourceUpdate:
       '{$request.body#/url}':
@@ -1178,6 +1253,7 @@ components:
               application/json:
                 schema:
                   type: object
+                  additionalProperties: false
                   properties:
                     event:
                       type: string
@@ -1185,13 +1261,15 @@ components:
                       enum: [update]
                     subject:
                       type: string
+                      pattern: '.*'
+                      maxLength: 255
                       description: The resource the event occurred on
                       example: "/software/0000-1111-2222-3333"
                   required:
                     - event
                     - subject
           responses:
-            '200':
+            '204':
               description: Callback successfully processed
     ResourceDelete:
       '{$request.body#/url}':
@@ -1203,6 +1281,7 @@ components:
               application/json:
                 schema:
                   type: object
+                  additionalProperties: false
                   properties:
                     event:
                       type: string
@@ -1210,13 +1289,15 @@ components:
                       enum: [delete]
                     subject:
                       type: string
+                      pattern: '.*'
+                      maxLength: 255
                       description: The resource the event occurred on
                       example: "/software/0000-1111-2222-3333"
                   required:
                     - event
                     - subject
           responses:
-            '200':
+            '204':
               description: Callback successfully processed
 
   responses:
@@ -1252,26 +1333,31 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Error'
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
     Software:
       title: Software
       type: object
+      additionalProperties: false
       properties:
         id:
           type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
           readOnly: true
         publiccodeYml:
           type: string
+          minLength: 1
+          maxLength: 99999
+          pattern: '.*'
         urls:
           type: array
+          minItems: 1
+          maxItems: 255
           items:
             type: string
+            format: uri
+            minLength: 1
+            maxLength: 255
         active:
           type: boolean
           description: >
@@ -1294,21 +1380,29 @@ components:
     Publisher:
       title: Publisher
       type: object
+      additionalProperties: false
       properties:
         codeHosting:
           type: array
+          minItems: 1
+          maxItems: 255
           items:
             type: object
+            additionalProperties: false
             properties:
               url:
                 type: string
                 format: uri
+                maxLength: 255
                 example: 'http://www.example.com'
         description:
           type: string
+          maxLength: 255
+          pattern: '.*'
         email:
           type: string
           format: email
+          maxLength: 255
           example: example@example.com
         active:
           type: boolean
@@ -1320,9 +1414,12 @@ components:
     Log:
       title: Log
       type: object
+      additionalProperties: false
       properties:
         id:
           type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
           readOnly: true
         createdAt:
           type: string
@@ -1338,8 +1435,12 @@ components:
           readOnly: true
         message:
           type: string
+          maxLength: 2048
+          pattern: '.*'
         entity:
           type: string
+          maxLength: 255
+          pattern: '.*'
           readOnly: true
       required:
         - id
@@ -1349,19 +1450,29 @@ components:
     Bundle:
       title: Bundle
       type: object
+      additionalProperties: false
       properties:
         id:
           type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
     Links:
       type: object
+      additionalProperties: false
       x-examples: {}
       properties:
         prev:
           type: string
+          format: base64
+          minLength: 1
+          maxLength: 255
           readOnly: true
           nullable: true
         next:
           type: string
+          format: base64
+          minLength: 1
+          maxLength: 255
           readOnly: true
           nullable: true
       required:
@@ -1370,6 +1481,7 @@ components:
       readOnly: true
     Error:
       type: object
+      additionalProperties: false
       x-examples:
         example-1:
           title: Can't create Software
@@ -1382,55 +1494,74 @@ components:
           validationErrors:
             - field: message
               rule: required
-              providedValue: ''
+              value: ''
       properties:
         title:
           type: string
+          pattern: '.*'
+          maxLength: 255
           description: 'Short, human-readable summary of the problem'
         detail:
           type: string
+          pattern: '.*'
+          maxLength: 2048
           description: Human-readable explanation of the problem
         validationErrors:
           type: array
           description: 'List of validation errors, returned by endpoints that validate input data (eg. POST, PATCH, etc.)'
+          minItems: 1
+          maxItems: 10
           items:
             type: object
+            additionalProperties: false
             description: Details of the occurred validation error
             properties:
               field:
                 type: string
+                maxLength: 64
+                pattern: '[A-Za-z]{1,64}'
                 description: Field name with a validation error
                 example: name
               rule:
                 type: string
+                maxLength: 64
+                pattern: '[A-Za-z]{1,64}'
                 description: Rule that makes the provided field invalid
                 example: required
-              providedValue:
+              value:
                 type: string
+                maxLength: 255
+                pattern: '.*'
                 description: |
                   The invalid value provided
                 example: '""'
             required:
               - field
               - rule
-              - providedValue
+              - value
       required:
         - title
         - detail
     Webhook:
       title: Webhook
       type: object
+      additionalProperties: false
       properties:
         id:
           type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
           writeOnly: true
         url:
           type: string
           format: uri
+          maxLength: 255
           example: 'https://example.org/my-webhook-endpoint'
           description: URL where the webhook payload will be delivered to
         secret:
           type: string
+          maxLength: 255
+          pattern: '.*'
           description: |
             Secret used to authenticate to the webhook endpoint
         createdAt:

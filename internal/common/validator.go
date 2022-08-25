@@ -39,6 +39,11 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 				value = ""
 			}
 
+			valueRunes := []rune(value)
+			if len(valueRunes) > 255 {
+				value = string(valueRunes[:255])
+			}
+
 			validationErrors = append(validationErrors, ValidationError{
 				Field: err.Field(),
 				Rule:  err.Tag(),
