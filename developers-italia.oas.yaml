@@ -1146,7 +1146,7 @@ components:
     ResourceCreate:
       '{$request.body#/url}':
         post:
-          description: TODO
+          description: The webhook called when a new resource is created
           requestBody:
             required: true
             content:
@@ -1156,11 +1156,11 @@ components:
                   properties:
                     event:
                       type: string
-                      description: TODO
+                      description: The type of event that triggered the webhook (always "create")
                       enum: [create]
                     subject:
                       type: string
-                      description: TODO
+                      description: The resource the event occurred on
                       example: "/software/0000-1111-2222-3333"
                   required:
                     - event
@@ -1171,7 +1171,7 @@ components:
     ResourceUpdate:
       '{$request.body#/url}':
         post:
-          description: TODO
+          description: The webhook called when a resource is updated
           requestBody:
             required: true
             content:
@@ -1181,11 +1181,11 @@ components:
                   properties:
                     event:
                       type: string
-                      description: TODO
+                      description: The type of event that triggered the webhook (always "update")
                       enum: [update]
                     subject:
                       type: string
-                      description: TODO
+                      description: The resource the event occurred on
                       example: "/software/0000-1111-2222-3333"
                   required:
                     - event
@@ -1196,7 +1196,7 @@ components:
     ResourceDelete:
       '{$request.body#/url}':
         post:
-          description: TODO
+          description: The webhook called when a resource is deleted
           requestBody:
             required: true
             content:
@@ -1206,11 +1206,11 @@ components:
                   properties:
                     event:
                       type: string
-                      description: TODO
+                      description: The type of event that triggered the webhook (always "delete")
                       enum: [delete]
                     subject:
                       type: string
-                      description: TODO
+                      description: The resource the event occurred on
                       example: "/software/0000-1111-2222-3333"
                   required:
                     - event
