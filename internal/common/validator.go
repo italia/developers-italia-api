@@ -8,7 +8,10 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-const tagPosition = 2
+const (
+	tagPosition      = 2
+	maxProvidedValue = 255
+)
 
 type ValidationError struct {
 	Field string `json:"field"`
@@ -40,8 +43,8 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 			}
 
 			valueRunes := []rune(value)
-			if len(valueRunes) > 255 {
-				value = string(valueRunes[:255])
+			if len(valueRunes) > maxProvidedValue {
+				value = string(valueRunes[:maxProvidedValue])
 			}
 
 			validationErrors = append(validationErrors, ValidationError{
