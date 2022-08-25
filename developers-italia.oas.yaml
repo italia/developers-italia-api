@@ -36,6 +36,7 @@ tags:
     description: Monitoring operations on the API
   - name: webhooks
     description: Operations on webhooks
+security: [{}]
 paths:
   /status:
     get:
@@ -43,7 +44,6 @@ paths:
       description: Get the API status
       tags:
         - monitor
-      security: []
       operationId: show-status
       responses:
         '204':
