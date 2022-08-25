@@ -4,10 +4,13 @@ import (
 	"log"
 
 	"github.com/caarlos0/env/v6"
+	"gorm.io/gorm"
 
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/handlers"
 	"github.com/italia/developers-italia-api/internal/middleware"
+	"github.com/italia/developers-italia-api/internal/models"
+	"github.com/italia/developers-italia-api/internal/webhooks"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
@@ -36,10 +39,18 @@ func Setup() *fiber.App {
 		log.Fatal(err)
 	}
 
-	publisherHandler := handlers.NewPublisher(gormDB)
-	softwareHandler := handlers.NewSoftware(gormDB)
-	statusHandler := handlers.NewStatus(gormDB)
-	logHandler := handlers.NewLog(gormDB)
+	// Setup a goroutine acting as a worker for events sent to the
+	// EventChan channel.
+	//
+	// It dispatches the webhooks related to the event that occurred
+	// (es. Publisher creation, Software delete, etc.)
+	go func() {
+		for event := range models.EventChan {
+			if err := webhooks.DispatchWebhooks(event, gormDB); err != nil {
+				log.Println(err)
+			}
+		}
+	}()
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: common.CustomErrorHandler,
@@ -64,15 +75,36 @@ func Setup() *fiber.App {
 
 	app.Use(middleware.NewPasetoMiddleware(envs))
 
+	setupHandlers(app, gormDB)
+
+	return app
+}
+
+func setupHandlers(app *fiber.App, gormDB *gorm.DB) {
+	publisherHandler := handlers.NewPublisher(gormDB)
+	softwareHandler := handlers.NewSoftware(gormDB)
+	statusHandler := handlers.NewStatus(gormDB)
+	logHandler := handlers.NewLog(gormDB)
+	publisherWebhookHandler := handlers.NewWebhook[models.Publisher](gormDB)
+	softwareWebhookHandler := handlers.NewWebhook[models.Software](gormDB)
+
 	//nolint:varnamelen
 	v1 := app.Group("/v1")
 
+	v1.Get("/publishers/webhooks", publisherWebhookHandler.GetResourceWebhooks)
+	v1.Post("/publishers/webhooks", publisherWebhookHandler.PostResourceWebhook)
+	v1.Get("/publishers/:id/webhooks", publisherWebhookHandler.GetSingleResourceWebhooks)
+	v1.Post("/publishers/:id/webhooks", publisherWebhookHandler.PostSingleResourceWebhook)
 	v1.Get("/publishers", publisherHandler.GetPublishers)
 	v1.Get("/publishers/:id", publisherHandler.GetPublisher)
 	v1.Post("/publishers", publisherHandler.PostPublisher)
 	v1.Patch("/publishers/:id", publisherHandler.PatchPublisher)
 	v1.Delete("/publishers/:id", publisherHandler.DeletePublisher)
 
+	v1.Get("/software/webhooks", softwareWebhookHandler.GetResourceWebhooks)
+	v1.Post("/software/webhooks", softwareWebhookHandler.PostResourceWebhook)
+	v1.Get("/software/:id/webhooks", softwareWebhookHandler.GetSingleResourceWebhooks)
+	v1.Post("/software/:id/webhooks", softwareWebhookHandler.PostSingleResourceWebhook)
 	v1.Get("/software", softwareHandler.GetAllSoftware)
 	v1.Get("/software/:id", softwareHandler.GetSoftware)
 	v1.Post("/software", softwareHandler.PostSoftware)
@@ -89,5 +121,7 @@ func Setup() *fiber.App {
 
 	v1.Get("/status", statusHandler.GetStatus)
 
-	return app
+	v1.Get("/webhooks/:id", publisherWebhookHandler.GetWebhook)
+	v1.Patch("/webhooks/:id", publisherWebhookHandler.PatchWebhook)
+	v1.Delete("/webhooks/:id", publisherWebhookHandler.DeleteWebhook)
 }

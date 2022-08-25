@@ -224,6 +224,225 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
+
+		// GET /publishers/:id/webhooks
+		{
+			query:    "GET /v1/publishers/47807e0c-0613-4aea-9917-5455cc6eddad/webhooks",
+			fixtures: []string{"publishers.yml", "webhooks.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 1, len(data))
+
+				// Default pagination size is 25, so all this publishers's logs fit into a page
+				// and cursors should be empty
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Nil(t, links["next"])
+
+				assert.IsType(t, map[string]interface{}{}, data[0])
+				firstWebhook := data[0].(map[string]interface{})
+				assert.Equal(t, "https://6-b.example.org/receiver", firstWebhook["url"])
+				assert.Equal(t, "1702cd06-fffb-4d20-8f55-73e2a00ee052", firstWebhook["id"])
+				assert.Equal(t, "2018-07-15T00:00:00Z", firstWebhook["createdAt"])
+				assert.Equal(t, "2018-07-15T00:00:00Z", firstWebhook["updatedAt"])
+
+				for key := range firstWebhook {
+					assert.Contains(t, []string{"id", "url", "createdAt", "updatedAt"}, key)
+				}
+			},
+		},
+		{
+			description: "GET /v1/publishers/:id/webhooks for non existing publishers",
+			query:       "GET /v1/publishers/NO_SUCH_publishers/webhooks",
+			fixtures:    []string{"publishers.yml", "webhooks.yml"},
+
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't find resource`, response["title"])
+				assert.Equal(t, "resource was not found", response["detail"])
+			},
+		},
+		{
+			description: "GET /v1/publishers/:id/webhooks for publishers without webhooks",
+			query:       "GET /v1/publishers/b97446f8-fe06-472c-9b26-c40150cac77f/webhooks",
+			fixtures:    []string{"publishers.yml", "webhooks.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 0, len(data))
+			},
+		},
+		{
+			description: "GET with page[size] query param",
+			query:       "GET /v1/publishers/d6ddc11a-ff85-4f0f-bb87-df38b2a9b394/webhooks?page[size]=1",
+			fixtures:    []string{"publishers.yml", "webhooks.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 1, len(data))
+
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Equal(t, "?page[after]=WyI2ZWUxNDVlMy1mNTE3LTQ3NmUtODFlZC00YTJlNDY4YWU2NjUiLCIyMDE4LTA3LTE2VDAwOjAwOjAwWiJd", links["next"])
+			},
+		},
+
+		// POST /publishers/:id/webhooks
+		{
+			description: "POST /v1/publishers/:id/webhooks for non existing publishers",
+			query:       "POST /v1/publishers/NO_SUCH_publishers/webhooks",
+			fixtures:    []string{"publishers.yml", "webhooks.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't find resource`, response["title"])
+				assert.Equal(t, "resource was not found", response["detail"])
+			},
+		},
+		{
+			query:    "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
+			body:     `{"url": "https://new.example.org", "secret": "xyz"}`,
+			fixtures: []string{"publishers.yml", "webhooks.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "https://new.example.org", response["url"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "url", "createdAt", "updatedAt"}, key)
+				}
+
+				// TODO: check the record was actually created in the database
+			},
+		},
+		{
+			description: "POST publishers webhook - wrong token",
+			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
+			body:        `{"url": "https://new.example.org"}`,
+			headers: map[string][]string{
+				"Authorization": {badToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        401,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description: "POST /v1/webhooks with invalid JSON",
+			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
+			body:        `INVALID_JSON`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Webhook`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: make this pass
+		// {
+		// 	description: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks with JSON with extra fields",
+		// 	body: `{"url": "https://new.example.org", EXTRA_FIELD: "extra field not in schema"}`,
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 		"Content-Type":  {"application/json"},
+		// 	},
+		// 	expectedCode:        422,
+		// 	expectedContentType: "application/problem+json",
+		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
+		// 		assert.Equal(t, `can't create Webhook`, response["title"])
+		// 		assert.Equal(t, "invalid json", response["detail"])
+		// 	},
+		// },
+		{
+			description: "POST /v1/webhooks with validation errors",
+			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
+			body:        `{"url": ""}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Webhook`, response["title"])
+				assert.Equal(t, "invalid format", response["detail"])
+
+				assert.IsType(t, []interface{}{}, response["validationErrors"])
+
+				validationErrors := response["validationErrors"].([]interface{})
+				assert.Equal(t, len(validationErrors), 1)
+
+				firstValidationError := validationErrors[0].(map[string]interface{})
+
+				for key := range firstValidationError {
+					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+				}
+			},
+		},
+		{
+			description: "POST /v1/webhooks with empty body",
+			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
+			body:        "",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Webhook`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: enforce this?
+		// {
+		// 	query: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks with no Content-Type",
+		// 	body:  "",
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 	},
+		// 	expectedCode:        404,
+		// },
 	}
 
 	runTestCases(t, tests)
@@ -1050,6 +1269,225 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// 	},
 		// 	expectedCode:        404,
 		// },
+
+		// GET /software/:id/webhooks
+		{
+			query:    "GET /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			fixtures: []string{"software.yml", "webhooks.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 1, len(data))
+
+				// Default pagination size is 25, so all this software's logs fit into a page
+				// and cursors should be empty
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Nil(t, links["next"])
+
+				assert.IsType(t, map[string]interface{}{}, data[0])
+				firstWebhook := data[0].(map[string]interface{})
+				assert.Equal(t, "https://1-b.example.org/receiver", firstWebhook["url"])
+				assert.Equal(t, "007bc84a-7e2d-43a0-b7e1-a256d4114aa7", firstWebhook["id"])
+				assert.Equal(t, "2017-05-01T00:00:00Z", firstWebhook["createdAt"])
+				assert.Equal(t, "2017-05-01T00:00:00Z", firstWebhook["updatedAt"])
+
+				for key := range firstWebhook {
+					assert.Contains(t, []string{"id", "url", "createdAt", "updatedAt"}, key)
+				}
+			},
+		},
+		{
+			description: "GET /v1/software/:id/webhooks for non existing software",
+			query:       "GET /v1/software/NO_SUCH_SOFTWARE/webhooks",
+			fixtures:    []string{"software.yml", "webhooks.yml"},
+
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't find resource`, response["title"])
+				assert.Equal(t, "resource was not found", response["detail"])
+			},
+		},
+		{
+			description: "GET /v1/software/:id/webhooks for software without webhooks",
+			query:       "GET /v1/software/e7576e7f-9dcf-4979-b9e9-d8cdcad3b60e/webhooks",
+			fixtures:    []string{"software.yml", "webhooks.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 0, len(data))
+			},
+		},
+		{
+			description: "GET with page[size] query param",
+			query:       "GET /v1/software/9f135268-a37e-4ead-96ec-e4a24bb9344a/webhooks?page[size]=1",
+			fixtures:    []string{"software.yml", "webhooks.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 1, len(data))
+
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Equal(t, "?page[after]=WyJkNjMzNDAwMC02OWE4LTQzYTEtYWI0My01MGJiMDRlMTRlZWQiLCIyMDE3LTA1LTAxVDAwOjAwOjAwWiJd", links["next"])
+			},
+		},
+
+		// POST /software/:id/webhooks
+		{
+			description: "POST /v1/software/:id/webhooks for non existing software",
+			query:       "POST /v1/software/NO_SUCH_SOFTWARE/webhooks",
+			fixtures:    []string{"software.yml", "webhooks.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't find resource`, response["title"])
+				assert.Equal(t, "resource was not found", response["detail"])
+			},
+		},
+		{
+			query:    "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			body:     `{"url": "https://new.example.org", "secret": "xyz"}`,
+			fixtures: []string{"software.yml", "webhooks.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "https://new.example.org", response["url"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "url", "createdAt", "updatedAt"}, key)
+				}
+
+				// TODO: check the record was actually created in the database
+			},
+		},
+		{
+			description: "POST software webhook - wrong token",
+			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			body:        `{"url": "https://new.example.org"}`,
+			headers: map[string][]string{
+				"Authorization": {badToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        401,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description: "POST /v1/webhooks with invalid JSON",
+			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			body:        `INVALID_JSON`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Webhook`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: make this pass
+		// {
+		// 	description: "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks with JSON with extra fields",
+		// 	body: `{"url": "https://new.example.org", EXTRA_FIELD: "extra field not in schema"}`,
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 		"Content-Type":  {"application/json"},
+		// 	},
+		// 	expectedCode:        422,
+		// 	expectedContentType: "application/problem+json",
+		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
+		// 		assert.Equal(t, `can't create Webhook`, response["title"])
+		// 		assert.Equal(t, "invalid json", response["detail"])
+		// 	},
+		// },
+		{
+			description: "POST /v1/webhooks with validation errors",
+			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			body:        `{"url": ""}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Webhook`, response["title"])
+				assert.Equal(t, "invalid format", response["detail"])
+
+				assert.IsType(t, []interface{}{}, response["validationErrors"])
+
+				validationErrors := response["validationErrors"].([]interface{})
+				assert.Equal(t, len(validationErrors), 1)
+
+				firstValidationError := validationErrors[0].(map[string]interface{})
+
+				for key := range firstValidationError {
+					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+				}
+			},
+		},
+		{
+			description: "POST /v1/webhooks with empty body",
+			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			body:        "",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Webhook`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: enforce this?
+		// {
+		// 	query: "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks with no Content-Type",
+		// 	body:  "",
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 	},
+		// 	expectedCode:        404,
+		// },
 	}
 
 	runTestCases(t, tests)
@@ -1376,6 +1814,186 @@ func TestLogsEndpoints(t *testing.T) {
 	runTestCases(t, tests)
 }
 
+func TestWebhooksEndpoints(t *testing.T) {
+	tests := []TestCase{
+		// GET /webhooks/:id
+		{
+			query:        "GET /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			fixtures:     []string{"webhooks.yml"},
+			expectedCode: 200,
+			expectedBody: `{"id":"007bc84a-7e2d-43a0-b7e1-a256d4114aa7","url":"https://1-b.example.org/receiver","createdAt":"2017-05-01T00:00:00Z","updatedAt":"2017-05-01T00:00:00Z"}`,
+			expectedContentType: "application/json",
+		},
+		{
+			description:  "Non-existent webhook",
+			fixtures:     []string{"webhooks.yml"},
+			query:        "GET /v1/webhooks/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			expectedCode: 404,
+			expectedBody: `{"title":"can't get Webhook","detail":"Webhook was not found","status":404}`,
+
+			expectedContentType: "application/problem+json",
+		},
+
+		// PATCH /webhooks/:id
+		{
+			query: "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			body:  `{"url": "https://new.example.org/receiver"}`,
+			fixtures:    []string{"webhooks.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "007bc84a-7e2d-43a0-b7e1-a256d4114aa7", response["id"])
+				assert.Equal(t, "https://new.example.org/receiver", response["url"])
+				assert.Equal(t, "2017-05-01T00:00:00Z", response["createdAt"])
+
+				_, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "url", "createdAt", "updatedAt"}, key)
+				}
+			},
+		},
+		{
+			description: "PATCH webhook - wrong token",
+			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			fixtures:    []string{"webhooks.yml"},
+			body:        `{"url": "https://new.example.org/receiver"}`,
+			headers: map[string][]string{
+				"Authorization": {badToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        401,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description: "PATCH /v1/webhooks with invalid JSON",
+			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			fixtures:    []string{"webhooks.yml"},
+			body:        `INVALID_JSON`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't update Webhook`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: make this pass
+		// {
+		// 	query: "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7 with JSON with extra fields",
+		// 	body: `{"url": "https://new.example.org/receiver", EXTRA_FIELD: "extra field not in schema"}`,
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 		"Content-Type":  {"application/json"},
+		// 	},
+		// 	expectedCode:        422,
+		// 	expectedContentType: "application/problem+json",
+		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
+		// 		assert.Equal(t, `can't create Webhook`, response["title"])
+		// 		assert.Equal(t, "invalid json", response["detail"])
+		// 	},
+		// },
+		{
+			description: "PATCH /v1/webhooks with validation errors",
+			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			fixtures:    []string{"webhooks.yml"},
+			body:        `{"message": ""}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't update Webhook`, response["title"])
+				assert.Equal(t, "invalid format", response["detail"])
+
+				assert.IsType(t, []interface{}{}, response["validationErrors"])
+
+				validationErrors := response["validationErrors"].([]interface{})
+				assert.Equal(t, len(validationErrors), 1)
+
+				firstValidationError := validationErrors[0].(map[string]interface{})
+
+				for key := range firstValidationError {
+					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+				}
+			},
+		},
+		{
+			description: "PATCH /v1/webhooks with empty body",
+			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			fixtures:    []string{"webhooks.yml"},
+			body:        "",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't update Webhook`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		// TODO: enforce this?
+		// {
+		// 	query:    "PATCH /v1/webhooks with no Content-Type",
+		// 	fixtures: []string{"webhooks.yml"},
+		// 	body:     "",
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 	},
+		// 	expectedCode:        404,
+		// },
+
+		// DELETE /webhooks/:id
+		{
+			description:         "Delete non-existent webhook",
+			query:               "GET /v1/webhooks/NO_SUCH_WEBHOOK",
+			fixtures:            []string{"webhooks.yml"},
+			expectedCode:        404,
+			expectedBody:        `{"title":"can't get Webhook","detail":"Webhook was not found","status":404}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description: "DELETE webhook with bad authentication",
+			query:       "DELETE /v1/webhooks/1702cd06-fffb-4d20-8f55-73e2a00ee052",
+			fixtures:    []string{"webhooks.yml"},
+			headers: map[string][]string{
+				"Authorization": {badToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        401,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			query:    "DELETE /v1/webhooks/24bc1b5d-fe81-47be-9d55-910f820bdd04",
+			fixtures: []string{"webhooks.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        204,
+			expectedBody:        "",
+			expectedContentType: "application/json",
+		},
+	}
+
+	runTestCases(t, tests)
+}
+
+
 func TestStatusEndpoints(t *testing.T) {
 	tests := []TestCase{
 		{
@@ -1389,3 +2007,5 @@ func TestStatusEndpoints(t *testing.T) {
 
 	runTestCases(t, tests)
 }
+
+// TODO: test that webhooks are delivered
