@@ -13,8 +13,7 @@ import (
 	"github.com/italia/developers-italia-api/internal/webhooks"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cache"
-	_ "github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/italia/developers-italia-api/internal/database"
 )
@@ -60,15 +59,13 @@ func Setup() *fiber.App {
 	// Automatically recover panics in handlers
 	app.Use(recover.New())
 
-	app.Use(cache.New())
-
 	// Use Fiber Rate API Limiter
-	// if !envs.IsTest() {
-	// 	app.Use(limiter.New(limiter.Config{
-	// 		Max:               envs.MaxRequests,
-	// 		LimiterMiddleware: limiter.SlidingWindow{},
-	// 	}))
-	// }
+	if !envs.IsTest() {
+		app.Use(limiter.New(limiter.Config{
+			Max:               envs.MaxRequests,
+			LimiterMiddleware: limiter.SlidingWindow{},
+		}))
+	}
 
 	if envs.PasetoKey == nil {
 		log.Printf("PASETO_KEY not set, API will run in read-only mode")
