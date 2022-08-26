@@ -61,6 +61,14 @@ endpoints at `http://localhost:3000/v1/`.
 
 The application will automatically reload when a change is made.
 
+# Configuration
+
+You can configure the API with environment variables:
+
+* `MAX_REQUESTS` (optional): number of requests per minute after which responses
+  will be ratelimited.
+  Default: no limit.
+
 # Contributing
 
 This project exists also thanks to your contributions! Here is a list of people

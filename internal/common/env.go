@@ -8,7 +8,7 @@ import (
 type Base64Key [SymmetricKeyLen]byte
 
 type Environment struct {
-	MaxRequests        int        `env:"MAX_REQUESTS" envDefault:"20"`
+	MaxRequests        int        `env:"MAX_REQUESTS" envDefault:"0"`
 	CurrentEnvironment string     `env:"ENVIRONMENT" envDefault:"local"`
 	Database           string     `env:"DATABASE_DSN"`
 	PasetoKey          *Base64Key `env:"PASETO_KEY"`
