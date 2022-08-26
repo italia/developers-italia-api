@@ -76,6 +76,10 @@ You can configure the API with environment variables:
 * `ENVIRONMENT` (optional): possible values `test`, `development`, `production`.
   Default `production`.
 
+* `MAX_REQUESTS` (optional): number of requests per minute after which responses
+  will be ratelimited.
+  Default: no limit.
+
 # Contributing
 
 This project exists also thanks to your contributions! Here is a list of people
