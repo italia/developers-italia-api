@@ -195,8 +195,8 @@ func TestPublishersEndpoints(t *testing.T) {
 				codeHost := fMap["codeHosting"].([]interface{})
 				assert.Equal(t, 1, len(codeHost))
 				codeHostElement := codeHost[0].(map[string]interface{})
-				assert.Equal(t, codeHostElement["url"], "https://www.example.com")
-				assert.Equal(t, fMap["email"], "example@example.com")
+				assert.Equal(t, "https://www.example.com", codeHostElement["url"])
+				assert.Equal(t, "example@example.com", fMap["email"])
 			},
 			expectedContentType: "application/json",
 		},
@@ -259,7 +259,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description: "GET /v1/publishers/:id/webhooks for non existing publishers",
+			description: "GET webhooks for non existing publisher",
 			query:       "GET /v1/publishers/NO_SUCH_publishers/webhooks",
 			fixtures:    []string{"publishers.yml", "webhooks.yml"},
 
@@ -271,7 +271,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description: "GET /v1/publishers/:id/webhooks for publishers without webhooks",
+			description: "GET webhooks for publisher without webhooks",
 			query:       "GET /v1/publishers/b97446f8-fe06-472c-9b26-c40150cac77f/webhooks",
 			fixtures:    []string{"publishers.yml", "webhooks.yml"},
 
@@ -306,7 +306,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 		// POST /publishers/:id/webhooks
 		{
-			description: "POST /v1/publishers/:id/webhooks for non existing publishers",
+			description: "POST webhook for non existing publisher",
 			query:       "POST /v1/publishers/NO_SUCH_publishers/webhooks",
 			fixtures:    []string{"publishers.yml", "webhooks.yml"},
 			headers: map[string][]string{
@@ -364,7 +364,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			description: "POST /v1/webhooks with invalid JSON",
+			description: "POST webhook with invalid JSON",
 			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
 			body:        `INVALID_JSON`,
 			headers: map[string][]string{
@@ -394,9 +394,9 @@ func TestPublishersEndpoints(t *testing.T) {
 		// 	},
 		// },
 		{
-			description: "POST /v1/webhooks with validation errors",
+			description: "POST webhook with validation errors",
 			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
-			body:        `{"url": ""}`,
+			body:        `{"url": "INVALID_URL"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -410,17 +410,17 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
 				validationErrors := response["validationErrors"].([]interface{})
-				assert.Equal(t, len(validationErrors), 1)
+				assert.Equal(t, 1, len(validationErrors))
 
 				firstValidationError := validationErrors[0].(map[string]interface{})
 
 				for key := range firstValidationError {
-					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+					assert.Contains(t, []string{"field", "rule", "value"}, key)
 				}
 			},
 		},
 		{
-			description: "POST /v1/webhooks with empty body",
+			description: "POST webhook with empty body",
 			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
 			body:        "",
 			headers: map[string][]string{
@@ -766,7 +766,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.IsType(t, []interface{}{}, response["urls"])
-				assert.Equal(t, len(response["urls"].([]interface{})), 1)
+				assert.Equal(t, 1, len(response["urls"].([]interface{})))
 
 				// TODO: check urls content
 				assert.NotEmpty(t, response["publiccodeYml"])
@@ -840,9 +840,9 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// 	},
 		// },
 		{
-			description: "POST /v1/software with validation errors",
+			description: "POST software with validation errors",
 			query:       "POST /v1/software",
-			body:        `{"message": ""}`,
+			body:        `{"url":"", "publiccodeYml": "-"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -856,17 +856,17 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
 				validationErrors := response["validationErrors"].([]interface{})
-				assert.Equal(t, len(validationErrors), 2)
+				assert.Equal(t, 1, len(validationErrors))
 
 				firstValidationError := validationErrors[0].(map[string]interface{})
 
 				for key := range firstValidationError {
-					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+					assert.Contains(t, []string{"field", "rule", "value"}, key)
 				}
 			},
 		},
 		{
-			description: "POST /v1/software with empty body",
+			description: "POST software with empty body",
 			query:       "POST /v1/software",
 			body:        "",
 			headers: map[string][]string{
@@ -916,7 +916,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.IsType(t, []interface{}{}, response["urls"])
-				assert.Equal(t, len(response["urls"].([]interface{})), 3)
+				assert.Equal(t, 3, len(response["urls"].([]interface{})))
 				// TODO: check urls content
 
 				assert.Equal(t, "publiccodedata", response["publiccodeYml"])
@@ -937,6 +937,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "PATCH software - wrong token",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			fixtures:    []string{"software.yml", "software_urls.yml"},
 			body:        ``,
 			headers: map[string][]string{
 				"Authorization": {badToken},
@@ -947,8 +948,9 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			description: "PATCH /v1/software with invalid JSON",
+			description: "PATCH software with invalid JSON",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			fixtures:    []string{"software.yml", "software_urls.yml"},
 			body:        `INVALID_JSON`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -963,7 +965,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		// TODO: make this pass
 		// {
-		// 	description: "PATCH /v1/software with JSON with extra fields",
+		// 	description: "PATCH software with JSON with extra fields",
 		// 	query: "PATCH /v1/software",
 		// 	body: `{"publiccodeYml": "-", EXTRA_FIELD: "extra field not in schema"}`,
 		// 	headers: map[string][]string{
@@ -978,9 +980,10 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// 	},
 		// },
 		{
-			description: "POST /v1/software with validation errors",
-			query:       "POST /v1/software",
-			body:        `{"message": ""}`,
+			description: "PATCH software with validation errors",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			fixtures:    []string{"software.yml", "software_urls.yml"},
+			body:        `{"urls": ["INVALID_URL"], "publiccodeYml": "-"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -988,24 +991,25 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
-				assert.Equal(t, `can't create Software`, response["title"])
+				assert.Equal(t, `can't update Software`, response["title"])
 				assert.Equal(t, "invalid format", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
 				validationErrors := response["validationErrors"].([]interface{})
-				assert.Equal(t, len(validationErrors), 2)
+				assert.Equal(t, 1, len(validationErrors))
 
 				firstValidationError := validationErrors[0].(map[string]interface{})
 
 				for key := range firstValidationError {
-					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+					assert.Contains(t, []string{"field", "rule", "value"}, key)
 				}
 			},
 		},
 		{
-			description: "POST /v1/software with empty body",
-			query:       "POST /v1/software",
+			description: "PATCH software with empty body",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			fixtures:    []string{"software.yml", "software_urls.yml"},
 			body:        "",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -1014,7 +1018,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedCode:        400,
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
-				assert.Equal(t, `can't create Software`, response["title"])
+				assert.Equal(t, `can't update Software`, response["title"])
 				assert.Equal(t, "invalid json", response["detail"])
 			},
 		},
@@ -1102,7 +1106,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description: "GET /v1/software/:id/logs for non existing software",
+			description: "GET logs for non existing software",
 			query:       "GET /v1/software/NO_SUCH_SOFTWARE/logs",
 			fixtures:    []string{"software.yml", "logs.yml"},
 
@@ -1136,7 +1140,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 		// POST /software/:id/logs
 		{
-			description: "POST /v1/software/:id/logs for non existing software",
+			description: "POST logs for non existing software",
 			query:       "POST /v1/software/NO_SUCH_SOFTWARE/logs",
 			fixtures:    []string{"software.yml", "logs.yml"},
 			headers: map[string][]string{
@@ -1190,7 +1194,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			description: "POST /v1/logs with invalid JSON",
+			description: "POST log with invalid JSON",
 			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
 			body:        `INVALID_JSON`,
 			headers: map[string][]string{
@@ -1220,7 +1224,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// 	},
 		// },
 		{
-			description: "POST /v1/logs with validation errors",
+			description: "POST log with validation errors",
 			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
 			body:        `{"message": ""}`,
 			headers: map[string][]string{
@@ -1241,12 +1245,12 @@ func TestSoftwareEndpoints(t *testing.T) {
 				firstValidationError := validationErrors[0].(map[string]interface{})
 
 				for key := range firstValidationError {
-					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+					assert.Contains(t, []string{"field", "rule", "value"}, key)
 				}
 			},
 		},
 		{
-			description: "POST /v1/logs with empty body",
+			description: "POST log with empty body",
 			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
 			body:        "",
 			headers: map[string][]string{
@@ -1304,7 +1308,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description: "GET /v1/software/:id/webhooks for non existing software",
+			description: "GET webhooks for non existing software",
 			query:       "GET /v1/software/NO_SUCH_SOFTWARE/webhooks",
 			fixtures:    []string{"software.yml", "webhooks.yml"},
 
@@ -1316,7 +1320,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description: "GET /v1/software/:id/webhooks for software without webhooks",
+			description: "GET webhooks for software without webhooks",
 			query:       "GET /v1/software/e7576e7f-9dcf-4979-b9e9-d8cdcad3b60e/webhooks",
 			fixtures:    []string{"software.yml", "webhooks.yml"},
 
@@ -1351,7 +1355,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 		// POST /software/:id/webhooks
 		{
-			description: "POST /v1/software/:id/webhooks for non existing software",
+			description: "POST webhooks for non existing software",
 			query:       "POST /v1/software/NO_SUCH_SOFTWARE/webhooks",
 			fixtures:    []string{"software.yml", "webhooks.yml"},
 			headers: map[string][]string{
@@ -1409,7 +1413,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			description: "POST /v1/webhooks with invalid JSON",
+			description: "POST webhook with invalid JSON",
 			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
 			body:        `INVALID_JSON`,
 			headers: map[string][]string{
@@ -1439,9 +1443,9 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// 	},
 		// },
 		{
-			description: "POST /v1/webhooks with validation errors",
+			description: "POST webhook with validation errors",
 			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
-			body:        `{"url": ""}`,
+			body:        `{"url": "INVALID_URL"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1460,12 +1464,12 @@ func TestSoftwareEndpoints(t *testing.T) {
 				firstValidationError := validationErrors[0].(map[string]interface{})
 
 				for key := range firstValidationError {
-					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+					assert.Contains(t, []string{"field", "rule", "value"}, key)
 				}
 			},
 		},
 		{
-			description: "POST /v1/webhooks with empty body",
+			description: "POST webhook with empty body",
 			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
 			body:        "",
 			headers: map[string][]string{
@@ -1730,7 +1734,7 @@ func TestLogsEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			description: "POST /v1/logs with invalid JSON",
+			description: "POST log with invalid JSON",
 			query:       "POST /v1/logs",
 			body:        `INVALID_JSON`,
 			headers: map[string][]string{
@@ -1760,7 +1764,7 @@ func TestLogsEndpoints(t *testing.T) {
 		// 	},
 		// },
 		{
-			description: "POST /v1/logs with validation errors",
+			description: "POST log with validation errors",
 			query:       "POST /v1/logs",
 			body:        `{"message": ""}`,
 			headers: map[string][]string{
@@ -1776,17 +1780,17 @@ func TestLogsEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
 				validationErrors := response["validationErrors"].([]interface{})
-				assert.Equal(t, len(validationErrors), 1)
+				assert.Equal(t, 1, len(validationErrors))
 
 				firstValidationError := validationErrors[0].(map[string]interface{})
 
 				for key := range firstValidationError {
-					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+					assert.Contains(t, []string{"field", "rule", "value"}, key)
 				}
 			},
 		},
 		{
-			description: "POST /v1/logs with empty body",
+			description: "POST log with empty body",
 			query:       "POST /v1/logs",
 			body:        "",
 			headers: map[string][]string{
@@ -1903,10 +1907,10 @@ func TestWebhooksEndpoints(t *testing.T) {
 		// 	},
 		// },
 		{
-			description: "PATCH /v1/webhooks with validation errors",
+			description: "PATCH webhook with validation errors",
 			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
 			fixtures:    []string{"webhooks.yml"},
-			body:        `{"message": ""}`,
+			body:        `{"url": "INVALID_URL"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1920,12 +1924,12 @@ func TestWebhooksEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
 				validationErrors := response["validationErrors"].([]interface{})
-				assert.Equal(t, len(validationErrors), 1)
+				assert.Equal(t, 1, len(validationErrors))
 
 				firstValidationError := validationErrors[0].(map[string]interface{})
 
 				for key := range firstValidationError {
-					assert.Contains(t, []string{"field", "rule", "providedValue"}, key)
+					assert.Contains(t, []string{"field", "rule", "value"}, key)
 				}
 			},
 		},
@@ -1992,7 +1996,6 @@ func TestWebhooksEndpoints(t *testing.T) {
 
 	runTestCases(t, tests)
 }
-
 
 func TestStatusEndpoints(t *testing.T) {
 	tests := []TestCase{
