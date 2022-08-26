@@ -4,6 +4,10 @@ metadata:
   name: {{ include "developers-italia-api.fullname" . }}
   labels:
     {{- include "developers-italia-api.labels" . | nindent 4 }}
+  {{- with .Values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
