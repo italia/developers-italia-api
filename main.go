@@ -78,7 +78,7 @@ func Setup() *fiber.App {
 			return ctx.Method() != fiber.MethodGet || ctx.Route().Path == "/v1/status"
 		},
 		CacheControl: true,
-		Expiration:   10 * time.Second,
+		Expiration:   10 * time.Second, //nolint:gomnd
 		KeyGenerator: func(ctx *fiber.Ctx) string {
 			return ctx.Path() + string(ctx.Context().QueryArgs().QueryString())
 		},
