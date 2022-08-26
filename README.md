@@ -65,6 +65,17 @@ The application will automatically reload when a change is made.
 
 You can configure the API with environment variables:
 
+* `DATABASE_DSN`: the data source used to connect to the database,
+  fe `host=db user=postgres password=postgres dbname=postgres port=5432`.
+  Supports PostgreSQL and SQLite.
+
+* `PASETO_KEY` (optional): Base65 encoded 32 bytes key used to check the
+  [PASETO](https://paseto.io/) authentication tokens.
+  If not set the API will run in read only mode.
+
+* `ENVIRONMENT` (optional): possible values `test`, `development`, `production`.
+  Default `production`.
+
 * `MAX_REQUESTS` (optional): number of requests per minute after which responses
   will be ratelimited.
   Default: no limit.

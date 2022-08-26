@@ -9,7 +9,7 @@ type Base64Key [SymmetricKeyLen]byte
 
 type Environment struct {
 	MaxRequests        int        `env:"MAX_REQUESTS" envDefault:"0"`
-	CurrentEnvironment string     `env:"ENVIRONMENT" envDefault:"local"`
+	CurrentEnvironment string     `env:"ENVIRONMENT" envDefault:"production"`
 	Database           string     `env:"DATABASE_DSN"`
 	PasetoKey          *Base64Key `env:"PASETO_KEY"`
 }
