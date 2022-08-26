@@ -6,7 +6,12 @@ info:
   description: |
     The API of Developers Italia
 
-    ### <a name="terms-of-service"></a> Terms of service
+    ## Caching
+
+    Cachable responses will contain the `Cache-Control` header that can be used by clients
+    to cache the resources.
+
+    ## <a name="terms-of-service"></a> Terms of service
     This API is open to use. While we normally rate limit the service, we reserve to block any
     potential malicious misuse of the API.
 
