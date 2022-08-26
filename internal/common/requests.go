@@ -12,11 +12,16 @@ type CodeHosting struct {
 }
 
 type Software struct {
-	URLs          []string `json:"urls" validate:"required,gt=0"`
+	URLs          []string `json:"urls" validate:"required,gt=0,dive,url"`
 	PubliccodeYml string   `json:"publiccodeYml" validate:"required"`
 	Active        bool     `json:"active"`
 }
 
 type Log struct {
 	Message string `json:"message" validate:"required,gt=1"`
+}
+
+type Webhook struct {
+	URL    string `json:"url" validate:"required,url"`
+	Secret string `json:"secret"`
 }
