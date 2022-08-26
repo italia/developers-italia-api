@@ -60,10 +60,13 @@ func Setup() *fiber.App {
 	app.Use(recover.New())
 
 	// Use Fiber Rate API Limiter
-	if !envs.IsTest() {
+	if !envs.IsTest() && envs.MaxRequests != 0 {
 		app.Use(limiter.New(limiter.Config{
 			Max:               envs.MaxRequests,
 			LimiterMiddleware: limiter.SlidingWindow{},
+			KeyGenerator: func(ctx *fiber.Ctx) string {
+				return ctx.IP() + ctx.Get(fiber.HeaderXForwardedFor, "")
+			},
 		}))
 	}
 
