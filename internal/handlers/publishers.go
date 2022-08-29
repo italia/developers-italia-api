@@ -104,7 +104,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 		return common.Error(fiber.StatusInternalServerError, "can't create Publisher", "db error")
 	}
 
-	return ctx.JSON(common.NewResponse(publisher))
+	return ctx.JSON(&publisher)
 }
 
 // PatchPublisher updates the publisher with the given ID.

@@ -30,14 +30,14 @@ type Log struct {
 }
 
 type Publisher struct {
-	ID          string         `gorm:"primarykey"`
+	ID          string         `json:"id" gorm:"primaryKey"`
 	Email       string         `json:"email"`
 	Description string         `json:"description"`
 	CodeHosting []CodeHosting  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique" json:"codeHosting"`
 	Active      bool           `json:"active" gorm:"default:true"`
 	CreatedAt   time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt   time.Time      `json:"updatedAt"`
-	DeletedAt   gorm.DeletedAt `gorm:"index"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 func (Publisher) TableName() string {
@@ -52,10 +52,17 @@ func (p Publisher) AfterSave(tx *gorm.DB) error {
 	return nil
 }
 
+func (CodeHosting) TableName() string {
+	return "publishers_code_hosting"
+}
+
 type CodeHosting struct {
-	gorm.Model
-	URL         string `json:"url" gorm:"not null"`
-	PublisherID string `json:"publisherId"`
+	ID          string         `json:"id" gorm:"primarykey"`
+	URL         string         `json:"url" gorm:"not null"`
+	PublisherID string         `json:"publisherId"`
+	CreatedAt   time.Time      `json:"createdAt" gorm:"index"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 type Software struct {

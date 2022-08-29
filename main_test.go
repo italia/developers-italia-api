@@ -167,21 +167,260 @@ func TestApi(t *testing.T) {
 
 func TestPublishersEndpoints(t *testing.T) {
 	tests := []TestCase{
+		// GET /publishers
 		{
-			query: "GET /v1/publishers",
+			description: "GET the first page on publishers",
+			query:       "GET /v1/publishers",
+			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 
 			expectedCode:        200,
-			expectedBody:        `{"data":[]}`,
 			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 25, len(data))
+
+				// Default pagination size is 25, so there's another page and
+				// next cursor should be present
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Equal(t, "?page[after]=WyJmNDFmYjMzZi1hZmIxLTRhYzUtOWZmZC1kZjJmMmZhYTRmM2YiLCIyMDE4LTExLTEyVDAwOjAwOjAwWiJd", links["next"])
+
+				assert.IsType(t, map[string]interface{}{}, data[0])
+				firstPub := data[0].(map[string]interface{})
+				assert.NotEmpty(t, firstPub["email"])
+
+				assert.IsType(t, []interface{}{}, firstPub["codeHosting"])
+				assert.Greater(t, len(firstPub["codeHosting"].([]interface{})), 0)
+
+				match, err := regexp.MatchString(UUID_REGEXP, firstPub["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, firstPub["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, firstPub["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range firstPub {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active"}, key)
+				}
+			},
 		},
 		{
-			description:  "publishers get non-existing id",
-			query:        "GET /v1/publishers/404",
-			expectedCode: 404,
-			expectedBody: `{"title":"can't get Publisher","detail":"Publisher was not found","status":404}`,
+			description: "GET all the publishers, except the non active ones",
+			query:       "GET /v1/publishers?page[size]=100",
+			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 26, len(data))
+
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Nil(t, links["next"])
+
+				assert.IsType(t, map[string]interface{}{}, data[0])
+				firstPub := data[0].(map[string]interface{})
+				assert.NotEmpty(t, firstPub["codeHosting"])
+
+				assert.IsType(t, []interface{}{}, firstPub["codeHosting"])
+				assert.Greater(t, len(firstPub["codeHosting"].([]interface{})), 0)
+
+				match, err := regexp.MatchString(UUID_REGEXP, firstPub["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, firstPub["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, firstPub["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range firstPub {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active"}, key)
+				}
+			},
+		},
+		{
+			description: "GET all publishers, including non active",
+			query:       "GET /v1/publishers?all=true&page[size]=100",
+			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 27, len(data))
+
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Nil(t, links["next"])
+
+				assert.IsType(t, map[string]interface{}{}, data[0])
+				firstPub := data[0].(map[string]interface{})
+				assert.NotEmpty(t, firstPub["codeHosting"])
+
+				assert.IsType(t, []interface{}{}, firstPub["codeHosting"])
+				assert.Greater(t, len(firstPub["codeHosting"].([]interface{})), 0)
+
+				match, err := regexp.MatchString(UUID_REGEXP, firstPub["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, firstPub["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, firstPub["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range firstPub {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active"}, key)
+				}
+			},
+		},
+		{
+			description: "GET with page[size] query param",
+			query:       "GET /v1/publishers?page[size]=2",
+			fixtures:    []string{"publishers.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 2, len(data))
+
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Equal(t, "?page[after]=WyIxMmZkYTdjNC02YmJmLTQzODctOGY4OS0yNThjMWU2ZmFmYTIiLCIyMDE4LTExLTI3VDAwOjAwOjAwWiJd", links["next"])
+			},
+		},
+		// TODO
+		// {
+		// 	description: "GET with invalid format for page[size] query param",
+		// 	query:    "GET /v1/publishers?page[size]=NOT_AN_INT",
+		// 	fixtures: []string{"publishers.yml"},
+
+		// 	expectedCode:        422,
+		// 	expectedContentType: "application/json",
+		// },
+		// TODO
+		// {
+		// 	description: "GET with page[size] bigger than the max of 100",
+		// 	query:    "GET /v1/publishers?page[size]=200",
+		// 	fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
+
+		// 	expectedCode:        422,
+		// 	expectedContentType: "application/json",
+		// },
+		{
+			description: `GET with "page[after]" query param`,
+			query:       "GET /v1/publishers?page[after]=WyJjMzUzNzU2ZS04NTk3LTRlNDYtYTk5Yi03ZGEyZTE0MTYwM2IiLCIyMDE0LTA1LTAxVDAwOjAwOjAwWiJd",
+			fixtures:    []string{"publishers.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 4, len(data))
+
+				links := response["links"].(map[string]interface{})
+				assert.Equal(t, "?page[before]=WyJjOTYzYzk4ZC1jZWE1LTQ2M2EtOGJmMS00YWM4ZDgwNDkyM2EiLCIyMDE4LTA5LTEzVDAwOjAwOjAwWiJd", links["prev"])
+				assert.Nil(t, links["next"])
+			},
+		},
+		{
+			description: `GET with invalid "page[after]" query param`,
+			query:       "GET /v1/publishers?page[after]=NOT_A_VALID_CURSOR",
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Publishers`, response["title"])
+				assert.Equal(t, "wrong cursor format in page[after] or page[before]", response["detail"])
+			},
+		},
+		{
+			description: "GET with page[before] query param",
+			query:       "GET /v1/publishers?page[before]=WyJjNWRlYzZmYS04YTAxLTQ4ODEtOWU3ZC0xMzI3NzBkNDIxNGQiLCIyMDE1LTAyLTI1VDAwOjAwOjAwWiJd",
+			fixtures:    []string{"publishers.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 22, len(data))
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Equal(t, "?page[after]=WyJjMDU5ZjgzYS03YWQ4LTQ4NjItOWMzOS1jZjAxZTJiZjVlMTAiLCIyMDE4LTA4LTE0VDAwOjAwOjAwWiJd", links["next"])
+			},
+		},
+		{
+			description: `GET with invalid "page[before]" query param`,
+			query:       "GET /v1/publishers?page[before]=NOT_A_VALID_CURSOR",
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Publishers`, response["title"])
+				assert.Equal(t, "wrong cursor format in page[after] or page[before]", response["detail"])
+			},
+		},
+
+		// GET /publishers/:id
+		{
+			description:         "Non-existent publishers",
+			query:               "GET /v1/publishers/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			expectedCode:        404,
+			expectedBody:        `{"title":"can't get Publisher","detail":"Publisher was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
+		{
+			query:               "GET /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			fixtures:            []string{"publishers.yml", "publishers_code_hosting.yml"},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.NotEmpty(t, response["codeHosting"])
+
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+				assert.Greater(t, len(response["codeHosting"].([]interface{})), 0)
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active"}, key)
+				}
+			},
+		},
+
+		// POST /publishers
 		{
 			query: "POST /v1/publishers",
 			body:  `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
@@ -189,33 +428,45 @@ func TestPublishersEndpoints(t *testing.T) {
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
-			expectedCode: 200,
-			validateFunc: func(t *testing.T, response map[string]interface{}) {
-				fMap := response["data"].(map[string]interface{})
-				codeHost := fMap["codeHosting"].([]interface{})
-				assert.Equal(t, 1, len(codeHost))
-				codeHostElement := codeHost[0].(map[string]interface{})
-				assert.Equal(t, "https://www.example.com", codeHostElement["url"])
-				assert.Equal(t, "example@example.com", fMap["email"])
-			},
+			expectedCode:        200,
 			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+				assert.Equal(t, 1, len(response["codeHosting"].([]interface{})))
+
+				// TODO: check codeHosting content
+				assert.NotEmpty(t, response["codeHosting"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				// TODO: check the record was actually created in the database
+				// TODO: check there are no dangling publishers_codeHosting
+			},
 		},
 		{
 			description: "POST publishers with invalid payload",
 			query:       "POST /v1/publishers",
-			body:        `{"URL":"https://www.example.com", "email":"error"}`,
+			body:        `{"publiccodeYml": "-"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        422,
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"codeHosting","rule":"required"},{"field":"email","rule":"email","value":"error"}]}`,
 			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"codeHosting","rule":"required"},{"field":"email","rule":"email"}]}`,
 		},
 		{
-			description: "POST publisher - wrong token",
+			description: "POST publishers - wrong token",
 			query:       "POST /v1/publishers",
-			body:        `{"name": "New publisher"}`,
+			body:        `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {badToken},
 				"Content-Type":  {"application/json"},
@@ -224,6 +475,207 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
+		{
+			query: "POST /v1/publishers with invalid JSON",
+			body:  `INVALID_JSON`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Publisher`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		{
+			description: "POST publishers with validation errors",
+			query:       "POST /v1/publishers",
+			body:        `{"codeHosting": [{"url" : "a"}], "email":"b"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Publisher`, response["title"])
+				assert.Equal(t, "invalid format", response["detail"])
+
+				assert.IsType(t, []interface{}{}, response["validationErrors"])
+
+				validationErrors := response["validationErrors"].([]interface{})
+				assert.Equal(t, 1, len(validationErrors))
+
+				firstValidationError := validationErrors[0].(map[string]interface{})
+
+				for key := range firstValidationError {
+					assert.Contains(t, []string{"field", "rule", "value"}, key)
+				}
+			},
+		},
+		{
+			description: "POST publishers with empty body",
+			query:       "POST /v1/publishers",
+			body:        "",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't create Publisher`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		{
+			description: "PATCH non-existing publishers",
+			query:       "PATCH /v1/publishers/NO_SUCH_publishers",
+			body:        `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedBody:        `{"title":"Not Found","detail":"update publisher error: : can't update Publisher. Publisher was not found","status":404}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			query: "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			body:  `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+				assert.Equal(t, 3, len(response["codeHosting"].([]interface{})))
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH publishers - wrong token",
+			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
+			body:        ``,
+			headers: map[string][]string{
+				"Authorization": {badToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        401,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description: "PATCH publishers with invalid JSON",
+			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
+			body:        `INVALID_JSON`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't update publishers`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		{
+			description: "PATCH publishers with validation errors",
+			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
+			body:        `{"codeHosting": ["INVALID_URL"], "publiccodeYml": "-"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't update publishers`, response["title"])
+				assert.Equal(t, "invalid format", response["detail"])
+
+				assert.IsType(t, []interface{}{}, response["validationErrors"])
+
+				validationErrors := response["validationErrors"].([]interface{})
+				assert.Equal(t, 1, len(validationErrors))
+
+				firstValidationError := validationErrors[0].(map[string]interface{})
+
+				for key := range firstValidationError {
+					assert.Contains(t, []string{"field", "rule", "value"}, key)
+				}
+			},
+		},
+		{
+			description: "PATCH publishers with empty body",
+			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
+			body:        "",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't update publishers`, response["title"])
+				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+
+		// DELETE /publishers/:id
+		{
+			description:         "Delete non-existent publishers",
+			query:               "GET /v1/publishers/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			expectedCode:        404,
+			expectedBody:        `{"title":"can't get Publishers","detail":"Publishers was not found","status":404}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description: "DELETE publishers with bad authentication",
+			query:       "DELETE /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
+			headers: map[string][]string{
+				"Authorization": {badToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        401,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			query:    "DELETE /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        204,
+			expectedBody:        "",
+			expectedContentType: "application/json",
+		},
+
+		// WebHooks
 
 		// GET /publishers/:id/webhooks
 		{
@@ -624,7 +1076,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, 5, len(data))
 
 				links := response["links"].(map[string]interface{})
-				assert.Equal(t, "?page[before]=WyJjNWRlYzZmYS04YTAxLTQ4ODEtOWU3ZC0xMzI3NzBkNDIxNGQiLCIyMDE1LTAyLTI1VDAwOjAwOjAwWiJd", links["prev"])
+				assert.Equal(t, "?page[before]=WyJjOTYzYzk4ZC1jZWE1LTQ2M2EtOGJmMS00YWM4ZDgwNDkyM2EiLCIyMDE4LTA5LTEzVDAwOjAwOjAwWiJd", links["prev"])
 				assert.Nil(t, links["next"])
 			},
 		},
@@ -1822,10 +2274,10 @@ func TestWebhooksEndpoints(t *testing.T) {
 	tests := []TestCase{
 		// GET /webhooks/:id
 		{
-			query:        "GET /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
-			fixtures:     []string{"webhooks.yml"},
-			expectedCode: 200,
-			expectedBody: `{"id":"007bc84a-7e2d-43a0-b7e1-a256d4114aa7","url":"https://1-b.example.org/receiver","createdAt":"2017-05-01T00:00:00Z","updatedAt":"2017-05-01T00:00:00Z"}`,
+			query:               "GET /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			fixtures:            []string{"webhooks.yml"},
+			expectedCode:        200,
+			expectedBody:        `{"id":"007bc84a-7e2d-43a0-b7e1-a256d4114aa7","url":"https://1-b.example.org/receiver","createdAt":"2017-05-01T00:00:00Z","updatedAt":"2017-05-01T00:00:00Z"}`,
 			expectedContentType: "application/json",
 		},
 		{
@@ -1840,9 +2292,9 @@ func TestWebhooksEndpoints(t *testing.T) {
 
 		// PATCH /webhooks/:id
 		{
-			query: "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
-			body:  `{"url": "https://new.example.org/receiver"}`,
-			fixtures:    []string{"webhooks.yml"},
+			query:    "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			body:     `{"url": "https://new.example.org/receiver"}`,
+			fixtures: []string{"webhooks.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},

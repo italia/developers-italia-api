@@ -14,7 +14,7 @@
   email: foobar@3.example.org
   created_at: '2018-05-31T00:00:00+00:00'
   updated_at: '2018-05-31T00:00:00+00:00'
-- id: '0947ebca-ae8f-46e1-9cfe-2caccc87108b'
+- id: 0947ebca-ae8f-46e1-9cfe-2caccc87108b
   description: Publisher description 4
   email: foobar@4.example.org
   created_at: '2018-06-15T00:00:00+00:00'
@@ -72,5 +72,68 @@
 - id: 21fda7c4-6bbf-4387-8f89-258c1e6fafa2
   description: Publisher description 15
   email: foobar@15.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+- id: 31fda7c4-6bbf-4387-8f89-258c1e6fafa2
+  description: Publisher description 16
+  email: foobar@16.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+- id: 41fda7c4-6bbf-4387-8f89-258c1e6fafa2
+  description: Publisher description 17
+  email: foobar@17.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+- id: 51fda7c4-6bbf-4387-8f89-258c1e6fafa2
+  description: Publisher description 18
+  email: foobar@18.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+- id: 61fda7c4-6bbf-4387-8f89-258c1e6fafa2
+  description: Publisher description 19
+  email: foobar@19.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+- id: 71fda7c4-6bbf-4387-8f89-258c1e6fafa2
+  description: Publisher description 20
+  email: foobar@20.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+- id: 81fda7c4-6bbf-4387-8f89-258c1e6fafa2
+  description: Publisher description 21
+  email: foobar@21.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+- id: 91fda7c4-6bbf-4387-8f89-258c1e6fafa2
+  description: Publisher description 22
+  email: foobar@22.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+- id: 12fda7c4-6bbf-4387-8f89-258c1e6fafa2
+  description: Publisher description 23
+  email: foobar@23.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+- id: 14fda7c4-6bbf-4387-8f89-258c1e6fafa2
+  description: Publisher description 24
+  email: foobar@24.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+- id: 15fda7c4-6bbf-4387-8f89-258c1e6fafa2
+  description: Publisher description 25
+  email: foobar@25.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+- id: 15fda7c4-6bbf-4387-8f89-258c1e6fafb1
+  description: Publisher description 26
+  email: foobar@26.example.org
+  created_at: '2018-11-27T00:00:00+00:00'
+  updated_at: '2018-11-27T00:00:00+00:00'
+
+# Publisher with active: false
+- id: 10fda7c4-6bbf-4387-8f89-258c1e6fafb1
+  description: Publisher description 27
+  email: foobar@27.example.org
+  active: false
   created_at: '2018-11-27T00:00:00+00:00'
   updated_at: '2018-11-27T00:00:00+00:00'
