@@ -804,6 +804,10 @@ paths:
                     $ref: '#/components/schemas/Links'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       operationId: list-publishers
@@ -814,6 +818,20 @@ paths:
           in: query
           name: all
           description: 'Show all publishers, even the one with "active" set to false'
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
     post:
       summary: Create a new Publisher
       description: Create a new Publisher
@@ -839,6 +857,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
   '/publishers/{publisherId}':
@@ -864,8 +884,12 @@ paths:
                 $ref: '#/components/schemas/Publisher'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       operationId: show-publishers-publisherId
@@ -890,6 +914,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:

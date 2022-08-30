@@ -130,6 +130,21 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 	return ctx.JSON(&publisher)
 }
 
+// DeletePublisher deletes the publisher with the given ID.
+func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
+	var publisher models.Publisher
+
+	if err := p.db.Delete(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, "can't delete Publisher", "Publisher was not found")
+		}
+
+		return common.Error(fiber.StatusInternalServerError, "can't delete Publisher", "db error")
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
 func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, req *common.Publisher) error {
 	err := p.db.Transaction(func(gormTrx *gorm.DB) error {
 		if err := gormTrx.Model(&models.Publisher{}).
@@ -156,19 +171,4 @@ func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, 
 	})
 
 	return fmt.Errorf("update publisher error: %w", err)
-}
-
-// DeletePublisher deletes the publisher with the given ID.
-func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
-	var publisher models.Publisher
-
-	if err := p.db.Delete(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "can't delete Publisher", "Publisher was not found")
-		}
-
-		return common.Error(fiber.StatusInternalServerError, "can't delete Publisher", "db error")
-	}
-
-	return ctx.SendStatus(fiber.StatusNoContent)
 }
