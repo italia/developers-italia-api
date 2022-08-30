@@ -33,7 +33,7 @@ type Publisher struct {
 	ID          string         `json:"id" gorm:"primaryKey"`
 	Email       string         `json:"email"`
 	Description string         `json:"description"`
-	CodeHosting []CodeHosting  `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique" json:"codeHosting"`
+	CodeHosting []CodeHosting  `json:"codeHosting" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique"`
 	Active      bool           `json:"active" gorm:"default:true"`
 	CreatedAt   time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt   time.Time      `json:"updatedAt"`
