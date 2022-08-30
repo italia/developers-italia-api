@@ -574,6 +574,62 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description: "GET software with a specific URL",
+			query:       "GET /v1/software?url=https://1-a.example.org/code/repo",
+			fixtures:    []string{"software.yml", "software_urls.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 1, len(data))
+
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Nil(t, links["next"])
+
+				assert.IsType(t, map[string]interface{}{}, data[0])
+				firstSoftware := data[0].(map[string]interface{})
+				assert.Equal(t, "-", firstSoftware["publiccodeYml"])
+
+				assert.IsType(t, []interface{}{}, firstSoftware["urls"])
+				assert.Equal(t, 2, len(firstSoftware["urls"].([]interface{})))
+
+				assert.Equal(t, "c353756e-8597-4e46-a99b-7da2e141603b", firstSoftware["id"])
+
+				assert.Equal(t, "2014-05-01T00:00:00Z", firstSoftware["createdAt"])
+				assert.Equal(t, "2014-05-01T00:00:00Z", firstSoftware["updatedAt"])
+
+				for key := range firstSoftware {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml", "active"}, key)
+				}
+			},
+		},
+		{
+			description: "GET software with a specific URL that doesn't exist",
+			query:       "GET /v1/software?url=https://no.such.url.in.db.example.org/code/repo",
+			fixtures:    []string{"software.yml", "software_urls.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 0, len(data))
+
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Nil(t, links["next"])
+			},
+		},
+		{
 			description: "GET with page[size] query param",
 			query:       "GET /v1/software?page[size]=2",
 			fixtures:    []string{"software.yml"},

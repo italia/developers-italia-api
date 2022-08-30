@@ -93,6 +93,14 @@ paths:
           name: all
           description: 'Show all software, even the one with "active" set to false'
         - schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: url
+          description: Only software with this URL
+        - schema:
             type: integer
             format: int32
             example: 100
@@ -1356,6 +1364,10 @@ components:
           pattern: '.*'
         urls:
           type: array
+          description: >
+            List of repository URLs this software is available at.
+            The first element of the array is the current and canonical one, while the others, if any,
+            are aliases to the current repository.
           minItems: 1
           maxItems: 255
           items:
