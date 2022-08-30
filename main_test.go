@@ -388,7 +388,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 		// GET /publishers/:id
 		{
-			description:         "Non-existent publishers",
+			description:         "Non-existent publisher",
 			query:               "GET /v1/publishers/eea19c82-0449-11ed-bd84-d8bbc146d165",
 			expectedCode:        404,
 			expectedBody:        `{"title":"can't get Publisher","detail":"Publisher was not found","status":404}`,
