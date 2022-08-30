@@ -46,6 +46,23 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error {
 		stmt = stmt.Scopes(models.Active)
 	}
 
+	// Return just software with a certain URL if the 'url' query filter
+	// is used.
+	if url := ctx.Query("url", ""); url != "" {
+		var softwareURL models.SoftwareURL
+
+		err = p.db.First(&softwareURL, "url = ?", url).Error
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(
+				fiber.StatusInternalServerError,
+				"can't get Software",
+				fiber.ErrInternalServerError.Message,
+			)
+		}
+
+		stmt.Where("id = ?", softwareURL.SoftwareID)
+	}
+
 	paginator := general.NewPaginator(ctx)
 
 	result, cursor, err := paginator.Paginate(stmt, &software)
