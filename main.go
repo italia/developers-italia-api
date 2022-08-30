@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/caarlos0/env/v6"
 	"gorm.io/gorm"
@@ -13,6 +14,7 @@ import (
 	"github.com/italia/developers-italia-api/internal/webhooks"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cache"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/italia/developers-italia-api/internal/database"
@@ -69,6 +71,18 @@ func Setup() *fiber.App {
 			},
 		}))
 	}
+
+	app.Use(cache.New(cache.Config{
+		Next: func(ctx *fiber.Ctx) bool {
+			// Don't cache POST, PUT, PATCH or /status
+			return ctx.Method() != fiber.MethodGet || ctx.Route().Path == "/v1/status"
+		},
+		CacheControl: true,
+		Expiration:   10 * time.Second, //nolint:gomnd
+		KeyGenerator: func(ctx *fiber.Ctx) string {
+			return ctx.Path() + string(ctx.Context().QueryArgs().QueryString())
+		},
+	}))
 
 	if envs.PasetoKey == nil {
 		log.Printf("PASETO_KEY not set, API will run in read-only mode")
