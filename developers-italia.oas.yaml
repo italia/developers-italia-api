@@ -879,7 +879,7 @@ paths:
       summary: Get a Publisher
       description: Get a Publisher by its id
       tags:
-        - publisher
+        - publishers
       responses:
         '200':
           description: OK
