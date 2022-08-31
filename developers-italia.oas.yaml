@@ -212,7 +212,7 @@ paths:
               $ref: '#/components/schemas/Software'
     delete:
       summary: Delete a Software
-      description: Delete a Sofware by its id
+      description: Delete a Software by its id
       tags:
         - software
       security:
@@ -802,10 +802,6 @@ paths:
                       $ref: '#/components/schemas/Publisher'
                   links:
                     $ref: '#/components/schemas/Links'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
         '429':
@@ -818,6 +814,16 @@ paths:
           in: query
           name: all
           description: 'Show all publishers, even the one with "active" set to false'
+        - schema:
+            type: integer
+            format: int32
+            example: 100
+            minimum: 1
+            maximum: 100
+            default: 25
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
         - schema:
             type: string
             maxLength: 255
@@ -836,16 +842,10 @@ paths:
       summary: Create a new Publisher
       description: Create a new Publisher
       tags:
-        - publishers
+        - publisher
       security:
         - bearerAuth: []
-      operationId: create-publishers
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Publisher'
+      operationId: create-publisher
       responses:
         '200':
           description: OK
@@ -857,10 +857,15 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Publisher'
+            examples: { }
   '/publishers/{publisherId}':
     parameters:
       - schema:
@@ -872,9 +877,9 @@ paths:
         required: true
     get:
       summary: Get a Publisher
-      description: Get a Publisher by its id
+      description: Get a publisher from its id
       tags:
-        - publishers
+        - publisher
       responses:
         '200':
           description: OK
@@ -882,25 +887,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Publisher'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-      operationId: show-publishers-publisherId
+      operationId: show-publisher-publisherId
     patch:
       summary: Update a Publisher
       description: Update a Publisher by its id
       tags:
-        - publishers
+        - publisher
       security:
-        - bearerAuth: []
-      operationId: update-publishers-publisherId
+        - bearerAuth: [ ]
+      operationId: update-publisher-publisherId
       responses:
         '200':
           description: OK
@@ -914,8 +913,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -928,15 +925,13 @@ paths:
       summary: Delete a Publisher
       description: Delete a Publisher by its id
       tags:
-        - publishers
+        - publisher
       security:
-        - bearerAuth: []
-      operationId: remove-publishers-publisherId
+        - bearerAuth: [ ]
+      operationId: remove-publisher-publisherId
       responses:
         '204':
           $ref: '#/components/responses/NoContent'
-        '400':
-          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
