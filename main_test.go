@@ -194,7 +194,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.NotEmpty(t, firstPub["email"])
 
 				assert.IsType(t, []interface{}{}, firstPub["codeHosting"])
-				assert.Greater(t, len(firstPub["codeHosting"].([]interface{})), 0)
+				assert.Equal(t, 2, len(firstPub["codeHosting"].([]interface{})))
 
 				match, err := regexp.MatchString(UUID_REGEXP, firstPub["id"].(string))
 				assert.Nil(t, err)
