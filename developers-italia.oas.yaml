@@ -927,7 +927,7 @@ paths:
       tags:
         - publisher
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       operationId: remove-publisher-publisherId
       responses:
         '204':
