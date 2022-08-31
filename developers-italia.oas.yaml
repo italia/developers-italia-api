@@ -842,7 +842,7 @@ paths:
       summary: Create a new Publisher
       description: Create a new Publisher
       tags:
-        - publisher
+        - publishers
       security:
         - bearerAuth: []
       operationId: create-publisher
@@ -877,7 +877,7 @@ paths:
         required: true
     get:
       summary: Get a Publisher
-      description: Get a publisher from its id
+      description: Get a Publisher by its id
       tags:
         - publisher
       responses:
@@ -898,7 +898,7 @@ paths:
       tags:
         - publisher
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       operationId: update-publisher-publisherId
       responses:
         '200':
@@ -927,7 +927,7 @@ paths:
       tags:
         - publisher
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       operationId: remove-publisher-publisherId
       responses:
         '204':

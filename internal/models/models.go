@@ -57,9 +57,9 @@ func (CodeHosting) TableName() string {
 }
 
 type CodeHosting struct {
-	ID          string         `json:"id" gorm:"primarykey"`
+	ID          string         `json:"-" gorm:"primarykey"`
 	URL         string         `json:"url" gorm:"not null"`
-	PublisherID string         `json:"publisherId"`
+	PublisherID string         `json:"-"`
 	CreatedAt   time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt   time.Time      `json:"updatedAt"`
 	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
