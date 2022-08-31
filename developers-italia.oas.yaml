@@ -896,7 +896,7 @@ paths:
       summary: Update a Publisher
       description: Update a Publisher by its id
       tags:
-        - publisher
+        - publishers
       security:
         - bearerAuth: []
       operationId: update-publisher-publisherId
