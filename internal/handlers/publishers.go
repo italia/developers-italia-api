@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/italia/developers-italia-api/internal/handlers/general"
+
 	"github.com/gofiber/fiber/v2/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -38,7 +40,18 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 		stmt = stmt.Scopes(models.Active)
 	}
 
-	if err := stmt.Find(&publishers).Error; err != nil {
+	paginator := general.NewPaginator(ctx)
+
+	result, cursor, err := paginator.Paginate(stmt, &publishers)
+	if err != nil {
+		return common.Error(
+			fiber.StatusUnprocessableEntity,
+			"can't get Publishers",
+			"wrong cursor format in page[after] or page[before]",
+		)
+	}
+
+	if result.Error != nil {
 		return common.Error(
 			fiber.StatusInternalServerError,
 			"can't get Publisher",
@@ -46,14 +59,14 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 		)
 	}
 
-	return ctx.JSON(common.NewResponse(publishers))
+	return ctx.JSON(fiber.Map{"data": &publishers, "links": general.PaginationLinks(cursor)})
 }
 
 // GetPublisher gets the publisher with the given ID and returns any error encountered.
 func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 	publisher := models.Publisher{}
 
-	if err := p.db.First(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
+	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't get Publisher", "Publisher was not found")
 		}
@@ -84,14 +97,14 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	for _, URLAddress := range request.CodeHosting {
-		publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{URL: URLAddress.URL})
+		publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{ID: utils.UUIDv4(), URL: URLAddress.URL})
 	}
 
 	if err := p.db.Create(&publisher).Error; err != nil {
 		return common.Error(fiber.StatusInternalServerError, "can't create Publisher", "db error")
 	}
 
-	return ctx.JSON(common.NewResponse(publisher))
+	return ctx.JSON(&publisher)
 }
 
 // PatchPublisher updates the publisher with the given ID.
@@ -115,6 +128,21 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(&publisher)
+}
+
+// DeletePublisher deletes the publisher with the given ID.
+func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
+	var publisher models.Publisher
+
+	if err := p.db.Delete(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, "can't delete Publisher", "Publisher was not found")
+		}
+
+		return common.Error(fiber.StatusInternalServerError, "can't delete Publisher", "db error")
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
 func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, req *common.Publisher) error {
@@ -143,19 +171,4 @@ func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, 
 	})
 
 	return fmt.Errorf("update publisher error: %w", err)
-}
-
-// DeletePublisher deletes the publisher with the given ID.
-func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
-	var publisher models.Publisher
-
-	if err := p.db.Delete(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "can't delete Publisher", "Publisher was not found")
-		}
-
-		return common.Error(fiber.StatusInternalServerError, "can't delete Publisher", "db error")
-	}
-
-	return ctx.SendStatus(fiber.StatusNoContent)
 }
