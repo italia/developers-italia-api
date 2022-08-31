@@ -1416,6 +1416,18 @@ components:
                 format: uri
                 maxLength: 255
                 example: 'http://www.example.com'
+              createdAt:
+                type: string
+                format: date-time
+                example: '2022-06-07T14:56:23Z'
+                description: The time the log was created (RFC 3339 datetime)
+                readOnly: true
+              updatedAt:
+                type: string
+                format: date-time
+                example: '2022-06-07T14:56:23Z'
+                description: The time the log was updated (RFC 3339 datetime)
+                readOnly: true
         description:
           type: string
           maxLength: 255
