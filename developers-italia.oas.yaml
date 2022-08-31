@@ -898,7 +898,7 @@ paths:
       tags:
         - publisher
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       operationId: update-publisher-publisherId
       responses:
         '200':
