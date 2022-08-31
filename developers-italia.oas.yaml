@@ -842,7 +842,7 @@ paths:
       summary: Create a new Publisher
       description: Create a new Publisher
       tags:
-        - publisher
+        - publishers
       security:
         - bearerAuth: []
       operationId: create-publisher
