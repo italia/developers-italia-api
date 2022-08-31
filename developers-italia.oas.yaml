@@ -877,7 +877,7 @@ paths:
         required: true
     get:
       summary: Get a Publisher
-      description: Get a publisher from its id
+      description: Get a Publisher by its id
       tags:
         - publisher
       responses:
