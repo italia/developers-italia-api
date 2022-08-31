@@ -925,7 +925,7 @@ paths:
       summary: Delete a Publisher
       description: Delete a Publisher by its id
       tags:
-        - publisher
+        - publishers
       security:
         - bearerAuth: []
       operationId: remove-publisher-publisherId
