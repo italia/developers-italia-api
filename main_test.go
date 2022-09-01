@@ -1752,7 +1752,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
 				validationErrors := response["validationErrors"].([]interface{})
-				assert.Equal(t, len(validationErrors), 1)
+				assert.Equal(t, 1, len(validationErrors))
 
 				firstValidationError := validationErrors[0].(map[string]interface{})
 
@@ -1971,7 +1971,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
 				validationErrors := response["validationErrors"].([]interface{})
-				assert.Equal(t, len(validationErrors), 1)
+				assert.Equal(t, 1, len(validationErrors))
 
 				firstValidationError := validationErrors[0].(map[string]interface{})
 
