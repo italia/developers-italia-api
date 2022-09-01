@@ -251,7 +251,9 @@ paths:
         required: true
     get:
       summary: List all Logs for a Software
-      description: List all Logs for a Software by its id
+      description: >
+        List all Logs for a Software by its id. The logs are ordered from the most recent
+        to the least recent.
       tags:
         - logs
         - software
@@ -701,7 +703,9 @@ paths:
   /logs:
     get:
       summary: List all Logs
-      description: List all Logs
+      description: >
+        List all Logs. The Logs are ordered from the most recent
+        to the least recent.
       tags:
         - logs
       responses:

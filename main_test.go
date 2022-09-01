@@ -187,7 +187,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyJmNDFmYjMzZi1hZmIxLTRhYzUtOWZmZC1kZjJmMmZhYTRmM2YiLCIyMDE4LTExLTEyVDAwOjAwOjAwWiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDE4LTExLTI3VDAwOjAwOjAwWiIsIjgxZmRhN2M0LTZiYmYtNDM4Ny04Zjg5LTI1OGMxZTZmYWZhMiJd", links["next"])
 
 				assert.IsType(t, map[string]interface{}{}, data[0])
 				firstPub := data[0].(map[string]interface{})
@@ -307,7 +307,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyIxMmZkYTdjNC02YmJmLTQzODctOGY4OS0yNThjMWU2ZmFmYTIiLCIyMDE4LTExLTI3VDAwOjAwOjAwWiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDE4LTA1LTE2VDAwOjAwOjAwWiIsIjQ3ODA3ZTBjLTA2MTMtNGFlYS05OTE3LTU0NTVjYzZlZGRhZCJd", links["next"])
 			},
 		},
 		// TODO
@@ -330,7 +330,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		// },
 		{
 			description: `GET with "page[after]" query param`,
-			query:       "GET /v1/publishers?page[after]=WyJjMzUzNzU2ZS04NTk3LTRlNDYtYTk5Yi03ZGEyZTE0MTYwM2IiLCIyMDE0LTA1LTAxVDAwOjAwOjAwWiJd",
+			query:       "GET /v1/publishers?page[after]=WyIyMDE4LTExLTI3VDAwOjAwOjAwWiIsIjgxZmRhN2M0LTZiYmYtNDM4Ny04Zjg5LTI1OGMxZTZmYWZhMiJd",
 			fixtures:    []string{"publishers.yml"},
 
 			expectedCode:        200,
@@ -338,10 +338,10 @@ func TestPublishersEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 4, len(data))
+				assert.Equal(t, 1, len(data))
 
 				links := response["links"].(map[string]interface{})
-				assert.Equal(t, "?page[before]=WyJjOTYzYzk4ZC1jZWE1LTQ2M2EtOGJmMS00YWM4ZDgwNDkyM2EiLCIyMDE4LTA5LTEzVDAwOjAwOjAwWiJd", links["prev"])
+				assert.Equal(t, "?page[before]=WyIyMDE4LTExLTI3VDAwOjAwOjAwWiIsIjkxZmRhN2M0LTZiYmYtNDM4Ny04Zjg5LTI1OGMxZTZmYWZhMiJd", links["prev"])
 				assert.Nil(t, links["next"])
 			},
 		},
@@ -358,7 +358,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "GET with page[before] query param",
-			query:       "GET /v1/publishers?page[before]=WyJjNWRlYzZmYS04YTAxLTQ4ODEtOWU3ZC0xMzI3NzBkNDIxNGQiLCIyMDE1LTAyLTI1VDAwOjAwOjAwWiJd",
+			query:       "GET /v1/publishers?page[before]=WyIyMDE4LTExLTI3VDAwOjAwOjAwWiIsIjkxZmRhN2M0LTZiYmYtNDM4Ny04Zjg5LTI1OGMxZTZmYWZhMiJd",
 			fixtures:    []string{"publishers.yml"},
 
 			expectedCode:        200,
@@ -367,11 +367,11 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["data"])
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 22, len(data))
+				assert.Equal(t, 25, len(data))
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyJjMDU5ZjgzYS03YWQ4LTQ4NjItOWMzOS1jZjAxZTJiZjVlMTAiLCIyMDE4LTA4LTE0VDAwOjAwOjAwWiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDE4LTExLTI3VDAwOjAwOjAwWiIsIjgxZmRhN2M0LTZiYmYtNDM4Ny04Zjg5LTI1OGMxZTZmYWZhMiJd", links["next"])
 			},
 		},
 		{
@@ -756,7 +756,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyI2ZWUxNDVlMy1mNTE3LTQ3NmUtODFlZC00YTJlNDY4YWU2NjUiLCIyMDE4LTA3LTE2VDAwOjAwOjAwWiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDE4LTA3LTE1VDAwOjAwOjAwWiIsIjhmMzczYThjLTFmNTUtNDVlNC04NTQ5LTA1Y2Q2MzJhMmFkZCJd", links["next"])
 			},
 		},
 
@@ -926,7 +926,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyJjMzUzNzU2ZS04NTk3LTRlNDYtYTk5Yi03ZGEyZTE0MTYwM2IiLCIyMDE0LTA1LTAxVDAwOjAwOjAwWiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDE1LTA0LTI2VDAwOjAwOjAwWiIsIjEyNDI4MGQ3LTc1NTItNGZmZS05MzlmLWY0NjY5N2NjMGU4YSJd", links["next"])
 
 				assert.IsType(t, map[string]interface{}{}, data[0])
 				firstSoftware := data[0].(map[string]interface{})
@@ -1102,7 +1102,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyIxMjQyODBkNy03NTUyLTRmZmUtOTM5Zi1mNDY2OTdjYzBlOGEiLCIyMDE1LTA0LTI2VDAwOjAwOjAwWiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDE0LTA1LTE2VDAwOjAwOjAwWiIsIjlmMTM1MjY4LWEzN2UtNGVhZC05NmVjLWU0YTI0YmI5MzQ0YSJd", links["next"])
 			},
 		},
 		// TODO
@@ -1125,7 +1125,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// },
 		{
 			description: `GET with "page[after]" query param`,
-			query:       "GET /v1/software?page[after]=WyJjMzUzNzU2ZS04NTk3LTRlNDYtYTk5Yi03ZGEyZTE0MTYwM2IiLCIyMDE0LTA1LTAxVDAwOjAwOjAwWiJd",
+			query:       "GET /v1/software?page[after]=WyIyMDE1LTA0LTI2VDAwOjAwOjAwWiIsIjEyNDI4MGQ3LTc1NTItNGZmZS05MzlmLWY0NjY5N2NjMGU4YSJd",
 			fixtures:    []string{"software.yml"},
 
 			expectedCode:        200,
@@ -1136,7 +1136,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, 5, len(data))
 
 				links := response["links"].(map[string]interface{})
-				assert.Equal(t, "?page[before]=WyJjNWRlYzZmYS04YTAxLTQ4ODEtOWU3ZC0xMzI3NzBkNDIxNGQiLCIyMDE1LTAyLTI1VDAwOjAwOjAwWiJd", links["prev"])
+				assert.Equal(t, "?page[before]=WyIyMDE1LTA1LTExVDAwOjAwOjAwWiIsIjgzZTdhMzVlLTMyOGItNDg5MS1iNjBiLTU5NzkyZTAxYzU5ZSJd", links["prev"])
 				assert.Nil(t, links["next"])
 			},
 		},
@@ -1153,7 +1153,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "GET with page[before] query param",
-			query:       "GET /v1/software?page[before]=WyJjNWRlYzZmYS04YTAxLTQ4ODEtOWU3ZC0xMzI3NzBkNDIxNGQiLCIyMDE1LTAyLTI1VDAwOjAwOjAwWiJd",
+			query:       "GET /v1/software?page[before]=WyIyMDE1LTA1LTExVDAwOjAwOjAwWiIsIjgzZTdhMzVlLTMyOGItNDg5MS1iNjBiLTU5NzkyZTAxYzU5ZSJd",
 			fixtures:    []string{"software.yml"},
 
 			expectedCode:        200,
@@ -1166,7 +1166,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyJjMzUzNzU2ZS04NTk3LTRlNDYtYTk5Yi03ZGEyZTE0MTYwM2IiLCIyMDE0LTA1LTAxVDAwOjAwOjAwWiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDE1LTA0LTI2VDAwOjAwOjAwWiIsIjEyNDI4MGQ3LTc1NTItNGZmZS05MzlmLWY0NjY5N2NjMGU4YSJd", links["next"])
 			},
 		},
 		{
@@ -1597,21 +1597,33 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Nil(t, links["prev"])
 				assert.Nil(t, links["next"])
 
-				assert.IsType(t, map[string]interface{}{}, data[0])
-				firstLog := data[0].(map[string]interface{})
-				assert.NotEmpty(t, firstLog["message"])
+				var prevCreatedAt *time.Time = nil
+				for _, l := range data {
+					assert.IsType(t, map[string]interface{}{}, l)
+					log := l.(map[string]interface{})
 
-				match, err := regexp.MatchString(UUID_REGEXP, firstLog["id"].(string))
-				assert.Nil(t, err)
-				assert.True(t, match)
+					assert.NotEmpty(t, log["message"])
 
-				_, err = time.Parse(time.RFC3339, firstLog["createdAt"].(string))
-				assert.Nil(t, err)
-				_, err = time.Parse(time.RFC3339, firstLog["updatedAt"].(string))
-				assert.Nil(t, err)
+					match, err := regexp.MatchString(UUID_REGEXP, log["id"].(string))
+					assert.Nil(t, err)
+					assert.True(t, match)
 
-				for key := range firstLog {
-					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "message", "entity"}, key)
+					createdAt, err := time.Parse(time.RFC3339, log["createdAt"].(string))
+					assert.Nil(t, err)
+
+					_, err = time.Parse(time.RFC3339, log["updatedAt"].(string))
+					assert.Nil(t, err)
+
+					for key := range log {
+						assert.Contains(t, []string{"id", "createdAt", "updatedAt", "message", "entity"}, key)
+					}
+
+					// Check the logs are ordered by descending createdAt
+					if prevCreatedAt != nil {
+						assert.GreaterOrEqual(t, *prevCreatedAt, createdAt)
+					}
+
+					prevCreatedAt = &createdAt
 				}
 
 				// TODO assert.NotEmpty(t, firstLog["entity"])
@@ -1646,7 +1658,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyIxOGE3MDM2Mi0wNDJlLTExZWQtYjc5My1kOGJiYzE0NmQxNjUiLCIyMDEwLTAxLTMwVDIzOjU5OjU5WiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDEwLTAxLTE1VDIzOjU5OjU5WiIsIjEyZjMwZDllLTA0MmUtMTFlZC04ZGRjLWQ4YmJjMTQ2ZDE2NSJd", links["next"])
 			},
 		},
 
@@ -1861,7 +1873,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyJkNjMzNDAwMC02OWE4LTQzYTEtYWI0My01MGJiMDRlMTRlZWQiLCIyMDE3LTA1LTAxVDAwOjAwOjAwWiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIwMDAxLTAxLTAxVDAwOjAwOjAwWiIsImU3ZjZkYmRhLWMzZjUtNGIyZi1iM2Q4LTM5YTM0MDI2ZTYwYSJd", links["next"])
 			},
 		},
 
@@ -2031,24 +2043,34 @@ func TestLogsEndpoints(t *testing.T) {
 				assert.Nil(t, links["prev"])
 				assert.Nil(t, links["next"])
 
-				assert.IsType(t, map[string]interface{}{}, data[0])
-				firstLog := data[0].(map[string]interface{})
-				assert.NotEmpty(t, firstLog["message"])
+				for _, l := range data {
+					assert.IsType(t, map[string]interface{}{}, l)
+					log := l.(map[string]interface{})
+					assert.NotEmpty(t, log["message"])
 
-				match, err := regexp.MatchString(UUID_REGEXP, firstLog["id"].(string))
-				assert.Nil(t, err)
-				assert.True(t, match)
+					match, err := regexp.MatchString(UUID_REGEXP, log["id"].(string))
+					assert.Nil(t, err)
+					assert.True(t, match)
 
-				_, err = time.Parse(time.RFC3339, firstLog["createdAt"].(string))
-				assert.Nil(t, err)
-				_, err = time.Parse(time.RFC3339, firstLog["updatedAt"].(string))
-				assert.Nil(t, err)
+					createdAt, err := time.Parse(time.RFC3339, log["createdAt"].(string))
+					assert.Nil(t, err)
+					_, err = time.Parse(time.RFC3339, log["updatedAt"].(string))
+					assert.Nil(t, err)
 
-				for key := range firstLog {
-					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "message", "entity"}, key)
+					var prevCreatedAt *time.Time = nil
+					for key := range log {
+						assert.Contains(t, []string{"id", "createdAt", "updatedAt", "message", "entity"}, key)
+					}
+
+					// TODO assert.NotEmpty(t, firstLog["entity"])
+
+					// Check the logs are ordered by descending createdAt
+					if prevCreatedAt != nil {
+						assert.GreaterOrEqual(t, *prevCreatedAt, createdAt)
+					}
+
+					prevCreatedAt = &createdAt
 				}
-
-				// TODO assert.NotEmpty(t, firstLog["entity"])
 			},
 		},
 		{
@@ -2068,7 +2090,7 @@ func TestLogsEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyIyZGZiMmJjMi0wNDJkLTExZWQtOTMzOC1kOGJiYzE0NmQxNjUiLCIyMDEwLTAxLTAxVDIzOjU5OjU5WiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDEwLTA3LTAxVDIzOjU5OjU5WiIsIjg1MWZlMGY0LTA0MmUtMTFlZC05MzNlLWQ4YmJjMTQ2ZDE2NSJd", links["next"])
 			},
 		},
 		// TODO
@@ -2081,7 +2103,7 @@ func TestLogsEndpoints(t *testing.T) {
 		// },
 		{
 			description: `GET with "page[after]" query param`,
-			query:       "GET /v1/logs?page[after]=WyI0Zjk1YjBkMC0wNDJlLTExZWQtODI1My1kOGJiYzE0NmQxNjUiLCIyMDEwLTAyLTAxVDIzOjU5OjU5WiJd",
+			query:       "GET /v1/logs?page[after]=WyIyMDEwLTA3LTAxVDIzOjU5OjU5WiIsIjg1MWZlMGY0LTA0MmUtMTFlZC05MzNlLWQ4YmJjMTQ2ZDE2NSJd",
 			fixtures:    []string{"logs.yml"},
 
 			expectedCode:        200,
@@ -2089,10 +2111,10 @@ func TestLogsEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 17, len(data))
+				assert.Equal(t, 18, len(data))
 
 				links := response["links"].(map[string]interface{})
-				assert.Equal(t, "?page[before]=WyI1MzY1MDUwOC0wNDJlLTExZWQtOWI4NC1kOGJiYzE0NmQxNjUiLCIyMDEwLTAyLTE1VDIzOjU5OjU5WiJd", links["prev"])
+				assert.Equal(t, "?page[before]=WyIyMDEwLTA2LTMwVDIzOjU5OjU5WiIsIjgyNTZmODgwLTA0MmUtMTFlZC04MmI5LWQ4YmJjMTQ2ZDE2NSJd", links["prev"])
 				assert.Nil(t, links["next"])
 			},
 		},
@@ -2109,7 +2131,7 @@ func TestLogsEndpoints(t *testing.T) {
 		},
 		{
 			description: "GET with page[before] query param",
-			query:       "GET /v1/logs?page[before]=WyI0Zjk1YjBkMC0wNDJlLTExZWQtODI1My1kOGJiYzE0NmQxNjUiLCIyMDEwLTEyLTMxVDIzOjU5OjU5WiJd",
+			query:       "GET /v1/logs?page[before]=WyIyMDEwLTA2LTMwVDIzOjU5OjU5WiIsIjgyNTZmODgwLTA0MmUtMTFlZC04MmI5LWQ4YmJjMTQ2ZDE2NSJd",
 			fixtures:    []string{"logs.yml"},
 
 			expectedCode:        200,
@@ -2118,11 +2140,11 @@ func TestLogsEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["data"])
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 4, len(data))
+				assert.Equal(t, 3, len(data))
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyI0Zjk1YjBkMC0wNDJlLTExZWQtODI1My1kOGJiYzE0NmQxNjUiLCIyMDEwLTAyLTAxVDIzOjU5OjU5WiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDEwLTA3LTAxVDIzOjU5OjU5WiIsIjg1MWZlMGY0LTA0MmUtMTFlZC05MzNlLWQ4YmJjMTQ2ZDE2NSJd", links["next"])
 			},
 		},
 		{

@@ -8,6 +8,7 @@ import (
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/handlers/general"
 	"github.com/italia/developers-italia-api/internal/models"
+	"github.com/pilagod/gorm-cursor-paginator/v2/paginator"
 	"gorm.io/gorm"
 )
 
@@ -43,7 +44,8 @@ func (p *Log) GetLogs(ctx *fiber.Ctx) error {
 		)
 	}
 
-	paginator := general.NewPaginator(ctx)
+	// Logs are returned in descending order, last first
+	paginator := general.NewPaginatorWithConfig(ctx, &paginator.Config{Order: paginator.DESC})
 
 	result, cursor, err := paginator.Paginate(stmt, &logs)
 	if err != nil {
@@ -171,7 +173,8 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 		Where(map[string]interface{}{"entity_type": models.Software{}.TableName()}).
 		Where("entity_id = ?", software.ID)
 
-	paginator := general.NewPaginator(ctx)
+	// Logs are returned in descending order, last first
+	paginator := general.NewPaginatorWithConfig(ctx, &paginator.Config{Order: paginator.DESC})
 
 	result, cursor, err := paginator.Paginate(stmt, &logs)
 	if err != nil {
