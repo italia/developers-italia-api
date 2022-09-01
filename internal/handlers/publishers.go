@@ -96,6 +96,10 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 		Email: request.Email,
 	}
 
+	if request.ExternalCode != "" {
+		publisher.ExternalCode = request.ExternalCode
+	}
+
 	for _, URLAddress := range request.CodeHosting {
 		publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{ID: utils.UUIDv4(), URL: URLAddress.URL})
 	}

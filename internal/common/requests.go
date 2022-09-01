@@ -1,10 +1,11 @@
 package common
 
 type Publisher struct {
-	CodeHosting []CodeHosting `json:"codeHosting" validate:"required"`
-	Description string        `json:"description"`
-	Email       string        `json:"email" validate:"email"`
-	Active      bool          `json:"active"`
+	CodeHosting  []CodeHosting `json:"codeHosting" validate:"required"`
+	Description  string        `json:"description"`
+	Email        string        `json:"email" validate:"email"`
+	Active       bool          `json:"active"`
+	ExternalCode string        `json:"externalCode" validate:"max=255"`
 }
 
 type CodeHosting struct {

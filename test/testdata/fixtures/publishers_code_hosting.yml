@@ -259,3 +259,13 @@
   url: https://26-b.example.org/code/repo
   created_at: '2014-10-28T00:00:00+00:00'
   updated_at: '2014-10-28T00:00:00+00:00'
+- id: 37ac7039-998b-478a-84ff-43fb65e74811
+  publisher_id: 15fda7c4-6bbf-4387-8f89-258c1e6facb0
+  url: https://27-a.example.org/code/repo
+  created_at: '2014-10-28T00:00:00+00:00'
+  updated_at: '2014-10-28T00:00:00+00:00'
+- id: 37ac7039-998b-418a-84ff-43fb65e74812
+  publisher_id: 15fda7c4-6bbf-4387-8f89-258c1e6facb0
+  url: https://27-b.example.org/code/repo
+  created_at: '2014-10-28T00:00:00+00:00'
+  updated_at: '2014-10-28T00:00:00+00:00'

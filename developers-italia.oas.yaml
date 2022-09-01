@@ -1461,6 +1461,10 @@ components:
             publishers (fe. when they are not complying with some rule, but the problem is
             expected to be fixed in the near future) without removing them.
           default: true
+        externalCode:
+          type: string
+          maxLength: 255
+          example: 'exampleExternalCode'
     Log:
       title: Log
       type: object

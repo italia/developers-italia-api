@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -45,23 +45,19 @@ type TestCase struct {
 }
 
 func init() {
-	os.Remove("./test.db")
+	_ = os.Remove("./test.db")
 
-	os.Setenv("DATABASE_DSN", "file:./test.db")
-	os.Setenv("ENVIRONMENT", "test")
+	_ = os.Setenv("DATABASE_DSN", "file:./test.db")
+	_ = os.Setenv("ENVIRONMENT", "test")
 
 	// echo -n 'test-paseto-key-dont-use-in-prod'  | base64
-	os.Setenv("PASETO_KEY", "dGVzdC1wYXNldG8ta2V5LWRvbnQtdXNlLWluLXByb2Q=")
+	_ = os.Setenv("PASETO_KEY", "dGVzdC1wYXNldG8ta2V5LWRvbnQtdXNlLWluLXByb2Q=")
 
 	var err error
 	db, err = sql.Open("sqlite3", os.Getenv("DATABASE_DSN"))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// This is needed, otherwise we get a database-locked error
-	// TODO: investigate the root cause
-	db.Exec("PRAGMA journal_mode=WAL;")
 
 	// Setup the app as it is done in the main function
 	app = Setup()
@@ -128,7 +124,7 @@ func runTestCases(t *testing.T, tests []TestCase) {
 
 			assert.Equal(t, test.expectedCode, res.StatusCode)
 
-			body, err := ioutil.ReadAll(res.Body)
+			body, err := io.ReadAll(res.Body)
 
 			assert.Nil(t, err)
 
@@ -187,7 +183,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyJmNDFmYjMzZi1hZmIxLTRhYzUtOWZmZC1kZjJmMmZhYTRmM2YiLCIyMDE4LTExLTEyVDAwOjAwOjAwWiJd", links["next"])
+				assert.Equal(t, "?page[after]=WyJkNmRkYzExYS1mZjg1LTRmMGYtYmI4Ny1kZjM4YjJhOWIzOTQiLCIyMDE4LTA1LTMxVDAwOjAwOjAwWiJd", links["next"])
 
 				assert.IsType(t, map[string]interface{}{}, data[0])
 				firstPub := data[0].(map[string]interface{})
@@ -221,7 +217,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["data"])
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 26, len(data))
+				assert.Equal(t, 27, len(data))
 
 				assert.IsType(t, map[string]interface{}{}, response["links"])
 
@@ -261,7 +257,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["data"])
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 27, len(data))
+				assert.Equal(t, 28, len(data))
 
 				assert.IsType(t, map[string]interface{}{}, response["links"])
 
@@ -367,7 +363,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["data"])
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 22, len(data))
+				assert.Equal(t, 23, len(data))
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
@@ -449,6 +445,35 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				// TODO: check the record was actually created in the database
 				// TODO: check there are no dangling publishers_codeHosting
+			},
+		},
+		{
+			query: "POST /v1/publishers - with externalCode example",
+			body:  `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com", "externalCode":"example"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+				assert.Equal(t, 1, len(response["codeHosting"].([]interface{})))
+
+				// TODO: check codeHosting content
+				assert.NotEmpty(t, response["codeHosting"])
+
+				assert.Equal(t, "example", response["externalCode"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
 			},
 		},
 		{
