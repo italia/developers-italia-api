@@ -48,10 +48,6 @@ func (p Publisher) UUID() string {
 	return p.ID
 }
 
-func (p Publisher) AfterSave(tx *gorm.DB) error {
-	return nil
-}
-
 func (CodeHosting) TableName() string {
 	return "publishers_code_hosting"
 }
