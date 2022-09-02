@@ -11,14 +11,34 @@ import (
 
 const DefaultLimitCount = 25
 
+var DefaultConfig = &paginator.Config{ //nolint:gochecknoglobals //can't turn it into a constant
+	Keys:  []string{"CreatedAt", "ID"},
+	Limit: DefaultLimitCount,
+	Order: paginator.ASC,
+}
+
 type PaginationLinks paginator.Cursor
 
 func NewPaginator(ctx *fiber.Ctx) *paginator.Paginator {
-	paginator := paginator.New(&paginator.Config{
-		Keys:  []string{"ID", "CreatedAt"},
-		Limit: DefaultLimitCount,
-		Order: paginator.ASC,
-	})
+	return NewPaginatorWithConfig(ctx, DefaultConfig)
+}
+
+func NewPaginatorWithConfig(ctx *fiber.Ctx, config *paginator.Config) *paginator.Paginator {
+	mergedConf := DefaultConfig
+
+	if len(config.Keys) != 0 {
+		mergedConf.Keys = config.Keys
+	}
+
+	if config.Limit != 0 {
+		mergedConf.Limit = config.Limit
+	}
+
+	if config.Order != DefaultConfig.Order {
+		mergedConf.Order = config.Order
+	}
+
+	paginator := paginator.New(mergedConf)
 
 	if after := ctx.Query("page[after]"); after != "" {
 		paginator.SetAfterCursor(after)
