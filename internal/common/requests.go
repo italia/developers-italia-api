@@ -1,7 +1,7 @@
 package common
 
 type Publisher struct {
-	CodeHosting  []CodeHosting `json:"codeHosting" validate:"required"`
+	CodeHosting  []CodeHosting `json:"codeHosting" validate:"required,gt=0,dive"`
 	Description  string        `json:"description"`
 	Email        string        `json:"email" validate:"email"`
 	Active       bool          `json:"active"`

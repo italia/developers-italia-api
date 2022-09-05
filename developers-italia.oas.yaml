@@ -907,7 +907,7 @@ paths:
       operationId: show-publisher-publisherId
     patch:
       summary: Update a Publisher
-      description: Update a Publisher by its id
+      description: Update a Publisher by its id. Only the fields that are provided will be updated, codeHosting field will be overwritten entirely.
       tags:
         - publishers
       security:

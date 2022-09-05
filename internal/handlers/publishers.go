@@ -85,9 +85,6 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	// TODO add query to check if codeHosting exists - Normalize URL
-	// TODO Add unique in  description, email, externalCode
-
 	publisher := &models.Publisher{
 		ID:    utils.UUIDv4(),
 		Email: publisherReq.Email,
