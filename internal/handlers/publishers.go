@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/italia/developers-italia-api/internal/handlers/general"
 
@@ -79,28 +78,30 @@ func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 
 // PostPublisher creates a new publisher.
 func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
-	request := common.Publisher{}
+	publisherReq := new(common.Publisher)
 
-	if err := ctx.BodyParser(&request); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't create Publisher", "invalid json")
+	err := common.ValidateRequestEntity(ctx, publisherReq, "Publisher")
+	if err != nil {
+		return err
 	}
 
-	if err := common.ValidateStruct(&request); err != nil {
-		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't create Publisher", "invalid format", err,
-		)
-	}
+	// TODO add query to check if codeHosting exists - Normalize URL
+	// TODO Add unique in  description, email, externalCode
 
 	publisher := &models.Publisher{
 		ID:    utils.UUIDv4(),
-		Email: request.Email,
+		Email: publisherReq.Email,
 	}
 
-	if request.ExternalCode != "" {
-		publisher.ExternalCode = request.ExternalCode
+	if publisherReq.ExternalCode != "" {
+		publisher.ExternalCode = publisherReq.ExternalCode
 	}
 
-	for _, URLAddress := range request.CodeHosting {
+	if publisherReq.Description != "" {
+		publisher.Description = publisherReq.Description
+	}
+
+	for _, URLAddress := range publisherReq.CodeHosting {
 		publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{ID: utils.UUIDv4(), URL: URLAddress.URL})
 	}
 
@@ -111,24 +112,52 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	return ctx.JSON(&publisher)
 }
 
-// PatchPublisher updates the publisher with the given ID.
+// PatchPublisher updates the publisher with the given ID. Please note that codeHosting URLs will be overwritten from the request.
 func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
 	publisherReq := new(common.Publisher)
 
-	if err := ctx.BodyParser(publisherReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't update Publisher", "invalid json")
-	}
-
-	if err := common.ValidateStruct(*publisherReq); err != nil {
-		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't update Publisher", "invalid format", err,
-		)
+	err := common.ValidateRequestEntity(ctx, publisherReq, "Publisher")
+	if err != nil {
+		return err
 	}
 
 	publisher := models.Publisher{}
 
-	if err := p.updatePublisher(ctx, publisher, publisherReq); err != nil {
-		return err
+	err = p.db.Transaction(func(gormTrx *gorm.DB) error {
+		if err := gormTrx.Model(&models.Publisher{}).Preload("CodeHosting").
+			First(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
+			}
+
+			return err
+		}
+
+		if publisherReq.Description != "" {
+			publisher.Description = publisherReq.Description
+		}
+
+		if publisherReq.Email != "" {
+			publisher.Email = publisherReq.Email
+		}
+
+		if publisherReq.ExternalCode != "" {
+			publisher.ExternalCode = publisherReq.ExternalCode
+		}
+
+		if publisherReq.CodeHosting != nil && len(publisherReq.CodeHosting) > 0 {
+			gormTrx.Delete(&publisher.CodeHosting)
+
+			for _, URLAddress := range publisherReq.CodeHosting {
+				publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{ID: utils.UUIDv4(), URL: URLAddress.URL})
+			}
+		}
+
+		return p.db.Updates(&publisher).Error
+	})
+
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, "can't update Publisher", err.Error())
 	}
 
 	return ctx.JSON(&publisher)
@@ -147,32 +176,4 @@ func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.SendStatus(fiber.StatusNoContent)
-}
-
-func (p *Publisher) updatePublisher(ctx *fiber.Ctx, publisher models.Publisher, req *common.Publisher) error {
-	err := p.db.Transaction(func(gormTrx *gorm.DB) error {
-		if err := gormTrx.Model(&models.Publisher{}).
-			Preload("CodeHosting").
-			First(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
-			}
-
-			return common.Error(fiber.StatusInternalServerError, "can't update Publisher", fiber.ErrInternalServerError.Message)
-		}
-
-		gormTrx.Delete(&publisher.CodeHosting)
-
-		for _, URLAddress := range req.CodeHosting {
-			publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{URL: URLAddress.URL})
-		}
-
-		if err := p.db.Updates(&publisher).Error; err != nil {
-			return common.Error(fiber.StatusUnprocessableEntity, "can't update Publisher", err.Error())
-		}
-
-		return nil
-	})
-
-	return fmt.Errorf("update publisher error: %w", err)
 }

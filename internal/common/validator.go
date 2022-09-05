@@ -2,8 +2,11 @@ package common
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/gofiber/fiber/v2"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -56,4 +59,18 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 	}
 
 	return validationErrors
+}
+
+func ValidateRequestEntity(ctx *fiber.Ctx, request interface{}, entityName string) error {
+	if err := ctx.BodyParser(request); err != nil {
+		return Error(fiber.StatusBadRequest, fmt.Sprintf("can't update %s", entityName), "invalid json")
+	}
+
+	if err := ValidateStruct(request); err != nil {
+		return ErrorWithValidationErrors(
+			fiber.StatusUnprocessableEntity, fmt.Sprintf("can't update %s", entityName), "invalid format", err,
+		)
+	}
+
+	return nil
 }

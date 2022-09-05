@@ -31,8 +31,8 @@ type Log struct {
 
 type Publisher struct {
 	ID           string         `json:"id" gorm:"primaryKey"`
-	Email        string         `json:"email"`
-	Description  string         `json:"description"`
+	Email        string         `json:"email" gorm:"uniqueIndex"`
+	Description  string         `json:"description" gorm:"uniqueIndex"`
 	CodeHosting  []CodeHosting  `json:"codeHosting" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique"`
 	Active       bool           `json:"active" gorm:"default:true"`
 	ExternalCode string         `json:"externalCode,omitempty"`
@@ -59,7 +59,7 @@ func (CodeHosting) TableName() string {
 
 type CodeHosting struct {
 	ID          string         `json:"-" gorm:"primaryKey"`
-	URL         string         `json:"url" gorm:"not null"`
+	URL         string         `json:"url" gorm:"not null,uniqueIndex"`
 	PublisherID string         `json:"-"`
 	CreatedAt   time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt   time.Time      `json:"updatedAt"`
