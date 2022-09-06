@@ -1,128 +1,159 @@
 ---
 - id: c353756e-8597-4e46-a99b-7da2e141603b
   publiccode_yml: "-"
+  software_url_id: beeadd3e-11bb-4313-99bb-94cd51836926
   created_at: '2014-05-01T00:00:00+00:00'
   updated_at: '2014-05-01T00:00:00+00:00'
 - id: 9f135268-a37e-4ead-96ec-e4a24bb9344a
   publiccode_yml: "-"
+  software_url_id: f22d408f-93a5-411c-9c35-99039514afc4
   created_at: '2014-05-16T00:00:00+00:00'
   updated_at: '2014-05-16T00:00:00+00:00'
 - id: 18348f13-1076-4a1e-b204-ed541b824d64
   publiccode_yml: "-"
+  software_url_id: 4a542d47-b249-4193-81d2-6adef5beec55
   created_at: '2014-05-31T00:00:00+00:00'
   updated_at: '2014-05-31T00:00:00+00:00'
 - id: 3eff1b39-8dd3-4871-9fec-32a3172510f1
   publiccode_yml: "-"
+  software_url_id: 5237ce3c-6b61-45de-8888-8fad01239bdf
   created_at: '2014-06-15T00:00:00+00:00'
   updated_at: '2014-06-15T00:00:00+00:00'
 - id: 76d50e86-09c2-4dc3-ae95-21d44d8d7610
   publiccode_yml: "-"
+  software_url_id: 316a6051-e04b-4061-b888-889697fb94f7
   created_at: '2014-06-30T00:00:00+00:00'
   updated_at: '2014-06-30T00:00:00+00:00'
 - id: b23cba1f-4e59-4454-98cd-0757b29a3ba0
   publiccode_yml: "-"
+  software_url_id: 8f3bc024-b71a-4377-bbb9-70a415bdb72b
   created_at: '2014-07-15T00:00:00+00:00'
   updated_at: '2014-07-15T00:00:00+00:00'
 - id: b05bb541-bc8e-4af0-834a-1b7be1e0a6cf
   publiccode_yml: "-"
+  software_url_id: bf2dca9b-52b1-4b69-8806-a2b8357c3957
   created_at: '2014-07-30T00:00:00+00:00'
   updated_at: '2014-07-30T00:00:00+00:00'
 - id: e7576e7f-9dcf-4979-b9e9-d8cdcad3b60e
   publiccode_yml: "-"
+  software_url_id: d20cf72c-dbe8-4ba7-ac30-8f1a24ca872e
   created_at: '2014-08-14T00:00:00+00:00'
   updated_at: '2014-08-14T00:00:00+00:00'
 - id: 11e101c4-f989-4cc4-a665-63f9f34e83f6
   publiccode_yml: "-"
+  software_url_id: 18778680-fcc9-4c55-a933-3d9b961c8ef6
   created_at: '2014-08-29T00:00:00+00:00'
   updated_at: '2014-08-29T00:00:00+00:00'
 - id: f026fdaa-8682-40d1-b26e-0d7a3abf1946
   publiccode_yml: "-"
+  software_url_id: bd96fadd-2e61-43c5-8072-f2e2494922f6
   created_at: '2014-09-13T00:00:00+00:00'
   updated_at: '2014-09-13T00:00:00+00:00'
 - id: 59f32fa2-6896-4654-969c-c69d161d84de
   publiccode_yml: "-"
+  software_url_id: 5d82cfa3-b9ac-47fb-a6bd-fa72d4979a9f
   created_at: '2014-09-28T00:00:00+00:00'
   updated_at: '2014-09-28T00:00:00+00:00'
 - id: 1782738e-8528-4506-a558-a2a3f3489ddf
   publiccode_yml: "-"
+  software_url_id: 410bca46-de7f-49cf-a159-5612f5588264
   created_at: '2014-10-13T00:00:00+00:00'
   updated_at: '2014-10-13T00:00:00+00:00'
 - id: 621a2af2-dc65-4a15-b7e8-33544b3415bc
   publiccode_yml: "-"
+  software_url_id: 0a697b70-4b58-4f69-a0b9-7edae98fb8f8
   created_at: '2014-10-28T00:00:00+00:00'
   updated_at: '2014-10-28T00:00:00+00:00'
 - id: 79d7dd0b-8c7f-4299-be00-4a226a20657e
   publiccode_yml: "-"
+  software_url_id: 1888a9dd-0ad7-4d11-bf30-8d80f98d94f6
   created_at: '2014-11-12T00:00:00+00:00'
   updated_at: '2014-11-12T00:00:00+00:00'
 - id: e8b1c04f-f4cb-4ded-ae2f-b76927cf78da
   publiccode_yml: "-"
+  software_url_id: 63f7fe58-5745-459f-aa94-7bde30107ff8
   created_at: '2014-11-27T00:00:00+00:00'
   updated_at: '2014-11-27T00:00:00+00:00'
 - id: aefab093-9082-4dfc-839b-17db4b98d804
   publiccode_yml: "-"
+  software_url_id: dbc09e58-53c6-4d30-9674-07efc28f8770
   created_at: '2014-12-12T00:00:00+00:00'
   updated_at: '2014-12-12T00:00:00+00:00'
 - id: 975a3ee7-0c9d-45e8-ba90-85613afcb9fc
   publiccode_yml: "-"
+  software_url_id: e6a622c0-8bd6-44fa-bf0f-52e2e813a550
   created_at: '2014-12-27T00:00:00+00:00'
   updated_at: '2014-12-27T00:00:00+00:00'
 - id: 59803fb7-8eec-4fe5-a354-8926009c364a
   publiccode_yml: "-"
+  software_url_id: 73d86c54-6880-4763-b872-cc652b52d1df
   created_at: '2015-01-11T00:00:00+00:00'
   updated_at: '2015-01-11T00:00:00+00:00'
 - id: a6c805ed-4edb-41a3-826e-900c0f85353b
   publiccode_yml: "-"
+  software_url_id: ff242b9e-2417-437e-bcbf-7d08c0492935
   created_at: '2015-01-26T00:00:00+00:00'
   updated_at: '2015-01-26T00:00:00+00:00'
 - id: 7902ff36-a23e-4d34-a906-91bbb57542fa
   publiccode_yml: "-"
+  software_url_id: c337be5f-83d5-4aff-99f9-8e0d2517093f
   created_at: '2015-02-10T00:00:00+00:00'
   updated_at: '2015-02-10T00:00:00+00:00'
 - id: c5dec6fa-8a01-4881-9e7d-132770d4214d
   publiccode_yml: "-"
+  software_url_id: 32746296-1321-47d7-9bf2-466acf144ea4
   created_at: '2015-02-25T00:00:00+00:00'
   updated_at: '2015-02-25T00:00:00+00:00'
 - id: 1e6e2df3-832f-434c-b70d-c2a3fb82df3e
   publiccode_yml: "-"
+  software_url_id: 54ce56bf-e53f-491e-8ce7-8ba3f97fa124
   created_at: '2015-03-12T00:00:00+00:00'
   updated_at: '2015-03-12T00:00:00+00:00'
 - id: 7fab4edd-57b1-4c16-8365-5f6f63f73eda
   publiccode_yml: "-"
+  software_url_id: e8833d12-5d44-49bf-bf18-4e9dfa22234b
   created_at: '2015-03-27T00:00:00+00:00'
   updated_at: '2015-03-27T00:00:00+00:00'
 - id: 3ea10274-6676-43c0-aa20-030e826f7788
   publiccode_yml: "-"
+  software_url_id: 087343d9-ecd2-4947-b251-b47efec10623
   created_at: '2015-04-11T00:00:00+00:00'
   updated_at: '2015-04-11T00:00:00+00:00'
 - id: 124280d7-7552-4ffe-939f-f46697cc0e8a
   publiccode_yml: "-"
+  software_url_id: b3039f56-69a8-4244-8d97-5b6bb9fc289b
   created_at: '2015-04-26T00:00:00+00:00'
   updated_at: '2015-04-26T00:00:00+00:00'
 - id: 83e7a35e-328b-4891-b60b-59792e01c59e
   publiccode_yml: "-"
+  software_url_id: 8ca8b5d6-0ef7-4abd-b6b6-4f4f038e6a61
   created_at: '2015-05-11T00:00:00+00:00'
   updated_at: '2015-05-11T00:00:00+00:00'
 - id: b6267714-4b2d-4b52-828d-b67340f0c588
   publiccode_yml: "-"
+  software_url_id: 46e215a9-ec41-4e1b-aff4-07ad1ec49494
   created_at: '2015-05-26T00:00:00+00:00'
   updated_at: '2015-05-26T00:00:00+00:00'
 - id: d5675fe6-f9d7-4fae-b270-5cd4918e4a30
   publiccode_yml: "-"
+  software_url_id: 11c87e37-0dc9-48fa-8aaf-7d9308e9674a
   created_at: '2015-06-10T00:00:00+00:00'
   updated_at: '2015-06-10T00:00:00+00:00'
 - id: b9b6dbf2-f0e9-4797-a75a-88729e22a14c
   publiccode_yml: "-"
+  software_url_id: 736984a7-1c4e-453c-ab57-e7fa852fd272
   created_at: '2015-06-25T00:00:00+00:00'
   updated_at: '2015-06-25T00:00:00+00:00'
 - id: 660aaa39-efc6-4272-b125-3b3775033503
   publiccode_yml: "-"
+  software_url_id: 5d5c50de-772e-4266-a855-340e364de439
   created_at: '2015-07-10T00:00:00+00:00'
   updated_at: '2015-07-10T00:00:00+00:00'
 
 # Software with active: false
 - id: 7fc258a8-28e0-443c-a889-5e835ce4a378
   publiccode_yml: "-"
+  software_url_id: 5d9316d4-7f80-4723-86c6-5a2515a01b04
   active: false
   created_at: '2015-07-15T00:00:00+00:00'
   updated_at: '2015-07-15T00:00:00+00:00'

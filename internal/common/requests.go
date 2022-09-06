@@ -12,10 +12,18 @@ type CodeHosting struct {
 	Group *bool  `json:"group"`
 }
 
-type Software struct {
-	URLs          []string `json:"urls" validate:"required,gt=0,dive,url"`
+type SoftwarePost struct {
+	URL           string   `json:"url" validate:"required,url"`
+	Aliases       []string `json:"aliases" validate:"dive,url"`
 	PubliccodeYml string   `json:"publiccodeYml" validate:"required"`
 	Active        *bool    `json:"active"`
+}
+
+type SoftwarePatch struct {
+	URL           string    `json:"url" validate:"url"`
+	Aliases       *[]string `json:"aliases" validate:"omitempty,dive,url"`
+	PubliccodeYml string    `json:"publiccodeYml"`
+	Active        bool      `json:"active"`
 }
 
 type Log struct {

@@ -63,14 +63,20 @@ type CodeHosting struct {
 }
 
 type Software struct {
-	ID            string         `json:"id" gorm:"primaryKey"`
-	URLs          []SoftwareURL  `json:"urls"`
-	PubliccodeYml string         `json:"publiccodeYml"`
-	Logs          []Log          `json:"-" gorm:"polymorphic:Entity;"`
-	Active        *bool          `json:"active" gorm:"default:true;not null"`
-	CreatedAt     time.Time      `json:"createdAt" gorm:"index"`
-	UpdatedAt     time.Time      `json:"updatedAt"`
-	DeletedAt     gorm.DeletedAt `json:"-" gorm:"index"`
+	ID string `json:"id" gorm:"primarykey"`
+
+	// This needs to be explicitly declared, otherwise GORM won't create
+	// the foreign key and will be confused about the double relationship
+	// with SoftwareURLs (belongs to and has many).
+	SoftwareURLID string `json:"-" gorm:"uniqueIndex,not null"`
+
+	URL           SoftwareURL   `json:"url"`
+	Aliases       []SoftwareURL `json:"aliases"`
+	PubliccodeYml string        `json:"publiccodeYml"`
+	Logs          []Log         `json:"-" gorm:"polymorphic:Entity;"`
+	Active        *bool         `json:"active" gorm:"default:true;not null"`
+	CreatedAt     time.Time     `json:"createdAt" gorm:"index"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
 }
 
 func (Software) TableName() string {
@@ -83,10 +89,11 @@ func (s Software) UUID() string {
 }
 
 type SoftwareURL struct {
-	gorm.Model
-	ID         string `gorm:"primaryKey"`
-	URL        string `gorm:"uniqueIndex"`
-	SoftwareID string
+	ID         string    `gorm:"primarykey"`
+	URL        string    `gorm:"uniqueIndex"`
+	SoftwareID string    `gorm:"not null"`
+	CreatedAt  time.Time `json:"createdAt" gorm:"index"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 func (su SoftwareURL) MarshalJSON() ([]byte, error) {
