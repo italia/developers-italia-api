@@ -13,7 +13,7 @@ type Model interface {
 }
 
 type Bundle struct {
-	ID   string `gorm:"primarykey"`
+	ID   string `gorm:"primaryKey"`
 	Name string
 }
 
@@ -62,7 +62,7 @@ type CodeHosting struct {
 }
 
 type Software struct {
-	ID            string         `json:"id" gorm:"primarykey"`
+	ID            string         `json:"id" gorm:"primaryKey"`
 	URLs          []SoftwareURL  `json:"urls"`
 	PubliccodeYml string         `json:"publiccodeYml"`
 	Logs          []Log          `json:"-" gorm:"polymorphic:Entity;"`
@@ -83,7 +83,7 @@ func (s Software) UUID() string {
 
 type SoftwareURL struct {
 	gorm.Model
-	ID         string `gorm:"primarykey"`
+	ID         string `gorm:"primaryKey"`
 	URL        string `gorm:"uniqueIndex"`
 	SoftwareID string
 }
@@ -93,7 +93,7 @@ func (su SoftwareURL) MarshalJSON() ([]byte, error) {
 }
 
 type Webhook struct {
-	ID        string         `json:"id" gorm:"primarykey"`
+	ID        string         `json:"id" gorm:"primaryKey"`
 	URL       string         `json:"url" gorm:"index:idx_webhook_url,unique"`
 	Secret    string         `json:"-"`
 	CreatedAt time.Time      `json:"createdAt" gorm:"index"`
@@ -106,7 +106,7 @@ type Webhook struct {
 }
 
 type Event struct {
-	ID         string `gorm:"primarykey"`
+	ID         string `gorm:"primaryKey"`
 	Type       string
 	EntityType string
 	EntityID   string
