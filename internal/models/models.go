@@ -34,7 +34,7 @@ type Publisher struct {
 	Email       string         `json:"email"`
 	Description string         `json:"description"`
 	CodeHosting []CodeHosting  `json:"codeHosting" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique"`
-	Active      bool           `json:"active" gorm:"default:true"`
+	Active      *bool          `json:"active" gorm:"default:true;not null"`
 	CreatedAt   time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt   time.Time      `json:"updatedAt"`
 	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
@@ -66,7 +66,7 @@ type Software struct {
 	URLs          []SoftwareURL  `json:"urls"`
 	PubliccodeYml string         `json:"publiccodeYml"`
 	Logs          []Log          `json:"-" gorm:"polymorphic:Entity;"`
-	Active        bool           `json:"active" gorm:"default:true"`
+	Active        *bool          `json:"active" gorm:"default:true;not null"`
 	CreatedAt     time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt     time.Time      `json:"updatedAt"`
 	DeletedAt     gorm.DeletedAt `json:"-" gorm:"index"`

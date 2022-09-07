@@ -447,6 +447,8 @@ func TestPublishersEndpoints(t *testing.T) {
 				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
 				assert.Nil(t, err)
 
+				assert.Equal(t, true, response["active"])
+
 				// TODO: check the record was actually created in the database
 				// TODO: check there are no dangling publishers_codeHosting
 			},
@@ -487,6 +489,20 @@ func TestPublishersEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Publisher`, response["title"])
 				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		{
+			description: "POST publishers with optional boolean field set to false",
+			query:       "POST /v1/publishers",
+			body:        `{"active": false, "codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, false, response["active"])
 			},
 		},
 		{
@@ -1293,6 +1309,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
 				assert.Nil(t, err)
 
+				assert.Equal(t, true, response["active"])
+
 				// TODO: check the record was actually created in the database
 				// TODO: check there are no dangling software_urls
 			},
@@ -1351,6 +1369,20 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// 		assert.Equal(t, "invalid json", response["detail"])
 		// 	},
 		// },
+		{
+			description: "POST software with optional boolean field set to false",
+			query:       "POST /v1/software",
+			body:        `{"active": false, "urls":["https://example.org"], "publiccodeYml": "-"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, false, response["active"])
+			},
+		},
 		{
 			description: "POST software with validation errors",
 			query:       "POST /v1/software",
