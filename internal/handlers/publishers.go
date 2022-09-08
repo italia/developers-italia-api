@@ -92,8 +92,9 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	publisher := &models.Publisher{
-		ID:    utils.UUIDv4(),
-		Email: request.Email,
+		ID:     utils.UUIDv4(),
+		Email:  request.Email,
+		Active: request.Active,
 	}
 
 	for _, URLAddress := range request.CodeHosting {
