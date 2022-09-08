@@ -10,11 +10,12 @@ jobs:
   release_chart:
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v3
       - name: Get version
         id: get_version
         run: echo "::set-output name=version::${GITHUB_REF_NAME#helm/}"
       - name: Push chart to GitHub Container Registry
-        uses: appany/helm-oci-chart-releaser@v1.0.0
+        uses: appany/helm-oci-chart-releaser@v0.3.0
         with:
           name: developers-italia-api
           repository: ${{ github.repository }}/charts
