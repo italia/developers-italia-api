@@ -338,7 +338,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 1, len(data))
+				assert.Equal(t, 2, len(data))
 
 				links := response["links"].(map[string]interface{})
 				assert.Equal(t, "?page[before]=WyIyMDE4LTExLTI3VDAwOjAwOjAwWiIsIjkxZmRhN2M0LTZiYmYtNDM4Ny04Zjg5LTI1OGMxZTZmYWZhMiJd", links["prev"])
