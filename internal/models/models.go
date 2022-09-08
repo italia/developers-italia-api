@@ -32,10 +32,10 @@ type Log struct {
 type Publisher struct {
 	ID           string         `json:"id" gorm:"primaryKey"`
 	Email        string         `json:"email" gorm:"uniqueIndex"`
-	Description  string         `json:"description" gorm:"uniqueIndex"`
+	Description  string         `json:"description"`
 	CodeHosting  []CodeHosting  `json:"codeHosting" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique"`
 	Active       bool           `json:"active" gorm:"default:true"`
-	ExternalCode string         `json:"externalCode,omitempty"`
+	ExternalCode string         `json:"externalCode,omitempty" gorm:"uniqueIndex"`
 	CreatedAt    time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
 	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`

@@ -9,8 +9,10 @@ import (
 var (
 	ErrAuthentication  = errors.New("token authentication failed")
 	ErrInvalidDateTime = errors.New("invalid date time format (RFC 3339 needed)")
+	ErrKeyLen          = errors.New("PASETO_KEY must be 32 bytes long once base64-decoded")
 
-	ErrKeyLen = errors.New("PASETO_KEY must be 32 bytes long once base64-decoded")
+	ErrUniqueConstraint = errors.New("db constraint violation")
+	ErrRecordNotFound   = errors.New("record not found")
 )
 
 func Error(status int, title string, detail string) ProblemJSONError {

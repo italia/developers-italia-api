@@ -7,6 +7,8 @@ import (
 
 type Base64Key [SymmetricKeyLen]byte
 
+var EnvironmentConfig Environment //nolint:gochecknoglobals
+
 type Environment struct {
 	MaxRequests        int        `env:"MAX_REQUESTS" envDefault:"0"`
 	CurrentEnvironment string     `env:"ENVIRONMENT" envDefault:"production"`

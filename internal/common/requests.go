@@ -3,7 +3,7 @@ package common
 type Publisher struct {
 	CodeHosting  []CodeHosting `json:"codeHosting" validate:"required,gt=0,dive"`
 	Description  string        `json:"description"`
-	Email        string        `json:"email" validate:"email"`
+	Email        string        `json:"email" validate:"email,required"`
 	Active       bool          `json:"active"`
 	ExternalCode string        `json:"externalCode" validate:"max=255"`
 }

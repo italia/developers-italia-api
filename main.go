@@ -28,17 +28,15 @@ func main() {
 }
 
 func Setup() *fiber.App {
-	envs := common.Environment{}
-
-	if err := env.Parse(&envs); err != nil {
-		log.Fatal(err)
+	if err := env.Parse(&common.EnvironmentConfig); err != nil {
+		panic(err)
 	}
 
-	db := database.NewDatabase(envs)
+	db := database.NewDatabase(common.EnvironmentConfig)
 
-	gormDB, err := db.Init(envs.Database)
+	gormDB, err := db.Init(common.EnvironmentConfig.Database)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	// Setup a goroutine acting as a worker for events sent to the
@@ -62,9 +60,9 @@ func Setup() *fiber.App {
 	app.Use(recover.New())
 
 	// Use Fiber Rate API Limiter
-	if !envs.IsTest() && envs.MaxRequests != 0 {
+	if !common.EnvironmentConfig.IsTest() && common.EnvironmentConfig.MaxRequests != 0 {
 		app.Use(limiter.New(limiter.Config{
-			Max:               envs.MaxRequests,
+			Max:               common.EnvironmentConfig.MaxRequests,
 			LimiterMiddleware: limiter.SlidingWindow{},
 			KeyGenerator: func(ctx *fiber.Ctx) string {
 				return ctx.IP() + ctx.Get(fiber.HeaderXForwardedFor, "")
@@ -84,13 +82,13 @@ func Setup() *fiber.App {
 		},
 	}))
 
-	if envs.PasetoKey == nil {
+	if common.EnvironmentConfig.PasetoKey == nil {
 		log.Printf("PASETO_KEY not set, API will run in read-only mode")
 
-		envs.PasetoKey = middleware.NewRandomPasetoKey()
+		common.EnvironmentConfig.PasetoKey = middleware.NewRandomPasetoKey()
 	}
 
-	app.Use(middleware.NewPasetoMiddleware(envs))
+	app.Use(middleware.NewPasetoMiddleware(common.EnvironmentConfig))
 
 	setupHandlers(app, gormDB)
 

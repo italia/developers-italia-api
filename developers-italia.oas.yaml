@@ -853,7 +853,7 @@ paths:
           description: Only results after this cursor
     post:
       summary: Create a new Publisher
-      description: Create a new Publisher
+      description: Create a new Publisher. The URL will be normalized. Publisher with same URL, Email or ExternalCode will be considered the same and an error will be thrown.
       tags:
         - publishers
       security:
