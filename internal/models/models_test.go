@@ -55,12 +55,6 @@ func init() {
 	}
 }
 
-func TestMain(m *testing.M) {
-	code := m.Run()
-
-	os.Exit(code)
-}
-
 func loadFixtures(t *testing.T, files ...string) {
 	var filesWithPath []string
 	for _, file := range files {
