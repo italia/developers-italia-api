@@ -179,9 +179,7 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error {
 
 // DeleteSoftware deletes the software with the given ID.
 func (p *Software) DeleteSoftware(ctx *fiber.Ctx) error {
-	var software models.Software
-
-	if err := p.db.Delete(&software, "id = ?", ctx.Params("id")).Error; err != nil {
+	if err := p.db.Select("Aliases").Delete(&models.Software{ID: ctx.Params("id")}).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't delete Software", "Software was not found")
 		}
