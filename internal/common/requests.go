@@ -23,7 +23,7 @@ type SoftwarePatch struct {
 	URL           string    `json:"url" validate:"url"`
 	Aliases       *[]string `json:"aliases" validate:"omitempty,dive,url"`
 	PubliccodeYml string    `json:"publiccodeYml"`
-	Active        bool      `json:"active"`
+	Active        *bool     `json:"active"`
 }
 
 type Log struct {

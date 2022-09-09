@@ -47,10 +47,6 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mos
 		)
 	}
 
-	if all := ctx.Query("all", ""); all == "" {
-		stmt = stmt.Scopes(models.Active)
-	}
-
 	// Return just software with a certain URL if the 'url' query filter
 	// is used.
 	if url := ctx.Query("url", ""); url != "" {
@@ -66,6 +62,10 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mos
 		}
 
 		stmt.Where("id = ?", softwareURL.SoftwareID)
+	} else {
+		if all := ctx.Query("all", ""); all == "" {
+			stmt = stmt.Scopes(models.Active)
+		}
 	}
 
 	paginator := general.NewPaginator(ctx)
@@ -241,7 +241,7 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // most
 		}
 
 		software.PubliccodeYml = softwareReq.PubliccodeYml
-		software.Active = &softwareReq.Active
+		software.Active = softwareReq.Active
 
 		// Manually set the canonical URL via the foreign key because of a limitation in gorm
 		software.SoftwareURLID = updatedURL.ID
