@@ -1437,6 +1437,12 @@ components:
                 format: uri
                 maxLength: 255
                 example: 'http://www.example.com'
+              group:
+                type: boolean
+                description: |
+                  Whether this code hosting URL is a group containing other repositories
+                  (like GitHub's organizations and GitLab's groups) or not.
+                default: true
               createdAt:
                 type: string
                 format: date-time
@@ -1449,6 +1455,10 @@ components:
                 example: '2022-06-07T14:56:23Z'
                 description: The time the log was updated (RFC 3339 datetime)
                 readOnly: true
+            required:
+              - url
+              - createdAt
+              - updatedAt
         description:
           type: string
           maxLength: 255

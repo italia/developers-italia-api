@@ -98,7 +98,10 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	for _, URLAddress := range request.CodeHosting {
-		publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{ID: utils.UUIDv4(), URL: URLAddress.URL})
+		publisher.CodeHosting = append(
+			publisher.CodeHosting,
+			models.CodeHosting{ID: utils.UUIDv4(), URL: URLAddress.URL, Group: URLAddress.Group},
+		)
 	}
 
 	if err := p.db.Create(&publisher).Error; err != nil {
