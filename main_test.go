@@ -1631,6 +1631,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedBody:        "",
 			expectedContentType: "application/json",
 		},
+		// TODO: check there are no dangling software_urls
 
 		// GET /software/:id/logs
 		{
