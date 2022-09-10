@@ -432,10 +432,13 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.IsType(t, []interface{}{}, response["codeHosting"])
-				assert.Equal(t, 1, len(response["codeHosting"].([]interface{})))
 
-				// TODO: check codeHosting content
-				assert.NotEmpty(t, response["codeHosting"])
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+				assert.Equal(t, "https://www.example.com", firstCodeHosting["url"])
+				assert.Equal(t, true, firstCodeHosting["group"])
 
 				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
 				assert.Nil(t, err)
@@ -503,6 +506,27 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, false, response["active"])
+			},
+		},
+		{
+			description: "POST publishers with codeHosting optional boolean field (group) set to false",
+			query:       "POST /v1/publishers",
+			body:        `{"codeHosting": [{"url" : "https://www.example.com", "group": false}], "email":"example@example.com"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+				assert.Equal(t, "https://www.example.com", firstCodeHosting["url"])
+				assert.Equal(t, false, firstCodeHosting["group"])
 			},
 		},
 		{

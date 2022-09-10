@@ -8,7 +8,8 @@ type Publisher struct {
 }
 
 type CodeHosting struct {
-	URL string `json:"url" validate:"required,url"`
+	URL   string `json:"url" validate:"required,url"`
+	Group *bool  `json:"group"`
 }
 
 type Software struct {
