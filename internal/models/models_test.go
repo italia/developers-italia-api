@@ -79,7 +79,7 @@ func TestSoftwareCreate(t *testing.T) {
 	err := db.Create(
 		&Software{
 			ID:            utils.UUIDv4(),
-			URLs:          []SoftwareURL{{ID: utils.UUIDv4(), URL: "https://example.org"}},
+			URL:           SoftwareURL{ID: utils.UUIDv4(), URL: "https://example.org"},
 			PubliccodeYml: "-",
 		},
 	).Error
@@ -89,7 +89,7 @@ func TestSoftwareCreate(t *testing.T) {
 	err = db.Create(
 		&Software{
 			ID:            "c353756e-8597-4e46-a99b-7da2e141603b",
-			URLs:          []SoftwareURL{{ID: utils.UUIDv4(), URL: "https://example.org"}},
+			URL:           SoftwareURL{ID: utils.UUIDv4(), URL: "https://example.org"},
 			PubliccodeYml: "-",
 		},
 	).Error
