@@ -452,7 +452,8 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			query: "POST /v1/publishers - with externalCode example",
+			description: "POST publishers - with externalCode example",
+			query: "POST /v1/publishers",
 			body:  `{"codeHosting": [{"url" : "https://www.example-testcase-2.com"}], "email":"example-testcase-2@example.com", "externalCode":"example-testcase-2"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
