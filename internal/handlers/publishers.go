@@ -94,12 +94,12 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 		return err //nolint:wrapcheck
 	}
 
-	publisher := &models.Publisher{}
-
 	normalizedEmail := normalize.Normalize(request.Email)
 
-	publisher.ID = utils.UUIDv4()
-	publisher.Email = normalizedEmail
+	publisher := &models.Publisher{
+		ID:    utils.UUIDv4(),
+		Email: normalizedEmail,
+	}
 
 	if request.ExternalCode != "" {
 		publisher.ExternalCode = request.ExternalCode
