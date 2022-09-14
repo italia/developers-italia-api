@@ -437,7 +437,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.Equal(t, 1, len(codeHosting))
 
 				firstCodeHosting := codeHosting[0].(map[string]interface{})
-				assert.Equal(t, "https://www.example.com", firstCodeHosting["url"])
+				assert.Equal(t, "https://example-testcase-1.com", firstCodeHosting["url"])
 				assert.Equal(t, true, firstCodeHosting["group"])
 
 				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
@@ -458,8 +458,8 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST publishers - with externalCode example",
-			query: "POST /v1/publishers",
-			body:  `{"codeHosting": [{"url" : "https://www.example-testcase-2.com"}], "email":"example-testcase-2@example.com", "externalCode":"example-testcase-2"}`,
+			query:       "POST /v1/publishers",
+			body:        `{"codeHosting": [{"url" : "https://www.example-testcase-2.com"}], "email":"example-testcase-2@example.com", "externalCode":"example-testcase-2"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -600,7 +600,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers with optional boolean field set to false",
 			query:       "POST /v1/publishers",
-			body:        `{"active": false, "codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
+			body:        `{"active": false, "codeHosting": [{"url" : "https://www.example.com"}], "email":"example-optional-boolean@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -614,7 +614,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers with codeHosting optional boolean field (group) set to false",
 			query:       "POST /v1/publishers",
-			body:        `{"codeHosting": [{"url" : "https://www.example.com", "group": false}], "email":"example@example.com"}`,
+			body:        `{"codeHosting": [{"url" : "https://www.example.com", "group": false}], "email":"example-optional-group@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -628,7 +628,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.Equal(t, 1, len(codeHosting))
 
 				firstCodeHosting := codeHosting[0].(map[string]interface{})
-				assert.Equal(t, "https://www.example.com", firstCodeHosting["url"])
+				assert.Equal(t, "https://example.com", firstCodeHosting["url"])
 				assert.Equal(t, false, firstCodeHosting["group"])
 			},
 		},
@@ -1463,8 +1463,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST software with aliases",
-			query: "POST /v1/software",
-			body:  `{"publiccodeYml": "-", "url": "https://software.example.org", "aliases": ["https://software-1.example.org", "https://software-2.example.org"]}`,
+			query:       "POST /v1/software",
+			body:        `{"publiccodeYml": "-", "url": "https://software.example.org", "aliases": ["https://software-1.example.org", "https://software-2.example.org"]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1674,8 +1674,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "PATCH software with no aliases (should leave current aliases untouched)",
-			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org"}`,
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1712,8 +1712,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "PATCH software with empty aliases (should remove aliases)",
-			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": []}`,
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": []}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},

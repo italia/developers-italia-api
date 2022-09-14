@@ -97,20 +97,27 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	normalizedEmail := normalize.Normalize(request.Email)
 
 	publisher := &models.Publisher{
-		ID:    utils.UUIDv4(),
-		Email: normalizedEmail,
+		ID:     utils.UUIDv4(),
+		Email:  normalizedEmail,
 		Active: request.Active,
 	}
 
-	publisher.ExternalCode = request.ExternalCode
-	publisher.Description = request.Description
+	if request.ExternalCode != "" {
+		publisher.ExternalCode = &request.ExternalCode
+	}
 
+	publisher.Description = request.Description
 
 	for _, codeHost := range request.CodeHosting {
 		urlAddress, _ := url.Parse(codeHost.URL)
 		normalizedURL := purell.NormalizeURL(urlAddress, normalizeFlags)
 
-		publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{ID: utils.UUIDv4(), URL: normalizedURL})
+		publisher.CodeHosting = append(publisher.CodeHosting,
+			models.CodeHosting{
+				ID:    utils.UUIDv4(),
+				URL:   normalizedURL,
+				Group: codeHost.Group,
+			})
 	}
 
 	if err := p.db.Create(&publisher).Error; err != nil {
@@ -178,7 +185,7 @@ func (p *Publisher) updatePublisherTrx(
 	}
 
 	if publisherReq.ExternalCode != "" {
-		publisher.ExternalCode = publisherReq.ExternalCode
+		publisher.ExternalCode = &publisherReq.ExternalCode
 	}
 
 	if publisherReq.CodeHosting != nil && len(publisherReq.CodeHosting) > 0 {

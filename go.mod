@@ -16,7 +16,10 @@ require (
 	gorm.io/gorm v1.23.6
 )
 
-require golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
+require (
+	github.com/dimuska139/go-email-normalizer v1.2.0
+	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
+)
 
 require golang.org/x/net v0.0.0-20220617184016-355a448f1bc9 // indirect
 

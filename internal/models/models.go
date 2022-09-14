@@ -35,7 +35,7 @@ type Publisher struct {
 	Description  string         `json:"description"`
 	CodeHosting  []CodeHosting  `json:"codeHosting" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique"`
 	Active       *bool          `json:"active" gorm:"default:true;not null"`
-	ExternalCode string         `json:"externalCode,omitempty" gorm:"uniqueIndex"`
+	ExternalCode *string        `json:"externalCode,omitempty" gorm:"uniqueIndex"`
 	CreatedAt    time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
 	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
