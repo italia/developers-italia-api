@@ -12,7 +12,6 @@ import (
 	"github.com/gofiber/fiber/v2/utils"
 
 	"github.com/PuerkitoBio/purell"
-	normalizer "github.com/dimuska139/go-email-normalizer"
 	"github.com/gofiber/fiber/v2"
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/models"
@@ -86,7 +85,6 @@ func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 
 // PostPublisher creates a new publisher.
 func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
-	normalize := normalizer.NewNormalizer()
 	request := new(common.PublisherPost)
 
 	err := common.ValidateRequestEntity(ctx, request, "can't create Publisher")
@@ -94,7 +92,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 		return err //nolint:wrapcheck
 	}
 
-	normalizedEmail := normalize.Normalize(request.Email)
+	normalizedEmail := common.NormalizeEmail(request.Email)
 
 	publisher := &models.Publisher{
 		ID:     utils.UUIDv4(),
@@ -167,7 +165,7 @@ func (p *Publisher) updatePublisherTrx(
 	gormTrx *gorm.DB,
 	publisher models.Publisher,
 	ctx *fiber.Ctx,
-	publisherReq *common.PublisherPatch,
+	request *common.PublisherPatch,
 ) error {
 	if err := gormTrx.Model(&models.Publisher{}).Preload("CodeHosting").
 		First(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
@@ -180,22 +178,23 @@ func (p *Publisher) updatePublisherTrx(
 			fmt.Errorf("db error: %w", err).Error())
 	}
 
-	if publisherReq.Description != "" {
-		publisher.Description = &publisherReq.Description
+	if request.Description != "" {
+		publisher.Description = &request.Description
 	}
 
-	if publisherReq.Email != "" {
-		publisher.Email = publisherReq.Email
+	if request.Email != "" {
+		normalizedEmail := common.NormalizeEmail(request.Email)
+		publisher.Email = normalizedEmail
 	}
 
-	if publisherReq.ExternalCode != "" {
-		publisher.ExternalCode = &publisherReq.ExternalCode
+	if request.ExternalCode != "" {
+		publisher.ExternalCode = &request.ExternalCode
 	}
 
-	if publisherReq.CodeHosting != nil && len(publisherReq.CodeHosting) > 0 {
+	if request.CodeHosting != nil && len(request.CodeHosting) > 0 {
 		gormTrx.Delete(&publisher.CodeHosting)
 
-		for _, URLAddress := range publisherReq.CodeHosting {
+		for _, URLAddress := range request.CodeHosting {
 			publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{ID: utils.UUIDv4(), URL: URLAddress.URL})
 		}
 	}

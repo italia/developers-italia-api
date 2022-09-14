@@ -1,5 +1,7 @@
 package common
 
+import "strings"
+
 type Publisher struct {
 	CodeHosting  []CodeHosting `json:"codeHosting" validate:"required,gt=0,dive"`
 	Description  string        `json:"description"`
@@ -50,4 +52,8 @@ type Log struct {
 type Webhook struct {
 	URL    string `json:"url" validate:"required,url"`
 	Secret string `json:"secret"`
+}
+
+func NormalizeEmail(email string) string {
+	return strings.TrimSpace(strings.ToLower(email))
 }
