@@ -13,7 +13,7 @@ type Model interface {
 }
 
 type Bundle struct {
-	ID   string `gorm:"primarykey"`
+	ID   string `gorm:"primaryKey"`
 	Name string
 }
 
@@ -34,7 +34,7 @@ type Publisher struct {
 	Email        string         `json:"email" gorm:"uniqueIndex"`
 	Description  string         `json:"description"`
 	CodeHosting  []CodeHosting  `json:"codeHosting" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique"`
-	Active       bool           `json:"active" gorm:"default:true"`
+	Active       *bool          `json:"active" gorm:"default:true;not null"`
 	ExternalCode string         `json:"externalCode,omitempty" gorm:"uniqueIndex"`
 	CreatedAt    time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
@@ -56,6 +56,7 @@ func (CodeHosting) TableName() string {
 type CodeHosting struct {
 	ID          string         `json:"-" gorm:"primaryKey"`
 	URL         string         `json:"url" gorm:"not null,uniqueIndex"`
+	Group       *bool          `json:"group" gorm:"default:true;not null"`
 	PublisherID string         `json:"-"`
 	CreatedAt   time.Time      `json:"createdAt" gorm:"index"`
 	UpdatedAt   time.Time      `json:"updatedAt"`
@@ -63,14 +64,20 @@ type CodeHosting struct {
 }
 
 type Software struct {
-	ID            string         `json:"id" gorm:"primarykey"`
-	URLs          []SoftwareURL  `json:"urls"`
-	PubliccodeYml string         `json:"publiccodeYml"`
-	Logs          []Log          `json:"-" gorm:"polymorphic:Entity;"`
-	Active        bool           `json:"active" gorm:"default:true"`
-	CreatedAt     time.Time      `json:"createdAt" gorm:"index"`
-	UpdatedAt     time.Time      `json:"updatedAt"`
-	DeletedAt     gorm.DeletedAt `json:"-" gorm:"index"`
+	ID string `json:"id" gorm:"primarykey"`
+
+	// This needs to be explicitly declared, otherwise GORM won't create
+	// the foreign key and will be confused about the double relationship
+	// with SoftwareURLs (belongs to and has many).
+	SoftwareURLID string `json:"-" gorm:"uniqueIndex,not null"`
+
+	URL           SoftwareURL   `json:"url"`
+	Aliases       []SoftwareURL `json:"aliases"`
+	PubliccodeYml string        `json:"publiccodeYml"`
+	Logs          []Log         `json:"-" gorm:"polymorphic:Entity;"`
+	Active        *bool         `json:"active" gorm:"default:true;not null"`
+	CreatedAt     time.Time     `json:"createdAt" gorm:"index"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
 }
 
 func (Software) TableName() string {
@@ -83,10 +90,11 @@ func (s Software) UUID() string {
 }
 
 type SoftwareURL struct {
-	gorm.Model
-	ID         string `gorm:"primarykey"`
-	URL        string `gorm:"uniqueIndex"`
-	SoftwareID string
+	ID         string    `gorm:"primarykey"`
+	URL        string    `gorm:"uniqueIndex"`
+	SoftwareID string    `gorm:"not null"`
+	CreatedAt  time.Time `json:"createdAt" gorm:"index"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 func (su SoftwareURL) MarshalJSON() ([]byte, error) {
@@ -94,7 +102,7 @@ func (su SoftwareURL) MarshalJSON() ([]byte, error) {
 }
 
 type Webhook struct {
-	ID        string         `json:"id" gorm:"primarykey"`
+	ID        string         `json:"id" gorm:"primaryKey"`
 	URL       string         `json:"url" gorm:"index:idx_webhook_url,unique"`
 	Secret    string         `json:"-"`
 	CreatedAt time.Time      `json:"createdAt" gorm:"index"`
@@ -107,7 +115,7 @@ type Webhook struct {
 }
 
 type Event struct {
-	ID         string `gorm:"primarykey"`
+	ID         string `gorm:"primaryKey"`
 	Type       string
 	EntityType string
 	EntityID   string

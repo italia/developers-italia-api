@@ -1387,12 +1387,20 @@ components:
           minLength: 1
           maxLength: 99999
           pattern: '.*'
-        urls:
+        url:
+          type: string
+          format: uri
+          minLength: 1
+          maxLength: 255
+          description: >
+            Repository URL this software is available at.
+            This is the current and canonical one.
+        aliases:
           type: array
           description: >
-            List of repository URLs this software is available at.
-            The first element of the array is the current and canonical one, while the others, if any,
-            are aliases to the current repository.
+            List of aliases for the current repository URL.
+            This is useful to keep track, for example, of previous addresses that redirect
+            to the current one.
           minItems: 1
           maxItems: 255
           items:
@@ -1419,6 +1427,12 @@ components:
           example: '2022-06-07T14:56:23Z'
           description: The time the log was updated (RFC 3339 datetime)
           readOnly: true
+      required:
+        - id
+        - url
+        - publiccodeYml
+        - createdAt
+        - updatedAt
     Publisher:
       title: Publisher
       type: object
@@ -1437,6 +1451,12 @@ components:
                 format: uri
                 maxLength: 255
                 example: 'http://www.example.com'
+              group:
+                type: boolean
+                description: |
+                  Whether this code hosting URL is a group containing other repositories
+                  (like GitHub's organizations and GitLab's groups) or not.
+                default: true
               createdAt:
                 type: string
                 format: date-time
@@ -1449,6 +1469,10 @@ components:
                 example: '2022-06-07T14:56:23Z'
                 description: The time the log was updated (RFC 3339 datetime)
                 readOnly: true
+            required:
+              - url
+              - createdAt
+              - updatedAt
         description:
           type: string
           maxLength: 255

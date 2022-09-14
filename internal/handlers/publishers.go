@@ -99,15 +99,12 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	publisher := &models.Publisher{
 		ID:    utils.UUIDv4(),
 		Email: normalizedEmail,
+		Active: request.Active,
 	}
 
-	if request.ExternalCode != "" {
-		publisher.ExternalCode = request.ExternalCode
-	}
+	publisher.ExternalCode = request.ExternalCode
+	publisher.Description = request.Description
 
-	if request.Description != "" {
-		publisher.Description = request.Description
-	}
 
 	for _, codeHost := range request.CodeHosting {
 		urlAddress, _ := url.Parse(codeHost.URL)

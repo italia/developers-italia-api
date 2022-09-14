@@ -432,10 +432,13 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.IsType(t, []interface{}{}, response["codeHosting"])
-				assert.Equal(t, 1, len(response["codeHosting"].([]interface{})))
 
-				// TODO: check codeHosting content
-				assert.NotEmpty(t, response["codeHosting"])
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+				assert.Equal(t, "https://www.example.com", firstCodeHosting["url"])
+				assert.Equal(t, true, firstCodeHosting["group"])
 
 				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
 				assert.Nil(t, err)
@@ -446,6 +449,8 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
 				assert.Nil(t, err)
+
+				assert.Equal(t, true, response["active"])
 
 				// TODO: check the record was actually created in the database
 				// TODO: check there are no dangling publishers_codeHosting
@@ -590,6 +595,41 @@ func TestPublishersEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Publisher`, response["title"])
 				assert.Equal(t, "invalid json", response["detail"])
+			},
+		},
+		{
+			description: "POST publishers with optional boolean field set to false",
+			query:       "POST /v1/publishers",
+			body:        `{"active": false, "codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, false, response["active"])
+			},
+		},
+		{
+			description: "POST publishers with codeHosting optional boolean field (group) set to false",
+			query:       "POST /v1/publishers",
+			body:        `{"codeHosting": [{"url" : "https://www.example.com", "group": false}], "email":"example@example.com"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+				assert.Equal(t, "https://www.example.com", firstCodeHosting["url"])
+				assert.Equal(t, false, firstCodeHosting["group"])
 			},
 		},
 		{
@@ -1035,8 +1075,10 @@ func TestSoftwareEndpoints(t *testing.T) {
 				firstSoftware := data[0].(map[string]interface{})
 				assert.NotEmpty(t, firstSoftware["publiccodeYml"])
 
-				assert.IsType(t, []interface{}{}, firstSoftware["urls"])
-				assert.Greater(t, len(firstSoftware["urls"].([]interface{})), 0)
+				assert.Equal(t, "https://1-a.example.org/code/repo", firstSoftware["url"])
+
+				assert.IsType(t, []interface{}{}, firstSoftware["aliases"])
+				assert.Equal(t, 1, len(firstSoftware["aliases"].([]interface{})))
 
 				match, err := regexp.MatchString(UUID_REGEXP, firstSoftware["id"].(string))
 				assert.Nil(t, err)
@@ -1047,8 +1089,10 @@ func TestSoftwareEndpoints(t *testing.T) {
 				_, err = time.Parse(time.RFC3339, firstSoftware["updatedAt"].(string))
 				assert.Nil(t, err)
 
+				assert.Equal(t, true, firstSoftware["active"])
+
 				for key := range firstSoftware {
-					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml", "active"}, key)
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active"}, key)
 				}
 			},
 		},
@@ -1075,12 +1119,16 @@ func TestSoftwareEndpoints(t *testing.T) {
 				firstSoftware := data[0].(map[string]interface{})
 				assert.NotEmpty(t, firstSoftware["publiccodeYml"])
 
-				assert.IsType(t, []interface{}{}, firstSoftware["urls"])
-				assert.Greater(t, len(firstSoftware["urls"].([]interface{})), 0)
+				assert.Equal(t, "https://1-a.example.org/code/repo", firstSoftware["url"])
+
+				assert.IsType(t, []interface{}{}, firstSoftware["aliases"])
+				assert.Equal(t, 1, len(firstSoftware["aliases"].([]interface{})))
 
 				match, err := regexp.MatchString(UUID_REGEXP, firstSoftware["id"].(string))
 				assert.Nil(t, err)
 				assert.True(t, match)
+
+				assert.Equal(t, true, firstSoftware["active"])
 
 				_, err = time.Parse(time.RFC3339, firstSoftware["createdAt"].(string))
 				assert.Nil(t, err)
@@ -1088,7 +1136,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Nil(t, err)
 
 				for key := range firstSoftware {
-					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml", "active"}, key)
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active"}, key)
 				}
 			},
 		},
@@ -1115,8 +1163,10 @@ func TestSoftwareEndpoints(t *testing.T) {
 				firstSoftware := data[0].(map[string]interface{})
 				assert.NotEmpty(t, firstSoftware["publiccodeYml"])
 
-				assert.IsType(t, []interface{}{}, firstSoftware["urls"])
-				assert.Greater(t, len(firstSoftware["urls"].([]interface{})), 0)
+				assert.Equal(t, "https://1-a.example.org/code/repo", firstSoftware["url"])
+
+				assert.IsType(t, []interface{}{}, firstSoftware["aliases"])
+				assert.Equal(t, 1, len(firstSoftware["aliases"].([]interface{})))
 
 				match, err := regexp.MatchString(UUID_REGEXP, firstSoftware["id"].(string))
 				assert.Nil(t, err)
@@ -1128,7 +1178,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Nil(t, err)
 
 				for key := range firstSoftware {
-					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml", "active"}, key)
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active"}, key)
 				}
 			},
 		},
@@ -1155,8 +1205,10 @@ func TestSoftwareEndpoints(t *testing.T) {
 				firstSoftware := data[0].(map[string]interface{})
 				assert.Equal(t, "-", firstSoftware["publiccodeYml"])
 
-				assert.IsType(t, []interface{}{}, firstSoftware["urls"])
-				assert.Equal(t, 2, len(firstSoftware["urls"].([]interface{})))
+				assert.Equal(t, "https://1-a.example.org/code/repo", firstSoftware["url"])
+
+				assert.IsType(t, []interface{}{}, firstSoftware["aliases"])
+				assert.Equal(t, 1, len(firstSoftware["aliases"].([]interface{})))
 
 				assert.Equal(t, "c353756e-8597-4e46-a99b-7da2e141603b", firstSoftware["id"])
 
@@ -1164,7 +1216,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, "2014-05-01T00:00:00Z", firstSoftware["updatedAt"])
 
 				for key := range firstSoftware {
-					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml", "active"}, key)
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active"}, key)
 				}
 			},
 		},
@@ -1351,8 +1403,10 @@ func TestSoftwareEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.NotEmpty(t, response["publiccodeYml"])
 
-				assert.IsType(t, []interface{}{}, response["urls"])
-				assert.Greater(t, len(response["urls"].([]interface{})), 0)
+				assert.Equal(t, "https://8-a.example.org/code/repo", response["url"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+				assert.Equal(t, 1, len(response["aliases"].([]interface{})))
 
 				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
 				assert.Nil(t, err)
@@ -1364,7 +1418,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Nil(t, err)
 
 				for key := range response {
-					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "urls", "publiccodeYml", "active"}, key)
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active"}, key)
 				}
 			},
 		},
@@ -1372,19 +1426,20 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// POST /software
 		{
 			query: "POST /v1/software",
-			body:  `{"publiccodeYml": "-", "urls": ["https://software.example.org"]}`,
+			body:  `{"publiccodeYml": "-", "url": "https://software.example.org"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
+			fixtures:            []string{"software.yml", "software_urls.yml"},
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
-				assert.IsType(t, []interface{}{}, response["urls"])
-				assert.Equal(t, 1, len(response["urls"].([]interface{})))
-
-				// TODO: check urls content
+				assert.Equal(t, "https://software.example.org", response["url"])
 				assert.NotEmpty(t, response["publiccodeYml"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+				assert.Empty(t, response["aliases"].([]interface{}))
 
 				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
 				assert.Nil(t, err)
@@ -1396,10 +1451,58 @@ func TestSoftwareEndpoints(t *testing.T) {
 				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
 				assert.Nil(t, err)
 
+				assert.Equal(t, true, response["active"])
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active"}, key)
+				}
+
 				// TODO: check the record was actually created in the database
 				// TODO: check there are no dangling software_urls
 			},
 		},
+		{
+			description: "POST software with aliases",
+			query: "POST /v1/software",
+			body:  `{"publiccodeYml": "-", "url": "https://software.example.org", "aliases": ["https://software-1.example.org", "https://software-2.example.org"]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			fixtures:            []string{"software.yml", "software_urls.yml"},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "https://software.example.org", response["url"])
+				assert.NotEmpty(t, response["publiccodeYml"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+
+				aliases := response["aliases"].([]interface{})
+				assert.Equal(t, 2, len(aliases))
+
+				assert.Equal(t, "https://software-1.example.org", aliases[0])
+				assert.Equal(t, "https://software-2.example.org", aliases[1])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active"}, key)
+				}
+
+				// TODO: check the record was actually created in the database
+				// TODO: check there are no dangling software_urls
+			},
+		},
+
 		{
 			description: "POST software with invalid payload",
 			query:       "POST /v1/software",
@@ -1410,12 +1513,12 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Software","detail":"invalid format","status":422,"validationErrors":[{"field":"urls","rule":"required"}]}`,
+			expectedBody:        `{"title":"can't create Software","detail":"invalid format","status":422,"validationErrors":[{"field":"url","rule":"required"}]}`,
 		},
 		{
 			description: "POST software - wrong token",
 			query:       "POST /v1/software",
-			body:        `{"publiccodeYml":  "-", "urls": ["https://software.example.org"]}`,
+			body:        `{"publiccodeYml":  "-", "url": "https://software.example.org"}`,
 			headers: map[string][]string{
 				"Authorization": {badToken},
 				"Content-Type":  {"application/json"},
@@ -1454,6 +1557,20 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// 		assert.Equal(t, "invalid json", response["detail"])
 		// 	},
 		// },
+		{
+			description: "POST software with optional boolean field set to false",
+			query:       "POST /v1/software",
+			body:        `{"active": false, "url": "https://example.org", "publiccodeYml": "-"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, false, response["active"])
+			},
+		},
 		{
 			description: "POST software with validation errors",
 			query:       "POST /v1/software",
@@ -1520,7 +1637,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:  `{"publiccodeYml": "publiccodedata", "urls": ["https://software.example.org", "https://sofware-old.example.com", "https://software-old.example.org"]}`,
+			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": ["https://software.example.com", "https://software-old.example.org"]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1530,9 +1647,88 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
-				assert.IsType(t, []interface{}{}, response["urls"])
-				assert.Equal(t, 3, len(response["urls"].([]interface{})))
-				// TODO: check urls content
+				assert.Equal(t, "https://software-new.example.org", response["url"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+
+				aliases := response["aliases"].([]interface{})
+				assert.Equal(t, 2, len(aliases))
+
+				assert.Equal(t, "https://software-old.example.org", aliases[0])
+				assert.Equal(t, "https://software.example.com", aliases[1])
+
+				assert.Equal(t, "publiccodedata", response["publiccodeYml"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH software with no aliases (should leave current aliases untouched)",
+			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			fixtures: []string{"software.yml", "software_urls.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "https://software-new.example.org", response["url"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+
+				aliases := response["aliases"].([]interface{})
+				assert.Equal(t, 2, len(aliases))
+
+				assert.Equal(t, "https://18-a.example.org/code/repo", aliases[0])
+				assert.Equal(t, "https://18-b.example.org/code/repo", aliases[1])
+
+				assert.Equal(t, "publiccodedata", response["publiccodeYml"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH software with empty aliases (should remove aliases)",
+			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": []}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			fixtures: []string{"software.yml", "software_urls.yml"},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "https://software-new.example.org", response["url"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+
+				aliases := response["aliases"].([]interface{})
+				assert.Equal(t, 0, len(aliases))
 
 				assert.Equal(t, "publiccodedata", response["publiccodeYml"])
 
@@ -1598,7 +1794,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			description: "PATCH software with validation errors",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
 			fixtures:    []string{"software.yml", "software_urls.yml"},
-			body:        `{"urls": ["INVALID_URL"], "publiccodeYml": "-"}`,
+			body:        `{"url": "INVALID_URL", "publiccodeYml": "-"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1678,6 +1874,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedBody:        "",
 			expectedContentType: "application/json",
 		},
+		// TODO: check there are no dangling software_urls
 
 		// GET /software/:id/logs
 		{

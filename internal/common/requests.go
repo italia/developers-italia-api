@@ -4,18 +4,27 @@ type Publisher struct {
 	CodeHosting  []CodeHosting `json:"codeHosting" validate:"required,gt=0,dive"`
 	Description  string        `json:"description"`
 	Email        string        `json:"email" validate:"email,required"`
-	Active       bool          `json:"active"`
+	Active       *bool          `json:"active"`
 	ExternalCode string        `json:"externalCode" validate:"max=255"`
 }
 
 type CodeHosting struct {
-	URL string `json:"url" validate:"required,url"`
+	URL   string `json:"url" validate:"required,url"`
+	Group *bool  `json:"group"`
 }
 
-type Software struct {
-	URLs          []string `json:"urls" validate:"required,gt=0,dive,url"`
+type SoftwarePost struct {
+	URL           string   `json:"url" validate:"required,url"`
+	Aliases       []string `json:"aliases" validate:"dive,url"`
 	PubliccodeYml string   `json:"publiccodeYml" validate:"required"`
-	Active        bool     `json:"active"`
+	Active        *bool    `json:"active"`
+}
+
+type SoftwarePatch struct {
+	URL           string    `json:"url" validate:"url"`
+	Aliases       *[]string `json:"aliases" validate:"omitempty,dive,url"`
+	PubliccodeYml string    `json:"publiccodeYml"`
+	Active        *bool     `json:"active"`
 }
 
 type Log struct {
