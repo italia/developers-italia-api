@@ -11,8 +11,8 @@ var (
 	ErrInvalidDateTime = errors.New("invalid date time format (RFC 3339 needed)")
 	ErrKeyLen          = errors.New("PASETO_KEY must be 32 bytes long once base64-decoded")
 
-	ErrUniqueConstraint = errors.New("db constraint violation")
-	ErrRecordNotFound   = errors.New("record not found")
+	ErrDbUniqueConstraint = errors.New("db constraint violation")
+	ErrDbRecordNotFound   = errors.New("record not found")
 )
 
 func Error(status int, title string, detail string) ProblemJSONError {

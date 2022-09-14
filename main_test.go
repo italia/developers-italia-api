@@ -524,18 +524,29 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided email, external_code or CodeHosting URL already exists\",\"status\":409}",
+			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
 		},
 		{
 			query: "POST /v1/publishers - Email already exist",
-			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3@example.com", "externalCode":"example-testcase-3"}`,
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3@example.com", "externalCode":"example-testcase-3", "description": "test"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided email, external_code or CodeHosting URL already exists\",\"status\":409}",
+			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
+		},
+		{
+			query: "POST /v1/publishers - Description already exist",
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-unique@example.com", "externalCode":"example-testcase-3", "description": "test"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
 		},
 		{
 			query: "POST /v1/publishers - ExternalCode already exist",
@@ -546,7 +557,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided email, external_code or CodeHosting URL already exists\",\"status\":409}",
+			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
 		},
 		{
 			query: "POST /v1/publishers - Email NOT Normalized already exist",
@@ -557,7 +568,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided email, external_code or CodeHosting URL already exists\",\"status\":409}",
+			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
 		},
 		{
 			description: "POST publishers with invalid payload",

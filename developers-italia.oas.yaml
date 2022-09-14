@@ -874,6 +874,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -1353,6 +1355,12 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
     NotFound:
       description: Not found
       content:
@@ -1491,6 +1499,8 @@ components:
           default: true
         externalCode:
           type: string
+          description: |
+            External code used to identify this publisher in external systems.
           maxLength: 255
           example: 'exampleExternalCode'
     Log:
