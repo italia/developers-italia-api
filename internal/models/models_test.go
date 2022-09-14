@@ -122,12 +122,13 @@ func TestSoftwareURLCreate(t *testing.T) {
 
 func TestPublisherCreate(t *testing.T) {
 	loadFixtures(t, "publishers.yml")
+	description := "New publisher"
 
 	// New ID
 	err := db.Create(
 		&Publisher{
 			ID:          utils.UUIDv4(),
-			Description: "New publisher",
+			Description: &description,
 			Email:       "new-publisher@example.org",
 		},
 	).Error
@@ -137,11 +138,11 @@ func TestPublisherCreate(t *testing.T) {
 	err = db.Create(
 		&Publisher{
 			ID:          "2ded32eb-c45e-4167-9166-a44e18b8adde",
-			Description: "New publisher",
+			Description: &description,
 			Email:       "new-publisher@example.org",
 		},
 	).Error
-	assert.EqualError(t, err, "UNIQUE constraint failed: publishers.id")
+	assert.EqualError(t, err, "UNIQUE constraint failed: publishers.email")
 }
 
 func TestWebhookCreate(t *testing.T) {
