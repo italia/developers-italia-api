@@ -199,7 +199,7 @@ func (p *Publisher) updatePublisherTrx(
 		}
 	}
 
-	if err := p.db.Updates(&publisher).Error; err != nil {
+	if err := gormTrx.Updates(&publisher).Error; err != nil {
 		return common.Error(fiber.StatusInternalServerError,
 			"can't update Publisher",
 			fmt.Errorf("db error: %w", err).Error())
