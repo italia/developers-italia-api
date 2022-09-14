@@ -37,18 +37,18 @@ func NewDatabase(env common.Environment) Database {
 func WrapErrors(dbError error) error {
 	if e, ok := dbError.(sqlite3.Error); ok {
 		if e.ExtendedCode == sqlite3.ErrConstraintUnique {
-			return common.ErrDbUniqueConstraint
+			return common.ErrDBUniqueConstraint
 		}
 	}
 
 	if e, ok := dbError.(*pgconn.PgError); ok {
 		if e.Code == pgerrcode.UniqueViolation {
-			return common.ErrDbUniqueConstraint
+			return common.ErrDBUniqueConstraint
 		}
 	}
 
 	if errors.Is(dbError, gorm.ErrRecordNotFound) {
-		return common.ErrDbRecordNotFound
+		return common.ErrDBRecordNotFound
 	}
 
 	return dbError

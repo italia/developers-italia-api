@@ -124,11 +124,11 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 
 	if err := p.db.Create(&publisher).Error; err != nil {
 		switch database.WrapErrors(err) { //nolint:errorlint
-		case common.ErrDbRecordNotFound:
+		case common.ErrDBRecordNotFound:
 			return common.Error(fiber.StatusNotFound,
 				"can't create Publisher",
 				"Publisher was not found")
-		case common.ErrDbUniqueConstraint:
+		case common.ErrDBUniqueConstraint:
 			return common.Error(fiber.StatusConflict,
 				"can't create Publisher",
 				"Publisher with provided description, email, external_code or CodeHosting URL already exists")
