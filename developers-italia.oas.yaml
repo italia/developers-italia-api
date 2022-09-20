@@ -1503,6 +1503,7 @@ components:
             External code used to identify this publisher in external systems.
           maxLength: 255
           example: 'exampleExternalCode'
+          pattern: '.*'
     Log:
       title: Log
       type: object
