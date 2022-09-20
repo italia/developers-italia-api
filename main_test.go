@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -45,13 +45,13 @@ type TestCase struct {
 }
 
 func init() {
-	os.Remove("./test.db")
+	_ = os.Remove("./test.db")
 
-	os.Setenv("DATABASE_DSN", "file:./test.db")
-	os.Setenv("ENVIRONMENT", "test")
+	_ = os.Setenv("DATABASE_DSN", "file:./test.db")
+	_ = os.Setenv("ENVIRONMENT", "test")
 
 	// echo -n 'test-paseto-key-dont-use-in-prod'  | base64
-	os.Setenv("PASETO_KEY", "dGVzdC1wYXNldG8ta2V5LWRvbnQtdXNlLWluLXByb2Q=")
+	_ = os.Setenv("PASETO_KEY", "dGVzdC1wYXNldG8ta2V5LWRvbnQtdXNlLWluLXByb2Q=")
 
 	var err error
 	db, err = sql.Open("sqlite3", os.Getenv("DATABASE_DSN"))
@@ -61,7 +61,7 @@ func init() {
 
 	// This is needed, otherwise we get a database-locked error
 	// TODO: investigate the root cause
-	db.Exec("PRAGMA journal_mode=WAL;")
+	_, _ = db.Exec("PRAGMA journal_mode=WAL;")
 
 	// Setup the app as it is done in the main function
 	app = Setup()
@@ -128,7 +128,7 @@ func runTestCases(t *testing.T, tests []TestCase) {
 
 			assert.Equal(t, test.expectedCode, res.StatusCode)
 
-			body, err := ioutil.ReadAll(res.Body)
+			body, err := io.ReadAll(res.Body)
 
 			assert.Nil(t, err)
 
@@ -221,7 +221,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["data"])
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 26, len(data))
+				assert.Equal(t, 27, len(data))
 
 				assert.IsType(t, map[string]interface{}{}, response["links"])
 
@@ -261,7 +261,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["data"])
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 27, len(data))
+				assert.Equal(t, 28, len(data))
 
 				assert.IsType(t, map[string]interface{}{}, response["links"])
 
@@ -338,7 +338,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 1, len(data))
+				assert.Equal(t, 2, len(data))
 
 				links := response["links"].(map[string]interface{})
 				assert.Equal(t, "?page[before]=WyIyMDE4LTExLTI3VDAwOjAwOjAwWiIsIjkxZmRhN2M0LTZiYmYtNDM4Ny04Zjg5LTI1OGMxZTZmYWZhMiJd", links["prev"])
@@ -423,7 +423,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		// POST /publishers
 		{
 			query: "POST /v1/publishers",
-			body:  `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
+			body:  `{"codeHosting": [{"url" : "https://www.example-testcase-1.com"}], "email":"example-testcase-1@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -437,7 +437,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.Equal(t, 1, len(codeHosting))
 
 				firstCodeHosting := codeHosting[0].(map[string]interface{})
-				assert.Equal(t, "https://www.example.com", firstCodeHosting["url"])
+				assert.Equal(t, "https://example-testcase-1.com", firstCodeHosting["url"])
 				assert.Equal(t, true, firstCodeHosting["group"])
 
 				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
@@ -457,9 +457,123 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description: "POST publishers - with externalCode example",
+			query:       "POST /v1/publishers",
+			body:        `{"codeHosting": [{"url" : "https://www.example-testcase-2.com"}], "email":"example-testcase-2@example.com", "externalCode":"example-testcase-2"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+				assert.Equal(t, 1, len(response["codeHosting"].([]interface{})))
+
+				// TODO: check codeHosting content
+				assert.NotEmpty(t, response["codeHosting"])
+
+				assert.Equal(t, "example-testcase-2", response["externalCode"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+			},
+		},
+		{
+			query: "POST /v1/publishers - NOT normalized URL validation passed",
+			body:  `{"codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}], "email":"example-testcase-3@example.com", "externalCode":"example-testcase-3"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+				assert.Equal(t, 1, len(response["codeHosting"].([]interface{})))
+
+				// TODO: check codeHosting content
+				assert.NotEmpty(t, response["codeHosting"])
+
+				assert.Equal(t, "example-testcase-3", response["externalCode"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+			},
+		},
+		{
+			query: "POST /v1/publishers - NOT normalized URL already exist",
+			body:  `{"codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}], "email":"example-testcase-3@example.com", "externalCode":"example-testcase-3"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
+		},
+		{
+			query: "POST /v1/publishers - Email already exist",
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3@example.com", "externalCode":"example-testcase-3", "description": "test"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
+		},
+		{
+			query: "POST /v1/publishers - Description already exist",
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-unique@example.com", "externalCode":"example-testcase-3", "description": "test"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
+		},
+		{
+			query: "POST /v1/publishers - ExternalCode already exist",
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-pass@example.com", "externalCode":"example-testcase-3"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
+		},
+		{
+			query: "POST /v1/publishers - Email NOT Normalized already exist",
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xxx3-not-exist.com"}], "email":"ExamplE-Testcase-3@example.com", "externalCode":"example-testcase-3-not-exist"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
+		},
+		{
 			description: "POST publishers with invalid payload",
 			query:       "POST /v1/publishers",
-			body:        `{"publiccodeYml": "-"}`,
+			body:        `{"url": "-"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -471,7 +585,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers - wrong token",
 			query:       "POST /v1/publishers",
-			body:        `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
+			body:        `{"codeHosting": [{"url" : "https://www.example-5.com"}], "email":"example@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {badToken},
 				"Content-Type":  {"application/json"},
@@ -497,7 +611,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers with optional boolean field set to false",
 			query:       "POST /v1/publishers",
-			body:        `{"active": false, "codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
+			body:        `{"active": false, "codeHosting": [{"url" : "https://www.example.com"}], "email":"example-optional-boolean@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -511,7 +625,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers with codeHosting optional boolean field (group) set to false",
 			query:       "POST /v1/publishers",
-			body:        `{"codeHosting": [{"url" : "https://www.example.com", "group": false}], "email":"example@example.com"}`,
+			body:        `{"codeHosting": [{"url" : "https://www.example.com", "group": false}], "email":"example-optional-group@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -525,7 +639,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.Equal(t, 1, len(codeHosting))
 
 				firstCodeHosting := codeHosting[0].(map[string]interface{})
-				assert.Equal(t, "https://www.example.com", firstCodeHosting["url"])
+				assert.Equal(t, "https://example.com", firstCodeHosting["url"])
 				assert.Equal(t, false, firstCodeHosting["group"])
 			},
 		},
@@ -546,7 +660,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
 				validationErrors := response["validationErrors"].([]interface{})
-				assert.Equal(t, 1, len(validationErrors))
+				assert.Equal(t, 2, len(validationErrors))
 
 				firstValidationError := validationErrors[0].(map[string]interface{})
 
@@ -579,7 +693,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        404,
-			expectedBody:        `{"title":"Not Found","detail":"update publisher error: : can't update Publisher. Publisher was not found","status":404}`,
+			expectedBody:        `{"title":"Not found","detail":"can't update Publisher. Publisher was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		//TODO fix database locked test
@@ -1360,8 +1474,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST software with aliases",
-			query: "POST /v1/software",
-			body:  `{"publiccodeYml": "-", "url": "https://software.example.org", "aliases": ["https://software-1.example.org", "https://software-2.example.org"]}`,
+			query:       "POST /v1/software",
+			body:        `{"publiccodeYml": "-", "url": "https://software.example.org", "aliases": ["https://software-1.example.org", "https://software-2.example.org"]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1571,8 +1685,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "PATCH software with no aliases (should leave current aliases untouched)",
-			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org"}`,
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1609,8 +1723,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "PATCH software with empty aliases (should remove aliases)",
-			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": []}`,
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": []}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},

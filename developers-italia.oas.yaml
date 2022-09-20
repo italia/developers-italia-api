@@ -857,7 +857,7 @@ paths:
           description: Only results after this cursor
     post:
       summary: Create a new Publisher
-      description: Create a new Publisher
+      description: Create a new Publisher. The URL will be normalized. Publisher with same URL, Email or ExternalCode will be considered the same and an error will be thrown.
       tags:
         - publishers
       security:
@@ -874,6 +874,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -911,7 +913,7 @@ paths:
       operationId: show-publisher-publisherId
     patch:
       summary: Update a Publisher
-      description: Update a Publisher by its id
+      description: Update a Publisher by its id. Only the fields that are provided will be updated, codeHosting field will be overwritten entirely.
       tags:
         - publishers
       security:
@@ -1353,6 +1355,12 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Error'
     NotFound:
       description: Not found
       content:
@@ -1489,6 +1497,13 @@ components:
             publishers (fe. when they are not complying with some rule, but the problem is
             expected to be fixed in the near future) without removing them.
           default: true
+        externalCode:
+          type: string
+          description: |
+            External code used to identify this publisher in external systems.
+          maxLength: 255
+          example: 'exampleExternalCode'
+          pattern: '.*'
     Log:
       title: Log
       type: object
