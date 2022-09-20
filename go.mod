@@ -17,7 +17,6 @@ require (
 )
 
 require (
-	github.com/dimuska139/go-email-normalizer v1.2.0
 	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
 )
 

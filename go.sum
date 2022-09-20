@@ -24,8 +24,6 @@ github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/denisenkom/go-mssqldb v0.12.2 h1:1OcPn5GBIobjWNd+8yjfHNIaFX14B1pWI3F9HZy5KXw=
-github.com/dimuska139/go-email-normalizer v1.2.0 h1:HmhEN+XKY+cX8knR+O9hn3ku1S/VOE0jcHlLb4FZh6E=
-github.com/dimuska139/go-email-normalizer v1.2.0/go.mod h1:fGPWcd/7PSz9aOHusKVYmDk+oKahH/fZTCQ7tTU7e0Y=
 github.com/go-kit/log v0.1.0/go.mod h1:zbhenjAZHb184qTLMA9ZjW7ThYL0H2mk7Q6pNt4vbaY=
 github.com/go-logfmt/logfmt v0.5.0/go.mod h1:wCYkCAKZfumFQihp8CzCvQ3paCTfi41vtzG1KdI/P7A=
 github.com/go-playground/assert/v2 v2.0.1 h1:MsBgLAaY856+nPRTKrp3/OZK38U/wa0CcBYNjji3q3A=
