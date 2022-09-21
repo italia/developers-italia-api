@@ -16,9 +16,7 @@ require (
 	gorm.io/gorm v1.23.6
 )
 
-require (
-	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
-)
+require golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
 
 require golang.org/x/net v0.0.0-20220617184016-355a448f1bc9 // indirect
 
@@ -49,7 +47,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/klauspost/compress v1.15.7 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
-	github.com/mattn/go-sqlite3 v1.14.13
+	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
