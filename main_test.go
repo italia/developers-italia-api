@@ -15,7 +15,6 @@ import (
 
 	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/gofiber/fiber/v2"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
 

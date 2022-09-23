@@ -3,13 +3,17 @@ package database
 import (
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/jackc/pgconn"
-	"github.com/mattn/go-sqlite3"
 
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/jackc/pgerrcode"
 	"gorm.io/gorm"
+)
+
+const (
+	uniqueConstraintFailedErrorSQLite = "UNIQUE constraint failed"
 )
 
 type Database interface {
@@ -35,10 +39,8 @@ func NewDatabase(env common.Environment) Database {
 
 //nolint:errorlint
 func WrapErrors(dbError error) error {
-	if e, ok := dbError.(sqlite3.Error); ok {
-		if e.ExtendedCode == sqlite3.ErrConstraintUnique {
-			return common.ErrDBUniqueConstraint
-		}
+	if strings.Contains(dbError.Error(), uniqueConstraintFailedErrorSQLite) {
+		return common.ErrDBUniqueConstraint
 	}
 
 	if e, ok := dbError.(*pgconn.PgError); ok {
