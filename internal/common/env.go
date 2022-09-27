@@ -14,6 +14,7 @@ type Environment struct {
 	CurrentEnvironment string     `env:"ENVIRONMENT" envDefault:"production"`
 	Database           string     `env:"DATABASE_DSN"`
 	PasetoKey          *Base64Key `env:"PASETO_KEY"`
+	ServiceName        string     `env:"SERVICE_NAME" envDefault:"developers_italia_api"`
 }
 
 func (k *Base64Key) UnmarshalText(text []byte) error {

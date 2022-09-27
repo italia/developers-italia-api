@@ -50,6 +50,8 @@ spec:
             {{- if .Values.maxRequests }}
             - name: MAX_REQUESTS
               value: {{ .Values.maxRequests }}
+            - name: SERVICE_NAME
+              value: { { .Values.serviceName } }
             {{- end }}
             - name: PASETO_KEY
               valueFrom:
