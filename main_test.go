@@ -527,15 +527,34 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
 		},
 		{
-			query: "POST /v1/publishers - Email already exist",
-			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"foobar@1.example.org", "description": "test"}`,
+			description: "POST new publisher with an existing email",
+			query:       "POST /v1/publishers",
+			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
+			body:        `{"codeHosting": [{"url" : "https://new-url.example.com"}], "email":"foobar@1.example.org", "description": "new publisher description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
-			expectedCode:        409,
-			expectedContentType: "application/problem+json",
-			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "foobar@1.example.org", response["email"])
+			},
+		},
+		{
+			description:    "POST new publisher with an existing email (not normalized)",
+			query:          "POST /v1/publishers",
+			fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
+			body:     `{"codeHosting": [{"url" : "https://new-url.example.com"}], "email":"FoobaR@1.example.org", "description": "new publisher description"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "foobar@1.example.org", response["email"])
+			},
 		},
 		{
 			query:    "POST /v1/publishers - Description already exist",
@@ -553,18 +572,6 @@ func TestPublishersEndpoints(t *testing.T) {
 			query:    "POST /v1/publishers - ExternalCode already exist",
 			fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
 			body:     `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-pass@example.com", "externalCode":"external-code-27", "description": "New POST description"}`,
-			headers: map[string][]string{
-				"Authorization": {goodToken},
-				"Content-Type":  {"application/json"},
-			},
-			expectedCode:        409,
-			expectedContentType: "application/problem+json",
-			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
-		},
-		{
-			query:    "POST /v1/publishers - Email NOT Normalized already exist",
-			fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
-			body:     `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"FoobaR@1.example.org", "externalCode":"example-testcase-3", "description": "Publisher description 1--x"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
