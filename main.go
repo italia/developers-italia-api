@@ -89,7 +89,6 @@ func Setup() *fiber.App {
 		common.EnvironmentConfig.PasetoKey = middleware.NewRandomPasetoKey()
 	}
 
-	// Setup the prometheus middleware
 	prometheus := fiberprometheus.New(common.EnvironmentConfig.ServiceName)
 	prometheus.RegisterAt(app, "/metrics")
 	app.Use(prometheus.Middleware)
