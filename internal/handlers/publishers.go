@@ -210,14 +210,14 @@ func (p *Publisher) updatePublisherTrx(
 
 // DeletePublisher deletes the publisher with the given ID.
 func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
-	var publisher models.Publisher
+	result := p.db.Select("CodeHosting").Delete(&models.Publisher{ID: ctx.Params("id")})
 
-	if err := p.db.Delete(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "can't delete Publisher", "Publisher was not found")
-		}
-
+	if result.Error != nil {
 		return common.Error(fiber.StatusInternalServerError, "can't delete Publisher", "db error")
+	}
+
+	if result.RowsAffected == 0 {
+		return common.Error(fiber.StatusNotFound, "can't delete Publisher", "Publisher was not found")
 	}
 
 	return ctx.SendStatus(fiber.StatusNoContent)

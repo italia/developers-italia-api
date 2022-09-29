@@ -238,5 +238,5 @@ func (p *Webhook[T]) DeleteWebhook(ctx *fiber.Ctx) error {
 		return common.Error(fiber.StatusNotFound, "can't delete Webhook", "Webhook was not found")
 	}
 
-	return ctx.Status(fiber.StatusNoContent).JSON("")
+	return ctx.SendStatus(fiber.StatusNoContent)
 }

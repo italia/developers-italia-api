@@ -817,10 +817,15 @@ func TestPublishersEndpoints(t *testing.T) {
 
 		// DELETE /publishers/:id
 		{
-			description:         "Delete non-existent publishers",
-			query:               "GET /v1/publishers/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			description: "Delete non-existent publishers",
+			query:       "DELETE /v1/publishers/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
 			expectedCode:        404,
-			expectedBody:        `{"title":"can't get Publisher","detail":"Publisher was not found","status":404}`,
+			expectedBody:        `{"title":"can't delete Publisher","detail":"Publisher was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -1871,9 +1876,14 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// DELETE /software/:id
 		{
 			description:         "Delete non-existent software",
-			query:               "GET /v1/software/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			query:               "DELETE /v1/software/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			fixtures:    []string{"software.yml", "software_urls.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
 			expectedCode:        404,
-			expectedBody:        `{"title":"can't get Software","detail":"Software was not found","status":404}`,
+			expectedBody:        `{"title":"can't delete Software","detail":"Software was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -1897,7 +1907,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 			expectedCode:        204,
 			expectedBody:        "",
-			expectedContentType: "application/json",
+			expectedContentType: "",
 		},
 		// TODO: check there are no dangling software_urls
 
@@ -2822,10 +2832,14 @@ func TestWebhooksEndpoints(t *testing.T) {
 		// DELETE /webhooks/:id
 		{
 			description:         "Delete non-existent webhook",
-			query:               "GET /v1/webhooks/NO_SUCH_WEBHOOK",
+			query:               "DELETE /v1/webhooks/NO_SUCH_WEBHOOK",
 			fixtures:            []string{"webhooks.yml"},
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
 			expectedCode:        404,
-			expectedBody:        `{"title":"can't get Webhook","detail":"Webhook was not found","status":404}`,
+			expectedBody:        `{"title":"can't delete Webhook","detail":"Webhook was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -2849,7 +2863,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 			},
 			expectedCode:        204,
 			expectedBody:        "",
-			expectedContentType: "application/json",
+			expectedContentType: "",
 		},
 	}
 

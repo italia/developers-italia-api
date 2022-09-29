@@ -272,15 +272,17 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // most
 
 // DeleteSoftware deletes the software with the given ID.
 func (p *Software) DeleteSoftware(ctx *fiber.Ctx) error {
-	if err := p.db.Select("Aliases").Delete(&models.Software{ID: ctx.Params("id")}).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "can't delete Software", "Software was not found")
-		}
+	result := p.db.Select("Aliases").Delete(&models.Software{ID: ctx.Params("id")})
 
+	if result.Error != nil {
 		return common.Error(fiber.StatusInternalServerError, "can't delete Software", "db error")
 	}
 
-	return ctx.Status(fiber.StatusNoContent).JSON("")
+	if result.RowsAffected == 0 {
+		return common.Error(fiber.StatusNotFound, "can't delete Software", "Software was not found")
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
 // syncAliases synchs the SoftwareURLs for a `software` in the database to reflect the
