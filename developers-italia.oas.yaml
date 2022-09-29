@@ -1446,6 +1446,11 @@ components:
       type: object
       additionalProperties: false
       properties:
+        id:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          readOnly: true
         codeHosting:
           type: array
           minItems: 1
@@ -1504,6 +1509,12 @@ components:
           maxLength: 255
           example: 'exampleExternalCode'
           pattern: '.*'
+      required:
+        - id
+        - description
+        - codeHosting
+        - createdAt
+        - updatedAt
     Log:
       title: Log
       type: object
