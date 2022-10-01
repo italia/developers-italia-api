@@ -55,6 +55,8 @@ paths:
           $ref: '#/components/responses/NoContent'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
   /software:
@@ -80,8 +82,6 @@ paths:
                       $ref: '#/components/schemas/Software'
                   links:
                     $ref: '#/components/schemas/Links'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       operationId: list-software
@@ -159,6 +159,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -215,6 +217,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -336,6 +340,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -436,6 +442,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -551,6 +559,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -615,6 +625,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -673,6 +685,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -819,8 +833,6 @@ paths:
                       $ref: '#/components/schemas/Publisher'
                   links:
                     $ref: '#/components/schemas/Links'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       operationId: list-publishers
@@ -876,6 +888,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -932,6 +946,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -1049,6 +1065,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -1164,6 +1182,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -1228,6 +1248,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
       requestBody:
@@ -1372,7 +1394,7 @@ components:
       content:
         application/problem+json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/ValidationError'
     TooManyRequests:
       description: Too Many Requests
       content:
@@ -1591,7 +1613,31 @@ components:
           title: Can't create Software
           detail: Invalid JSON
           status: 400
-        example-2:
+      properties:
+        title:
+          type: string
+          pattern: '.*'
+          maxLength: 255
+          description: 'Short, human-readable summary of the problem'
+        detail:
+          type: string
+          pattern: '.*'
+          maxLength: 2048
+          description: Human-readable explanation of the problem
+        status:
+          type: integer
+          format: int32
+          minimum: 400
+          maximum: 499
+          description: The HTTP status code for this problem
+      required:
+        - title
+        - detail
+    ValidationError:
+      type: object
+      additionalProperties: false
+      x-examples:
+        example-1:
           title: Can't create Log
           detail: Validation error
           status: 422
@@ -1610,6 +1656,13 @@ components:
           pattern: '.*'
           maxLength: 2048
           description: Human-readable explanation of the problem
+        status:
+          type: integer
+          format: int32
+          # TODO: use enum
+          minimum: 422
+          maximum: 422
+          description: The HTTP status code for this problem
         validationErrors:
           type: array
           description: 'List of validation errors, returned by endpoints that validate input data (eg. POST, PATCH, etc.)'
