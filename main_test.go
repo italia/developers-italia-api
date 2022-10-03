@@ -516,7 +516,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/publishers - NOT normalized URL already exist",
-			body:  `{"codeHosting": [{"url" : "hTtps://1-A.example.org/code//repo"}], "email":"example-testcase-3@example.com", "externalCode":"example-testcase-3"}`,
+			body:  `{"codeHosting": [{"url" : "hTtps://1-A.example.org/code//repo"}], "email":"example-testcase-3@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
