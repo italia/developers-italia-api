@@ -527,7 +527,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/publishers - Email already exist",
-			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"foobar@1.example.org", "externalCode":"example-testcase-3", "description": "test"}`,
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"foobar@1.example.org", "description": "test"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
