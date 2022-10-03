@@ -516,7 +516,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/publishers - NOT normalized URL already exist",
-			body:  `{"codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}], "email":"example-testcase-3@example.com", "externalCode":"example-testcase-3"}`,
+			body:  `{"codeHosting": [{"url" : "hTtps://1-A.example.org/code//repo"}], "email":"example-testcase-3@example.com", "externalCode":"example-testcase-3"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -527,7 +527,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/publishers - Email already exist",
-			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3@example.com", "externalCode":"example-testcase-3", "description": "test"}`,
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"foobar@1.example.org", "externalCode":"example-testcase-3", "description": "test"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -538,7 +538,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/publishers - Description already exist",
-			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-unique@example.com", "externalCode":"example-testcase-3", "description": "test"}`,
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-unique@example.com", "externalCode":"example-testcase-3", "description": "Publisher description 1"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -549,7 +549,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/publishers - ExternalCode already exist",
-			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-pass@example.com", "externalCode":"example-testcase-3"}`,
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-pass@example.com", "externalCode":"external-code-27"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -560,7 +560,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/publishers - Email NOT Normalized already exist",
-			body:  `{"codeHosting": [{"url" : "https://example-testcase-xxx3-not-exist.com"}], "email":"ExamplE-Testcase-3@example.com", "externalCode":"example-testcase-3-not-exist"}`,
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"FoobaR@1.example.org", "externalCode":"example-testcase-3", "description": "Publisher description 1--x"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
