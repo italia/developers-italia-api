@@ -6,6 +6,7 @@ import (
 	"github.com/italia/developers-italia-api/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type PostgresDB struct {
@@ -17,6 +18,8 @@ func (d *PostgresDB) Init(dsn string) (*gorm.DB, error) {
 
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
+		// Disable logging in production
+		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't open database: %w", err)
