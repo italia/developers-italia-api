@@ -128,7 +128,7 @@ func TestPublisherCreate(t *testing.T) {
 	err := db.Create(
 		&Publisher{
 			ID:          utils.UUIDv4(),
-			Description: &description,
+			Description: description,
 			Email:       "new-publisher@example.org",
 		},
 	).Error
@@ -138,7 +138,7 @@ func TestPublisherCreate(t *testing.T) {
 	err = db.Create(
 		&Publisher{
 			ID:          "2ded32eb-c45e-4167-9166-a44e18b8adde",
-			Description: &description,
+			Description: description,
 			Email:       "new-publisher@example.org",
 		},
 	).Error

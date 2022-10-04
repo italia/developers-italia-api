@@ -96,7 +96,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 
 	publisher := &models.Publisher{
 		ID:           utils.UUIDv4(),
-		Description:  &request.Description,
+		Description:  request.Description,
 		Email:        normalizedEmail,
 		Active:       request.Active,
 		ExternalCode: &request.ExternalCode,
@@ -171,7 +171,7 @@ func (p *Publisher) updatePublisherTrx(
 	}
 
 	if request.Description != "" {
-		publisher.Description = &request.Description
+		publisher.Description = request.Description
 	}
 
 	if request.Email != "" {
