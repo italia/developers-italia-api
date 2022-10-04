@@ -93,7 +93,7 @@ func TestSoftwareCreate(t *testing.T) {
 			PubliccodeYml: "-",
 		},
 	).Error
-	assert.EqualError(t, err, "UNIQUE constraint failed: software.id")
+	assert.EqualError(t, err, "UNIQUE constraint failed: software.software_url_id")
 }
 
 func TestSoftwareURLCreate(t *testing.T) {
