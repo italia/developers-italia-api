@@ -95,20 +95,12 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	normalizedEmail := common.NormalizeEmail(request.Email)
 
 	publisher := &models.Publisher{
-		ID:     utils.UUIDv4(),
-		Email:  normalizedEmail,
-		Active: request.Active,
+		ID:           utils.UUIDv4(),
+		Description:  &request.Description,
+		Email:        normalizedEmail,
+		Active:       request.Active,
+		ExternalCode: &request.ExternalCode,
 	}
-
-	if request.ExternalCode != "" {
-		publisher.ExternalCode = &request.ExternalCode
-	}
-
-	if request.Description != "" {
-		publisher.Description = &request.Description
-	}
-
-	publisher.Description = &request.Description
 
 	for _, codeHost := range request.CodeHosting {
 		urlAddress, _ := url.Parse(codeHost.URL)
