@@ -142,7 +142,7 @@ func TestPublisherCreate(t *testing.T) {
 			Email:       "new-publisher@example.org",
 		},
 	).Error
-	assert.EqualError(t, err, "UNIQUE constraint failed: publishers.email")
+	assert.EqualError(t, err, "UNIQUE constraint failed: publishers.description")
 }
 
 func TestWebhookCreate(t *testing.T) {
