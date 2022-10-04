@@ -55,7 +55,7 @@ func (CodeHosting) TableName() string {
 
 type CodeHosting struct {
 	ID          string         `json:"-" gorm:"primaryKey"`
-	URL         string         `json:"url" gorm:"not null,uniqueIndex"`
+	URL         string         `json:"url" gorm:"not null;uniqueIndex"`
 	Group       *bool          `json:"group" gorm:"default:true;not null"`
 	PublisherID string         `json:"-"`
 	CreatedAt   time.Time      `json:"createdAt" gorm:"index"`
@@ -69,7 +69,7 @@ type Software struct {
 	// This needs to be explicitly declared, otherwise GORM won't create
 	// the foreign key and will be confused about the double relationship
 	// with SoftwareURLs (belongs to and has many).
-	SoftwareURLID string `json:"-" gorm:"uniqueIndex,not null"`
+	SoftwareURLID string `json:"-" gorm:"uniqueIndex;not null"`
 
 	URL           SoftwareURL   `json:"url"`
 	Aliases       []SoftwareURL `json:"aliases"`

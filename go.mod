@@ -16,7 +16,10 @@ require (
 	gorm.io/gorm v1.23.6
 )
 
-require golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
+require (
+	github.com/Jeffail/gabs/v2 v2.6.1
+	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
+)
 
 require (
 	github.com/mattn/go-sqlite3 v1.14.13 // indirect
