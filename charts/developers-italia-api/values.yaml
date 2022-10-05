@@ -100,3 +100,15 @@ databaseDSN: ""
 
 # -- Base64 encoded Paseto Key.
 pasetoKey: ""
+
+serviceMonitor:
+  # -- Create ServiceMonitor resource (requires corresponding Prometheus Operator CRD installed).
+  enabled: false
+  additionalLabels: {}
+  # -- (string)
+  jobLabel:
+  # -- (string) Interval at which metrics should be scraped.
+  interval:
+  # -- (string) Timeout after which the scrape is ended.
+  scrapeTimeout:
+  targetLabels: []
