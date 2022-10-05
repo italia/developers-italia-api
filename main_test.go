@@ -505,7 +505,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, external_code or CodeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with an existing email",
@@ -544,7 +544,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, external_code or CodeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with no description",
@@ -556,7 +556,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"invalid format\",\"status\":422,\"validationErrors\":[{\"field\":\"description\",\"rule\":\"required\"}]}",
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"description","rule":"required"}]}`,
 		},
 		{
 			description: "POST new publisher with empty description",
@@ -568,7 +568,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"invalid format\",\"status\":422,\"validationErrors\":[{\"field\":\"description\",\"rule\":\"required\"}]}",
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"description","rule":"required"}]}`,
 		},
 		{
 			query: "POST /v1/publishers - ExternalCode already exist",
@@ -579,7 +579,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        "{\"title\":\"can't create Publisher\",\"detail\":\"Publisher with provided description, email, external_code or CodeHosting URL already exists\",\"status\":409}",
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, external_code or CodeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST publishers with invalid payload",
