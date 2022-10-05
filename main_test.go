@@ -31,7 +31,6 @@ type TestCase struct {
 	description string
 
 	// Test input
-	fixtures []string
 	query    string
 	body     string
 	headers  map[string][]string
@@ -72,16 +71,11 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func loadFixtures(t *testing.T, files ...string) {
-	var filesWithPath []string
-	for _, file := range files {
-		filesWithPath = append(filesWithPath, "test/testdata/fixtures/"+file)
-	}
-
+func loadFixtures(t *testing.T) {
 	fixtures, err := testfixtures.New(
 		testfixtures.Database(db),
 		testfixtures.Dialect("sqlite"),
-		testfixtures.Files(filesWithPath...),
+		testfixtures.Directory("test/testdata/fixtures/"),
 	)
 	assert.Nil(t, err)
 
@@ -97,9 +91,7 @@ func runTestCases(t *testing.T, tests []TestCase) {
 		}
 
 		t.Run(description, func(t *testing.T) {
-			if len(test.fixtures) > 0 {
-				loadFixtures(t, test.fixtures...)
-			}
+			loadFixtures(t)
 
 			query := strings.Split(test.query, " ")
 
@@ -170,7 +162,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description:         "GET the first page on publishers",
 			query:               "GET /v1/publishers",
-			fixtures:            []string{"publishers.yml", "publishers_code_hosting.yml"},
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
@@ -211,7 +202,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description:         "GET all the publishers, except the non active ones",
 			query:               "GET /v1/publishers?page[size]=100",
-			fixtures:            []string{"publishers.yml", "publishers_code_hosting.yml"},
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
@@ -250,7 +240,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "GET all publishers, including non active",
 			query:       "GET /v1/publishers?all=true&page[size]=100",
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -290,7 +279,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "GET with page[size] query param",
 			query:       "GET /v1/publishers?page[size]=2",
-			fixtures:    []string{"publishers.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -311,7 +299,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		// {
 		// 	description: "GET with invalid format for page[size] query param",
 		// 	query:    "GET /v1/publishers?page[size]=NOT_AN_INT",
-		// 	fixtures: []string{"publishers.yml"},
 
 		// 	expectedCode:        422,
 		// 	expectedContentType: "application/json",
@@ -320,7 +307,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		// {
 		// 	description: "GET with page[size] bigger than the max of 100",
 		// 	query:    "GET /v1/publishers?page[size]=200",
-		// 	fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
 
 		// 	expectedCode:        422,
 		// 	expectedContentType: "application/json",
@@ -328,7 +314,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: `GET with "page[after]" query param`,
 			query:       "GET /v1/publishers?page[after]=WyIyMDE4LTExLTI3VDAwOjAwOjAwWiIsIjgxZmRhN2M0LTZiYmYtNDM4Ny04Zjg5LTI1OGMxZTZmYWZhMiJd",
-			fixtures:    []string{"publishers.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -356,7 +341,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "GET with page[before] query param",
 			query:       "GET /v1/publishers?page[before]=WyIyMDE4LTExLTI3VDAwOjAwOjAwWiIsIjkxZmRhN2M0LTZiYmYtNDM4Ny04Zjg5LTI1OGMxZTZmYWZhMiJd",
-			fixtures:    []string{"publishers.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -393,7 +377,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query:               "GET /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
-			fixtures:            []string{"publishers.yml", "publishers_code_hosting.yml"},
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
@@ -457,7 +440,6 @@ func TestPublishersEndpoints(t *testing.T) {
 			description: "POST publishers - with externalCode example",
 			query:       "POST /v1/publishers",
 			body:        `{"description":"new description", "codeHosting": [{"url" : "https://www.example-testcase-2.com"}], "email":"example-testcase-2@example.com", "externalCode":"example-testcase-2"}`,
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -487,7 +469,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			query: "POST /v1/publishers - NOT normalized URL validation passed",
 			body:  `{"description":"new description", "codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}], "email":"example-testcase-3@example.com", "externalCode":"example-testcase-3"}`,
-			fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -518,7 +499,6 @@ func TestPublishersEndpoints(t *testing.T) {
 			description: "POST publishers with duplicate URL (when normalized)",
 			query:       "POST /v1/publishers",
 			body: `{"codeHosting": [{"url" : "https://1-a.exAMple.org/code/repo"}], "email":"example-testcase-3@example.com", "description":"new description"}`,
-			fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -530,7 +510,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST new publisher with an existing email",
 			query:       "POST /v1/publishers",
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 			body:        `{"codeHosting": [{"url" : "https://new-url.example.com"}], "email":"foobar@1.example.org", "description": "new publisher description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -545,7 +524,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description:    "POST new publisher with an existing email (not normalized)",
 			query:          "POST /v1/publishers",
-			fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
 			body:     `{"codeHosting": [{"url" : "https://new-url.example.com"}], "email":"FoobaR@1.example.org", "description": "new publisher description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -559,7 +537,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query:    "POST /v1/publishers - Description already exist",
-			fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
 			body:     `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-unique@example.com", "description": "Publisher description 1"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -606,7 +583,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST publishers with invalid payload",
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 			query:       "POST /v1/publishers",
 			body:        `{"url": "-"}`,
 			headers: map[string][]string{
@@ -619,7 +595,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST publishers - wrong token",
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 			query:       "POST /v1/publishers",
 			body:        `{"description":"new description", "codeHosting": [{"url" : "https://www.example-5.com"}], "email":"example@example.com"}`,
 			headers: map[string][]string{
@@ -646,7 +621,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST publishers with optional boolean field set to false",
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 			query:       "POST /v1/publishers",
 			body:        `{"active": false, "description": "new description", "codeHosting": [{"url" : "https://www.example.com"}], "email":"example-optional-boolean@example.com"}`,
 			headers: map[string][]string{
@@ -663,7 +637,6 @@ func TestPublishersEndpoints(t *testing.T) {
 			description: "POST publishers with codeHosting optional boolean field (group) set to false",
 			query:       "POST /v1/publishers",
 			body:        `{"description":"new description", "codeHosting": [{"url" : "https://www.example.com", "group": false}], "email":"example-optional-group@example.com"}`,
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -743,7 +716,6 @@ func TestPublishersEndpoints(t *testing.T) {
 					"Authorization": {goodToken},
 					"Content-Type":  {"application/json"},
 				},
-				fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
 
 				expectedCode:        200,
 				expectedContentType: "application/json",
@@ -767,7 +739,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "PATCH publishers - wrong token",
 			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 			body:        ``,
 			headers: map[string][]string{
 				"Authorization": {badToken},
@@ -780,7 +751,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "PATCH publishers with invalid JSON",
 			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 			body:        `INVALID_JSON`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -798,7 +768,6 @@ func TestPublishersEndpoints(t *testing.T) {
 			{
 				description: "PATCH publishers with validation errors",
 				query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
-				fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 				body:        `{"codeHosting": [{"url" : "INVALID_URL"}], "email":"example@example.com"}`,
 				headers: map[string][]string{
 					"Authorization": {goodToken},
@@ -825,7 +794,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "PATCH publishers with empty body",
 			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 			body:        "",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -843,7 +811,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "Delete non-existent publishers",
 			query:       "DELETE /v1/publishers/eea19c82-0449-11ed-bd84-d8bbc146d165",
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -855,7 +822,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "DELETE publishers with bad authentication",
 			query:       "DELETE /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
-			fixtures:    []string{"publishers.yml", "publishers_code_hosting.yml"},
 			headers: map[string][]string{
 				"Authorization": {badToken},
 				"Content-Type":  {"application/json"},
@@ -866,7 +832,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query:    "DELETE /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
-			fixtures: []string{"publishers.yml", "publishers_code_hosting.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -881,7 +846,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		// GET /publishers/:id/webhooks
 		{
 			query:    "GET /v1/publishers/47807e0c-0613-4aea-9917-5455cc6eddad/webhooks",
-			fixtures: []string{"publishers.yml", "webhooks.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -914,7 +878,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "GET webhooks for non existing publisher",
 			query:       "GET /v1/publishers/NO_SUCH_publishers/webhooks",
-			fixtures:    []string{"publishers.yml", "webhooks.yml"},
 
 			expectedCode:        404,
 			expectedContentType: "application/problem+json",
@@ -926,7 +889,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "GET webhooks for publisher without webhooks",
 			query:       "GET /v1/publishers/b97446f8-fe06-472c-9b26-c40150cac77f/webhooks",
-			fixtures:    []string{"publishers.yml", "webhooks.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -939,7 +901,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "GET with page[size] query param",
 			query:       "GET /v1/publishers/d6ddc11a-ff85-4f0f-bb87-df38b2a9b394/webhooks?page[size]=1",
-			fixtures:    []string{"publishers.yml", "webhooks.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -961,7 +922,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST webhook for non existing publisher",
 			query:       "POST /v1/publishers/NO_SUCH_publishers/webhooks",
-			fixtures:    []string{"publishers.yml", "webhooks.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -977,7 +937,6 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			query:    "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
 			body:     `{"url": "https://new.example.org", "secret": "xyz"}`,
-			fixtures: []string{"publishers.yml", "webhooks.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1107,7 +1066,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET the first page on software",
 			query:       "GET /v1/software",
-			fixtures:    []string{"software.yml", "software_urls.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1153,7 +1111,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET all the software, except the non active ones",
 			query:       "GET /v1/software?page[size]=100",
-			fixtures:    []string{"software.yml", "software_urls.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1197,7 +1154,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET all software, including non active",
 			query:       "GET /v1/software?all=true&page[size]=100",
-			fixtures:    []string{"software.yml", "software_urls.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1239,7 +1195,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET software with a specific URL",
 			query:       "GET /v1/software?url=https://1-a.example.org/code/repo",
-			fixtures:    []string{"software.yml", "software_urls.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1277,7 +1232,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET software with a specific URL that doesn't exist",
 			query:       "GET /v1/software?url=https://no.such.url.in.db.example.org/code/repo",
-			fixtures:    []string{"software.yml", "software_urls.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1297,7 +1251,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET with page[size] query param",
 			query:       "GET /v1/software?page[size]=2",
-			fixtures:    []string{"software.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1318,7 +1271,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// {
 		// 	description: "GET with invalid format for page[size] query param",
 		// 	query:    "GET /v1/software?page[size]=NOT_AN_INT",
-		// 	fixtures: []string{"software.yml"},
 
 		// 	expectedCode:        422,
 		// 	expectedContentType: "application/json",
@@ -1327,7 +1279,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// {
 		// 	description: "GET with page[size] bigger than the max of 100",
 		// 	query:    "GET /v1/software?page[size]=200",
-		// 	fixtures: []string{"software.yml", "software_urls.yml"},
 
 		// 	expectedCode:        422,
 		// 	expectedContentType: "application/json",
@@ -1335,7 +1286,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: `GET with "page[after]" query param`,
 			query:       "GET /v1/software?page[after]=WyIyMDE1LTA0LTI2VDAwOjAwOjAwWiIsIjEyNDI4MGQ3LTc1NTItNGZmZS05MzlmLWY0NjY5N2NjMGU4YSJd",
-			fixtures:    []string{"software.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1363,7 +1313,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET with page[before] query param",
 			query:       "GET /v1/software?page[before]=WyIyMDE1LTA1LTExVDAwOjAwOjAwWiIsIjgzZTdhMzVlLTMyOGItNDg5MS1iNjBiLTU5NzkyZTAxYzU5ZSJd",
-			fixtures:    []string{"software.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1392,7 +1341,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: `GET with "from" query param`,
 			query:       "GET /v1/software?from=2015-04-01T09:56:23Z",
-			fixtures:    []string{"software.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1406,7 +1354,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: `GET with invalid "from" query param`,
 			query:       "GET /v1/software?from=3",
-			fixtures:    []string{"software.yml"},
 
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
@@ -1418,7 +1365,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: `GET with "to" query param`,
 			query:       "GET /v1/software?to=2014-11-01T09:56:23Z",
-			fixtures:    []string{"software.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1431,7 +1377,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: `GET with invalid "to" query param`,
 			query:       "GET /v1/software?to=3",
-			fixtures:    []string{"software.yml"},
 
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
@@ -1451,7 +1396,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			query:               "GET /v1/software/e7576e7f-9dcf-4979-b9e9-d8cdcad3b60e",
-			fixtures:            []string{"software.yml", "software_urls.yml"},
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
@@ -1485,7 +1429,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
-			fixtures:            []string{"software.yml", "software_urls.yml"},
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
@@ -1523,7 +1466,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
-			fixtures:            []string{"software.yml", "software_urls.yml"},
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
@@ -1696,7 +1638,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
-			fixtures: []string{"software.yml", "software_urls.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1734,7 +1675,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
-			fixtures: []string{"software.yml", "software_urls.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1772,7 +1712,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
-			fixtures: []string{"software.yml", "software_urls.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1802,7 +1741,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "PATCH software - wrong token",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			fixtures:    []string{"software.yml", "software_urls.yml"},
 			body:        ``,
 			headers: map[string][]string{
 				"Authorization": {badToken},
@@ -1815,7 +1753,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "PATCH software with invalid JSON",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			fixtures:    []string{"software.yml", "software_urls.yml"},
 			body:        `INVALID_JSON`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -1847,7 +1784,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "PATCH software with validation errors",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			fixtures:    []string{"software.yml", "software_urls.yml"},
 			body:        `{"url": "INVALID_URL", "publiccodeYml": "-"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -1874,7 +1810,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "PATCH software with empty body",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			fixtures:    []string{"software.yml", "software_urls.yml"},
 			body:        "",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -1901,7 +1836,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description:         "Delete non-existent software",
 			query:               "DELETE /v1/software/eea19c82-0449-11ed-bd84-d8bbc146d165",
-			fixtures:    []string{"software.yml", "software_urls.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1913,7 +1847,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "DELETE software with bad authentication",
 			query:       "DELETE /v1/software/11e101c4-f989-4cc4-a665-63f9f34e83f6",
-			fixtures:    []string{"software.yml", "software_urls.yml"},
 			headers: map[string][]string{
 				"Authorization": {badToken},
 				"Content-Type":  {"application/json"},
@@ -1924,7 +1857,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			query:    "DELETE /v1/software/11e101c4-f989-4cc4-a665-63f9f34e83f6",
-			fixtures: []string{"software.yml", "software_urls.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1938,7 +1870,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// GET /software/:id/logs
 		{
 			query:    "GET /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
-			fixtures: []string{"software.yml", "logs.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1991,7 +1922,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET logs for non existing software",
 			query:       "GET /v1/software/NO_SUCH_SOFTWARE/logs",
-			fixtures:    []string{"software.yml", "logs.yml"},
 
 			expectedCode:        404,
 			expectedContentType: "application/problem+json",
@@ -2003,7 +1933,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET with page[size] query param",
 			query:       "GET /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs?page[size]=2",
-			fixtures:    []string{"logs.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2025,7 +1954,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "POST logs for non existing software",
 			query:       "POST /v1/software/NO_SUCH_SOFTWARE/logs",
-			fixtures:    []string{"software.yml", "logs.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2041,7 +1969,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			query:    "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
 			body:     `{"message": "New software log from test suite"}`,
-			fixtures: []string{"software.yml", "logs.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2160,7 +2087,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		// GET /software/:id/webhooks
 		{
 			query:    "GET /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
-			fixtures: []string{"software.yml", "webhooks.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2193,7 +2119,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET webhooks for non existing software",
 			query:       "GET /v1/software/NO_SUCH_SOFTWARE/webhooks",
-			fixtures:    []string{"software.yml", "webhooks.yml"},
 
 			expectedCode:        404,
 			expectedContentType: "application/problem+json",
@@ -2205,7 +2130,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET webhooks for software without webhooks",
 			query:       "GET /v1/software/e7576e7f-9dcf-4979-b9e9-d8cdcad3b60e/webhooks",
-			fixtures:    []string{"software.yml", "webhooks.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2218,7 +2142,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "GET with page[size] query param",
 			query:       "GET /v1/software/9f135268-a37e-4ead-96ec-e4a24bb9344a/webhooks?page[size]=1",
-			fixtures:    []string{"software.yml", "webhooks.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2240,7 +2163,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "POST webhooks for non existing software",
 			query:       "POST /v1/software/NO_SUCH_SOFTWARE/webhooks",
-			fixtures:    []string{"software.yml", "webhooks.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2256,7 +2178,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			query:    "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
 			body:     `{"url": "https://new.example.org", "secret": "xyz"}`,
-			fixtures: []string{"software.yml", "webhooks.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2385,7 +2306,6 @@ func TestLogsEndpoints(t *testing.T) {
 		// GET /logs
 		{
 			query:               "GET /v1/logs",
-			fixtures:            []string{"logs.yml"},
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
@@ -2435,7 +2355,6 @@ func TestLogsEndpoints(t *testing.T) {
 		{
 			description: "GET with page[size] query param",
 			query:       "GET /v1/logs?page[size]=3",
-			fixtures:    []string{"logs.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2456,14 +2375,12 @@ func TestLogsEndpoints(t *testing.T) {
 		// {
 		// 	description: "GET with invalid format for page[size] query param",
 		// 	query:    "GET /v1/logs?page[size]=NOT_AN_INT",
-		// 	fixtures: []string{"logs.yml"},
 		// 	expectedCode:        422,
 		// 	expectedContentType: "application/json",
 		// },
 		{
 			description: `GET with "page[after]" query param`,
 			query:       "GET /v1/logs?page[after]=WyIyMDEwLTA3LTAxVDIzOjU5OjU5WiIsIjg1MWZlMGY0LTA0MmUtMTFlZC05MzNlLWQ4YmJjMTQ2ZDE2NSJd",
-			fixtures:    []string{"logs.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2491,7 +2408,6 @@ func TestLogsEndpoints(t *testing.T) {
 		{
 			description: "GET with page[before] query param",
 			query:       "GET /v1/logs?page[before]=WyIyMDEwLTA2LTMwVDIzOjU5OjU5WiIsIjgyNTZmODgwLTA0MmUtMTFlZC04MmI5LWQ4YmJjMTQ2ZDE2NSJd",
-			fixtures:    []string{"logs.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2520,7 +2436,6 @@ func TestLogsEndpoints(t *testing.T) {
 		{
 			description: `GET with "from" query param`,
 			query:       "GET /v1/logs?from=2010-03-01T09:56:23Z",
-			fixtures:    []string{"logs.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2534,7 +2449,6 @@ func TestLogsEndpoints(t *testing.T) {
 		{
 			description: `GET with invalid "from" query param`,
 			query:       "GET /v1/logs?from=3",
-			fixtures:    []string{"logs.yml"},
 
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
@@ -2546,7 +2460,6 @@ func TestLogsEndpoints(t *testing.T) {
 		{
 			description: `GET with "to" query param`,
 			query:       "GET /v1/logs?to=2010-03-01T09:56:23Z",
-			fixtures:    []string{"logs.yml"},
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2559,7 +2472,6 @@ func TestLogsEndpoints(t *testing.T) {
 		{
 			description: `GET with invalid "to" query param`,
 			query:       "GET /v1/logs?to=3",
-			fixtures:    []string{"logs.yml"},
 
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
@@ -2716,14 +2628,12 @@ func TestWebhooksEndpoints(t *testing.T) {
 		// GET /webhooks/:id
 		{
 			query:               "GET /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
-			fixtures:            []string{"webhooks.yml"},
 			expectedCode:        200,
 			expectedBody:        `{"id":"007bc84a-7e2d-43a0-b7e1-a256d4114aa7","url":"https://1-b.example.org/receiver","createdAt":"2017-05-01T00:00:00Z","updatedAt":"2017-05-01T00:00:00Z"}`,
 			expectedContentType: "application/json",
 		},
 		{
 			description:  "Non-existent webhook",
-			fixtures:     []string{"webhooks.yml"},
 			query:        "GET /v1/webhooks/eea19c82-0449-11ed-bd84-d8bbc146d165",
 			expectedCode: 404,
 			expectedBody: `{"title":"can't get Webhook","detail":"Webhook was not found","status":404}`,
@@ -2735,7 +2645,6 @@ func TestWebhooksEndpoints(t *testing.T) {
 		{
 			query:    "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
 			body:     `{"url": "https://new.example.org/receiver"}`,
-			fixtures: []string{"webhooks.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2758,7 +2667,6 @@ func TestWebhooksEndpoints(t *testing.T) {
 		{
 			description: "PATCH webhook - wrong token",
 			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
-			fixtures:    []string{"webhooks.yml"},
 			body:        `{"url": "https://new.example.org/receiver"}`,
 			headers: map[string][]string{
 				"Authorization": {badToken},
@@ -2771,7 +2679,6 @@ func TestWebhooksEndpoints(t *testing.T) {
 		{
 			description: "PATCH /v1/webhooks with invalid JSON",
 			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
-			fixtures:    []string{"webhooks.yml"},
 			body:        `INVALID_JSON`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -2802,7 +2709,6 @@ func TestWebhooksEndpoints(t *testing.T) {
 		{
 			description: "PATCH webhook with validation errors",
 			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
-			fixtures:    []string{"webhooks.yml"},
 			body:        `{"url": "INVALID_URL"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -2829,7 +2735,6 @@ func TestWebhooksEndpoints(t *testing.T) {
 		{
 			description: "PATCH /v1/webhooks with empty body",
 			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
-			fixtures:    []string{"webhooks.yml"},
 			body:        "",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -2845,7 +2750,6 @@ func TestWebhooksEndpoints(t *testing.T) {
 		// TODO: enforce this?
 		// {
 		// 	query:    "PATCH /v1/webhooks with no Content-Type",
-		// 	fixtures: []string{"webhooks.yml"},
 		// 	body:     "",
 		// 	headers: map[string][]string{
 		// 		"Authorization": {goodToken},
@@ -2857,7 +2761,6 @@ func TestWebhooksEndpoints(t *testing.T) {
 		{
 			description:         "Delete non-existent webhook",
 			query:               "DELETE /v1/webhooks/NO_SUCH_WEBHOOK",
-			fixtures:            []string{"webhooks.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2869,7 +2772,6 @@ func TestWebhooksEndpoints(t *testing.T) {
 		{
 			description: "DELETE webhook with bad authentication",
 			query:       "DELETE /v1/webhooks/1702cd06-fffb-4d20-8f55-73e2a00ee052",
-			fixtures:    []string{"webhooks.yml"},
 			headers: map[string][]string{
 				"Authorization": {badToken},
 				"Content-Type":  {"application/json"},
@@ -2880,7 +2782,6 @@ func TestWebhooksEndpoints(t *testing.T) {
 		},
 		{
 			query:    "DELETE /v1/webhooks/24bc1b5d-fe81-47be-9d55-910f820bdd04",
-			fixtures: []string{"webhooks.yml"},
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
