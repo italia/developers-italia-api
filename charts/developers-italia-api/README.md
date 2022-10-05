@@ -47,6 +47,7 @@ The API of Developers Italia
 | serviceMonitor.jobLabel | string | `nil` |  |
 | serviceMonitor.scrapeTimeout | string | `nil` | Timeout after which the scrape is ended. |
 | serviceMonitor.targetLabels | list | `[]` |  |
+| serviceName | string | `"developers_italia_api"` | Label for Prometheus metrics. |
 | tolerations | list | `[]` |  |
 | useExistingSecret | string | `nil` | Name of existing Kubernetes secret containing keys 'databaseDSN' and 'pasetoKey'. If not provided, a secret will be generated using values from 'databaseDSN' and 'pasetoKey'. |
 
