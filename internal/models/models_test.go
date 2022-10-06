@@ -124,12 +124,14 @@ func TestPublisherCreate(t *testing.T) {
 	loadFixtures(t, "publishers.yml")
 	description := "New publisher"
 
+	email := "new-publisher@example.org"
+
 	// New ID
 	err := db.Create(
 		&Publisher{
 			ID:          utils.UUIDv4(),
 			Description: description,
-			Email:       "new-publisher@example.org",
+			Email:       &email,
 		},
 	).Error
 	assert.NoError(t, err)
@@ -139,7 +141,7 @@ func TestPublisherCreate(t *testing.T) {
 		&Publisher{
 			ID:          "2ded32eb-c45e-4167-9166-a44e18b8adde",
 			Description: description,
-			Email:       "new-publisher@example.org",
+			Email:       &email,
 		},
 	).Error
 	assert.EqualError(t, err, "UNIQUE constraint failed: publishers.description")

@@ -52,5 +52,6 @@ func NormalizeEmail(email *string) *string {
 	}
 
 	normalized := strings.TrimSpace(strings.ToLower(*email))
+
 	return &normalized
 }
