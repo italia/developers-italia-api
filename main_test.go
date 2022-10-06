@@ -438,9 +438,9 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description: "POST publishers - with externalCode example",
+			description: "POST publisher with alternativeId",
 			query:       "POST /v1/publishers",
-			body:        `{"description":"new description", "codeHosting": [{"url" : "https://www.example-testcase-2.com"}], "externalCode":"example-testcase-2"}`,
+			body:        `{"alternativeId":"12345", "description":"new description", "codeHosting": [{"url" : "https://www.example-testcase-2.com"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -454,7 +454,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				// TODO: check codeHosting content
 				assert.NotEmpty(t, response["codeHosting"])
 
-				assert.Equal(t, "example-testcase-2", response["externalCode"])
+				assert.Equal(t, "12345", response["alternativeId"])
 
 				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
 				assert.Nil(t, err)
@@ -468,8 +468,32 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description: "POST publisher with duplicate alternativeId",
+			query: "POST /v1/publishers",
+			body:  `{"alternativeId": "alternative-id-12345", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-pass@example.com"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
+		},
+		{
+			description: "POST publisher with empty alternativeId",
+			query: "POST /v1/publishers",
+			body:  `{"alternativeId": "", "description":"new description", "codeHosting": [{"url" : "https://gitlab.example.com/repo"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"alternativeId","rule":"min"}]}`,
+		},
+		{
 			query: "POST /v1/publishers - NOT normalized URL validation passed",
-			body:  `{"description":"new description", "codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}], "externalCode":"example-testcase-3"}`,
+			body:  `{"description":"new description", "codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -482,8 +506,6 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				// TODO: check codeHosting content
 				assert.NotEmpty(t, response["codeHosting"])
-
-				assert.Equal(t, "example-testcase-3", response["externalCode"])
 
 				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
 				assert.Nil(t, err)
@@ -506,7 +528,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, external_code or CodeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with an existing email",
@@ -574,7 +596,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, external_code or CodeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with no description",
@@ -601,15 +623,16 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"description","rule":"required"}]}`,
 		},
 		{
-			query: "POST /v1/publishers - ExternalCode already exist",
-			body:  `{"description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "externalCode":"external-code-27"}`,
+			description: "POST publisher with duplicate alternativeId",
+			query: "POST /v1/publishers",
+			body:  `{"alternativeId": "alternative-id-12345", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, external_code or CodeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST publishers with invalid payload",

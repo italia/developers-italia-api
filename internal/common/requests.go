@@ -3,19 +3,19 @@ package common
 import "strings"
 
 type PublisherPost struct {
-	CodeHosting  []CodeHosting `json:"codeHosting" validate:"required,gt=0,dive"`
-	Description  string        `json:"description" validate:"required"`
-	Email        *string       `json:"email" validate:"omitempty,email"`
-	Active       *bool         `json:"active"`
-	ExternalCode string        `json:"externalCode" validate:"max=255"`
+	CodeHosting   []CodeHosting `json:"codeHosting" validate:"required,gt=0,dive"`
+	Description   string        `json:"description" validate:"required"`
+	Email         *string       `json:"email" validate:"omitempty,email"`
+	Active        *bool         `json:"active"`
+	AlternativeID *string       `json:"alternativeId" validate:"omitempty,min=1,max=255"`
 }
 
 type PublisherPatch struct {
-	CodeHosting  []CodeHosting `json:"codeHosting" validate:"gt=0"`
-	Description  string        `json:"description"`
-	Email        string        `json:"email" validate:"email"`
-	Active       *bool         `json:"active"`
-	ExternalCode string        `json:"externalCode" validate:"max=255"`
+	CodeHosting   []CodeHosting `json:"codeHosting" validate:"gt=0"`
+	Description   string        `json:"description"`
+	Email         string        `json:"email" validate:"email"`
+	Active        *bool         `json:"active"`
+	AlternativeID string        `json:"alternativeId" validate:"max=255"`
 }
 
 type CodeHosting struct {

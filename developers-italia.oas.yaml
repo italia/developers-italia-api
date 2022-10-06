@@ -869,7 +869,7 @@ paths:
           description: Only results after this cursor
     post:
       summary: Create a new Publisher
-      description: Create a new Publisher. The URL will be normalized. Publisher with same URL, Email or ExternalCode will be considered the same and an error will be thrown.
+      description: Create a new Publisher
       tags:
         - publishers
       security:
@@ -1528,12 +1528,13 @@ components:
             publishers (fe. when they are not complying with some rule, but the problem is
             expected to be fixed in the near future) without removing them.
           default: true
-        externalCode:
+        alternativeId:
           type: string
           description: |
-            External code used to identify this publisher in external systems.
+            Optional alternative custom id for this Publisher. This is useful for example if this
+            Publisher has another id or code in a different database.
           maxLength: 255
-          example: 'exampleExternalCode'
+          example: 'ID-1234'
           pattern: '.*'
       required:
         - id
