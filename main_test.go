@@ -431,6 +431,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.Nil(t, err)
 
 				assert.Equal(t, true, response["active"])
+				assert.Equal(t, "example-testcase-1@example.com", response["email"])
 
 				// TODO: check the record was actually created in the database
 				// TODO: check there are no dangling publishers_codeHosting
@@ -439,7 +440,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers - with externalCode example",
 			query:       "POST /v1/publishers",
-			body:        `{"description":"new description", "codeHosting": [{"url" : "https://www.example-testcase-2.com"}], "email":"example-testcase-2@example.com", "externalCode":"example-testcase-2"}`,
+			body:        `{"description":"new description", "codeHosting": [{"url" : "https://www.example-testcase-2.com"}], "externalCode":"example-testcase-2"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -468,7 +469,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/publishers - NOT normalized URL validation passed",
-			body:  `{"description":"new description", "codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}], "email":"example-testcase-3@example.com", "externalCode":"example-testcase-3"}`,
+			body:  `{"description":"new description", "codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}], "externalCode":"example-testcase-3"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -498,7 +499,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers with duplicate URL (when normalized)",
 			query:       "POST /v1/publishers",
-			body: `{"codeHosting": [{"url" : "https://1-a.exAMple.org/code/repo"}], "email":"example-testcase-3@example.com", "description":"new description"}`,
+			body: `{"codeHosting": [{"url" : "https://1-a.exAMple.org/code/repo"}], "description":"new description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -536,8 +537,37 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description:    "POST new publisher with no email",
+			query:          "POST /v1/publishers",
+			body: `{"codeHosting": [{"url" : "https://new-url.example.com"}], "description": "new publisher description"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "new publisher description", response["description"])
+
+				email, exists := response["email"]
+				assert.False(t, exists, "email key is present: %s", email)
+			},
+		},
+		{
+			description:    "POST new publisher with empty email",
+			query:          "POST /v1/publishers",
+			body: `{"email": "", "codeHosting": [{"url" : "https://new-url.example.com"}], "description": "new publisher description"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"email","rule":"email"}]}`,
+		},
+		{
 			query:    "POST /v1/publishers - Description already exist",
-			body:     `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-unique@example.com", "description": "Publisher description 1"}`,
+			body:     `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "description": "Publisher description 1"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -549,7 +579,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST new publisher with no description",
 			query:       "POST /v1/publishers",
-			body:        `{"codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}], "email":"example-testcase-3@example.com"}`,
+			body:        `{"codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -561,7 +591,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST new publisher with empty description",
 			query:       "POST /v1/publishers",
-			body:        `{"description":"", "codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}], "email":"example-testcase-3@example.com"}`,
+			body:        `{"description":"", "codeHosting": [{"url" : "https://WwW.example-testcase-3.com"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -572,7 +602,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/publishers - ExternalCode already exist",
-			body:  `{"description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-pass@example.com", "externalCode":"external-code-27"}`,
+			body:  `{"description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "externalCode":"external-code-27"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -591,12 +621,12 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"codeHosting","rule":"required"},{"field":"description","rule":"required"},{"field":"email","rule":"email"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"codeHosting","rule":"required"},{"field":"description","rule":"required"}]}`,
 		},
 		{
 			description: "POST publishers - wrong token",
 			query:       "POST /v1/publishers",
-			body:        `{"description":"new description", "codeHosting": [{"url" : "https://www.example-5.com"}], "email":"example@example.com"}`,
+			body:        `{"description":"new description", "codeHosting": [{"url" : "https://www.example-5.com"}]}`,
 			headers: map[string][]string{
 				"Authorization": {badToken},
 				"Content-Type":  {"application/json"},
@@ -622,7 +652,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers with optional boolean field set to false",
 			query:       "POST /v1/publishers",
-			body:        `{"active": false, "description": "new description", "codeHosting": [{"url" : "https://www.example.com"}], "email":"example-optional-boolean@example.com"}`,
+			body:        `{"active": false, "description": "new description", "codeHosting": [{"url" : "https://www.example.com"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -636,7 +666,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers with codeHosting optional boolean field (group) set to false",
 			query:       "POST /v1/publishers",
-			body:        `{"description":"new description", "codeHosting": [{"url" : "https://www.example.com", "group": false}], "email":"example-optional-group@example.com"}`,
+			body:        `{"description":"new description", "codeHosting": [{"url" : "https://www.example.com", "group": false}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},

@@ -175,7 +175,7 @@ func (p *Publisher) updatePublisherTrx(
 	}
 
 	if request.Email != "" {
-		normalizedEmail := common.NormalizeEmail(request.Email)
+		normalizedEmail := common.NormalizeEmail(&request.Email)
 		publisher.Email = normalizedEmail
 	}
 
