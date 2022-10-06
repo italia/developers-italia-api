@@ -101,9 +101,6 @@ databaseDSN: ""
 # -- Base64 encoded Paseto Key.
 pasetoKey: ""
 
-# -- Label for Prometheus metrics.
-serviceName: "developers_italia_api"
-
 serviceMonitor:
   # -- Create ServiceMonitor resource (requires corresponding Prometheus Operator CRD installed).
   enabled: false

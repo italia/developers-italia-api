@@ -51,10 +51,6 @@ spec:
             - name: MAX_REQUESTS
               value: {{ .Values.maxRequests }}
             {{- end }}
-            {{- if .Values.serviceName }}
-            - name: SERVICE_NAME
-              value: {{ .Values.serviceName }}
-            {{- end }}
             - name: PASETO_KEY
               valueFrom:
                 secretKeyRef:

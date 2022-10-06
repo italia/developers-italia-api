@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/caarlos0/env/v6"
@@ -89,7 +90,7 @@ func Setup() *fiber.App {
 		common.EnvironmentConfig.PasetoKey = middleware.NewRandomPasetoKey()
 	}
 
-	prometheus := fiberprometheus.New(common.EnvironmentConfig.ServiceName)
+	prometheus := fiberprometheus.New(os.Args[0])
 	prometheus.RegisterAt(app, "/metrics")
 	app.Use(prometheus.Middleware)
 
