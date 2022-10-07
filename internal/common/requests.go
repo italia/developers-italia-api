@@ -11,11 +11,11 @@ type PublisherPost struct {
 }
 
 type PublisherPatch struct {
-	CodeHosting   []CodeHosting `json:"codeHosting" validate:"gt=0"`
-	Description   string        `json:"description"`
-	Email         string        `json:"email" validate:"email"`
-	Active        *bool         `json:"active"`
-	AlternativeID string        `json:"alternativeId" validate:"max=255"`
+	CodeHosting   *[]CodeHosting `json:"codeHosting" validate:"omitempty,gt=0,dive"`
+	Description   *string        `json:"description"`
+	Email         *string        `json:"email" validate:"omitempty,email"`
+	Active        *bool          `json:"active"`
+	AlternativeID *string        `json:"alternativeId" validate:"omitempty,max=255"`
 }
 
 type CodeHosting struct {
