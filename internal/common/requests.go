@@ -5,7 +5,7 @@ import "strings"
 type PublisherPost struct {
 	CodeHosting  []CodeHosting `json:"codeHosting" validate:"required,gt=0,dive"`
 	Description  string        `json:"description" validate:"required"`
-	Email        string        `json:"email" validate:"email,required"`
+	Email        *string       `json:"email" validate:"omitempty,email"`
 	Active       *bool         `json:"active"`
 	ExternalCode string        `json:"externalCode" validate:"max=255"`
 }
@@ -46,6 +46,12 @@ type Webhook struct {
 	Secret string `json:"secret"`
 }
 
-func NormalizeEmail(email string) string {
-	return strings.TrimSpace(strings.ToLower(email))
+func NormalizeEmail(email *string) *string {
+	if email == nil {
+		return nil
+	}
+
+	normalized := strings.TrimSpace(strings.ToLower(*email))
+
+	return &normalized
 }
