@@ -748,50 +748,103 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.Equal(t, "invalid json", response["detail"])
 			},
 		},
+
+		// PATCH /publishers/:id
 		{
-			description: "PATCH non-existing publishers",
-			query:       "PATCH /v1/publishers/NO_SUCH_publishers",
-			body:        `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
+			description: "PATCH non existing publisher",
+			query:       "PATCH /v1/publishers/NO_SUCH_PUBLISHER",
+			body:        ``,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        404,
-			expectedBody:        `{"title":"Not found","detail":"can't update Publisher. Publisher was not found","status":404}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
-		//TODO fix database locked test
-		/*
-			{
-				query: "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
-				body:  `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
-				headers: map[string][]string{
-					"Authorization": {goodToken},
-					"Content-Type":  {"application/json"},
-				},
+		{
+			description: "PATCH a publisher",
+			query: "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:  `{"description": "new PATCHed description", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "new PATCHed description", response["description"])
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
 
-				expectedCode:        200,
-				expectedContentType: "application/json",
-				validateFunc: func(t *testing.T, response map[string]interface{}) {
-					assert.IsType(t, []interface{}{}, response["codeHosting"])
-					assert.Equal(t, 3, len(response["codeHosting"].([]interface{})))
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
 
-					match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
-					assert.Nil(t, err)
-					assert.True(t, match)
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
 
-					created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
-					assert.Nil(t, err)
+				assert.Equal(t, "https://gitlab.example.org/patched-repo", firstCodeHosting["url"])
+				assert.Equal(t, "2ded32eb-c45e-4167-9166-a44e18b8adde", response["id"])
 
-					updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
-					assert.Nil(t, err)
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
 
-					assert.Greater(t, updated, created)
-				},
-			},*/
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH publishers with no codeHosting (should leave current codeHosting untouched)",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "new description"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "2ded32eb-c45e-4167-9166-a44e18b8adde", response["id"])
+				assert.Equal(t, "new description", response["description"])
+				assert.Equal(t, "foobar@1.example.org", response["email"])
+
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 2, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+				assert.Equal(t, "https://1-a.example.org/code/repo", firstCodeHosting["url"])
+				secondCodeHosting := codeHosting[1].(map[string]interface{})
+				assert.Equal(t, "https://1-b.example.org/code/repo", secondCodeHosting["url"])
+
+				assert.Equal(t, "2018-05-01T00:00:00Z", response["createdAt"])
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH publishers with empty codeHosting",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "new description", "codeHosting": []}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody: `{"title":"can't update Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"codeHosting","rule":"gt"}]}`,
+		},
 		{
 			description: "PATCH publishers - wrong token",
-			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
 			body:        ``,
 			headers: map[string][]string{
 				"Authorization": {badToken},
@@ -802,8 +855,8 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			description: "PATCH publishers with invalid JSON",
-			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			description: "PATCH publisher with invalid JSON",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
 			body:        `INVALID_JSON`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -816,37 +869,37 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.Equal(t, "invalid json", response["detail"])
 			},
 		},
-		//TODO fix database locked test
-		/*
-			{
-				description: "PATCH publishers with validation errors",
-				query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
-				body:        `{"codeHosting": [{"url" : "INVALID_URL"}], "email":"example@example.com"}`,
-				headers: map[string][]string{
-					"Authorization": {goodToken},
-					"Content-Type":  {"application/json"},
-				},
-				expectedCode:        422,
-				expectedContentType: "application/problem+json",
-				validateFunc: func(t *testing.T, response map[string]interface{}) {
-					assert.Equal(t, `can't update Publisher`, response["title"])
-					assert.Equal(t, "invalid format", response["detail"])
-
-					assert.IsType(t, []interface{}{}, response["validationErrors"])
-
-					validationErrors := response["validationErrors"].([]interface{})
-					assert.Equal(t, 1, len(validationErrors))
-
-					firstValidationError := validationErrors[0].(map[string]interface{})
-
-					for key := range firstValidationError {
-						assert.Contains(t, []string{"field", "rule", "value"}, key)
-					}
-				},
-			},*/
+		// TODO: make this pass
+		// {
+		// 	description: "PATCH publishers with JSON with extra fields",
+		// 	query: "PATCH /v1/publishers",
+		// 	body: `{"description": "new description", EXTRA_FIELD: "extra field not in schema"}`,
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 		"Content-Type":  {"application/json"},
+		// 	},
+		// 	expectedCode:        422,
+		// 	expectedContentType: "application/problem+json",
+		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
+		// 		assert.Equal(t, `can't create Publisher`, response["title"])
+		// 		assert.Equal(t, "invalid json", response["detail"])
+		// 	},
+		// },
+		{
+			description: "PATCH publisher with validation errors",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "new description", "codeHosting": [{"url": "INVALID_URL"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody: `{"title":"can't update Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"url","rule":"url","value":"INVALID_URL"}]}`,
+		},
 		{
 			description: "PATCH publishers with empty body",
-			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
 			body:        "",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -854,11 +907,17 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        400,
 			expectedContentType: "application/problem+json",
-			validateFunc: func(t *testing.T, response map[string]interface{}) {
-				assert.Equal(t, `can't update Publisher`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
-			},
+			expectedBody: `{"title":"can't update Publisher","detail":"invalid json","status":400}`,
 		},
+		// TODO: enforce this?
+		// {
+		// 	query: "PATCH /v1/publishers with no Content-Type",
+		// 	body:  "",
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 	},
+		// 	expectedCode:        404,
+		// }
 
 		// DELETE /publishers/:id
 		{
