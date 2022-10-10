@@ -95,11 +95,11 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	normalizedEmail := common.NormalizeEmail(request.Email)
 
 	publisher := &models.Publisher{
-		ID:           utils.UUIDv4(),
-		Description:  request.Description,
-		Email:        normalizedEmail,
-		Active:       request.Active,
-		ExternalCode: &request.ExternalCode,
+		ID:            utils.UUIDv4(),
+		Description:   request.Description,
+		Email:         normalizedEmail,
+		Active:        request.Active,
+		AlternativeID: request.AlternativeID,
 	}
 
 	for _, codeHost := range request.CodeHosting {
@@ -123,7 +123,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 		case common.ErrDBUniqueConstraint:
 			return common.Error(fiber.StatusConflict,
 				"can't create Publisher",
-				"Publisher with provided description, email, external_code or CodeHosting URL already exists")
+				"Publisher with provided description, email, alternativeId or CodeHosting URL already exists")
 		default:
 			return common.Error(fiber.StatusInternalServerError,
 				"can't create Publisher",
@@ -179,8 +179,8 @@ func (p *Publisher) updatePublisherTrx(
 		publisher.Email = normalizedEmail
 	}
 
-	if request.ExternalCode != "" {
-		publisher.ExternalCode = &request.ExternalCode
+	if request.AlternativeID != "" {
+		publisher.AlternativeID = &request.AlternativeID
 	}
 
 	if request.CodeHosting != nil && len(request.CodeHosting) > 0 {

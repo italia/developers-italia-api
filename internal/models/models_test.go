@@ -145,6 +145,17 @@ func TestPublisherCreate(t *testing.T) {
 		},
 	).Error
 	assert.EqualError(t, err, "UNIQUE constraint failed: publishers.description")
+
+	// Duplicate alternativeId
+	alternativeID := "alternative-id-12345"
+	err = db.Create(
+		&Publisher{
+			ID:            utils.UUIDv4(),
+			Description:   "Another description",
+			AlternativeID: &alternativeID,
+		},
+	).Error
+	assert.EqualError(t, err, "UNIQUE constraint failed: publishers.alternative_id")
 }
 
 func TestWebhookCreate(t *testing.T) {

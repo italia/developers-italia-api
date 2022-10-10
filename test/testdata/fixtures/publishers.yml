@@ -130,13 +130,13 @@
   created_at: '2018-11-27T00:00:00+00:00'
   updated_at: '2018-11-27T00:00:00+00:00'
 
-# Publisher with external code
+# Publisher with alternativeId
 - id: 15fda7c4-6bbf-4387-8f89-258c1e6facb0
-  description: Publisher description 27 with externalCode
-  email: foobar-with-external-code@27.example.org
+  description: Publisher description 27 with alternativeId
+  email: foobar-with-alternative-id@27.example.org
   created_at: '2022-09-01T00:00:00+00:00'
   updated_at: '2022-09-01T00:00:00+00:00'
-  external_code: 'external-code-27'
+  alternative_id: 'alternative-id-12345'
 
 # Publisher with active: false
 - id: 10fda7c4-6bbf-4387-8f89-258c1e6fafb1
