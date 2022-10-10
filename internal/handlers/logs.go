@@ -76,7 +76,11 @@ func (p *Log) GetLog(ctx *fiber.Ctx) error {
 			return common.Error(fiber.StatusNotFound, "can't get Log", "Log was not found")
 		}
 
-		return common.Error(fiber.StatusInternalServerError, "can't get Log", "internal server error")
+		return common.Error(
+			fiber.StatusInternalServerError,
+			"can't get Log",
+			fiber.ErrInternalServerError.Message,
+		)
 	}
 
 	return ctx.JSON(&log)
@@ -122,7 +126,11 @@ func (p *Log) PatchLog(ctx *fiber.Ctx) error {
 			return common.Error(fiber.StatusNotFound, "can't update Log", "Log was not found")
 		}
 
-		return common.Error(fiber.StatusInternalServerError, "can't update Log", "internal server error")
+		return common.Error(
+			fiber.StatusInternalServerError,
+			"can't update Log",
+			fiber.ErrInternalServerError.Message,
+		)
 	}
 
 	log.Message = logReq.Message

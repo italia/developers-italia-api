@@ -77,7 +77,11 @@ func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 			return common.Error(fiber.StatusNotFound, "can't get Publisher", "Publisher was not found")
 		}
 
-		return common.Error(fiber.StatusInternalServerError, "can't get Publisher", "internal server error")
+		return common.Error(
+			fiber.StatusInternalServerError,
+			"can't get Publisher",
+			fiber.ErrInternalServerError.Message,
+		)
 	}
 
 	return ctx.JSON(&publisher)
@@ -127,7 +131,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 		default:
 			return common.Error(fiber.StatusInternalServerError,
 				"can't create Publisher",
-				"internal server error")
+				fiber.ErrInternalServerError.Message)
 		}
 	}
 

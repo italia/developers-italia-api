@@ -199,7 +199,11 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // most
 			return common.Error(fiber.StatusNotFound, "can't update Software", "Software was not found")
 		}
 
-		return common.Error(fiber.StatusInternalServerError, "can't update Software", "internal server error")
+		return common.Error(
+			fiber.StatusInternalServerError,
+			"can't update Software",
+			fiber.ErrInternalServerError.Message,
+		)
 	}
 
 	if err := ctx.BodyParser(softwareReq); err != nil {

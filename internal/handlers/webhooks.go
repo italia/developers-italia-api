@@ -28,7 +28,11 @@ func (p *Webhook[T]) GetWebhook(ctx *fiber.Ctx) error {
 			return common.Error(fiber.StatusNotFound, "can't get Webhook", "Webhook was not found")
 		}
 
-		return common.Error(fiber.StatusInternalServerError, "can't get Webhook", "internal server error")
+		return common.Error(
+			fiber.StatusInternalServerError,
+			"can't get Webhook",
+			fiber.ErrInternalServerError.Message,
+		)
 	}
 
 	return ctx.JSON(&webhook)
