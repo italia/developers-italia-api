@@ -477,7 +477,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST publisher with empty alternativeId",
@@ -528,7 +528,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with an existing email",
@@ -596,7 +596,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with no description",
@@ -632,7 +632,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST publishers with invalid payload",

@@ -124,7 +124,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 		case common.ErrDBUniqueConstraint:
 			return common.Error(fiber.StatusConflict,
 				"can't create Publisher",
-				"Publisher with provided description, email, alternativeId or CodeHosting URL already exists")
+				"description, alternativeId or codeHosting URL already exists")
 		default:
 			return common.Error(fiber.StatusInternalServerError,
 				"can't create Publisher",
