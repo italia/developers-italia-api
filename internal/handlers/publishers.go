@@ -259,7 +259,7 @@ func syncCodeHosting( //nolint:cyclop // mostly error handling ifs
 	for _, url := range codeHosting {
 		_, exists := urlMap[url]
 		if !exists {
-			ch := models.CodeHosting{ID: utils.UUIDv4(), URL: url}
+			ch := models.CodeHosting{ID: utils.UUIDv4(), URL: url, PublisherID: publisher.ID}
 
 			toAdd = append(toAdd, ch)
 			urlMap[url] = ch
