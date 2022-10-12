@@ -41,6 +41,12 @@ The API of Developers Italia
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.name | string | `""` |  |
+| serviceMonitor.additionalLabels | object | `{}` |  |
+| serviceMonitor.enabled | bool | `false` | Create ServiceMonitor resource (requires corresponding Prometheus Operator CRD installed). |
+| serviceMonitor.interval | string | `nil` | Interval at which metrics should be scraped (uses Prometheus default if unspecified, details [here](https://prometheus-operator.dev/docs/operator/api/#monitoring.coreos.com/v1.Endpoint)) |
+| serviceMonitor.jobLabel | string | `nil` | Defaults to the name of the Kubernetes service (details [here](https://prometheus-operator.dev/docs/operator/api/#monitoring.coreos.com/v1.ServiceMonitor)). |
+| serviceMonitor.scrapeTimeout | string | `nil` | Timeout after which the scrape is ended (uses Prometheus default if unspecified, details [here](https://prometheus-operator.dev/docs/operator/api/#monitoring.coreos.com/v1.Endpoint)). |
+| serviceMonitor.targetLabels | list | `[]` |  |
 | tolerations | list | `[]` |  |
 | useExistingSecret | string | `nil` | Name of existing Kubernetes secret containing keys 'databaseDSN' and 'pasetoKey'. If not provided, a secret will be generated using values from 'databaseDSN' and 'pasetoKey'. |
 

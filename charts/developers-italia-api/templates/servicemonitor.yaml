@@ -1,0 +1,35 @@
+{{- if .Values.serviceMonitor.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "developers-italia-api.fullname" . }}
+  labels:
+    {{- include "developers-italia-api.labels" . | nindent 4 }}
+  {{- if .Values.serviceMonitor.additionalLabels }}
+    {{- toYaml .Values.serviceMonitor.additionalLabels | nindent 4 }}
+  {{- end }}
+spec:
+  endpoints:
+    - port: http
+    {{- if .Values.serviceMonitor.interval }}
+      interval: {{ .Values.serviceMonitor.interval }}
+    {{- end }}
+    {{- if .Values.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+    {{- end }}
+{{- if .Values.serviceMonitor.jobLabel }}
+  jobLabel: {{ .Values.serviceMonitor.jobLabel | quote }}
+{{- end }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+{{- if .Values.serviceMonitor.targetLabels }}
+  targetLabels:
+  {{- range .Values.serviceMonitor.targetLabels }}
+    - {{ . }}
+  {{- end }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "developers-italia-api.selectorLabels" . | nindent 6 }}
+{{- end }}

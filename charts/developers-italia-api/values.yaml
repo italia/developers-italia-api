@@ -100,3 +100,15 @@ databaseDSN: ""
 
 # -- Base64 encoded Paseto Key.
 pasetoKey: ""
+
+serviceMonitor:
+  # -- Create ServiceMonitor resource (requires corresponding Prometheus Operator CRD installed).
+  enabled: false
+  additionalLabels: {}
+  # -- (string) Defaults to the name of the Kubernetes service (details [here](https://prometheus-operator.dev/docs/operator/api/#monitoring.coreos.com/v1.ServiceMonitor)).
+  jobLabel:
+  # -- (string) Interval at which metrics should be scraped (uses Prometheus default if unspecified, details [here](https://prometheus-operator.dev/docs/operator/api/#monitoring.coreos.com/v1.Endpoint))
+  interval:
+  # -- (string) Timeout after which the scrape is ended (uses Prometheus default if unspecified, details [here](https://prometheus-operator.dev/docs/operator/api/#monitoring.coreos.com/v1.Endpoint)).
+  scrapeTimeout:
+  targetLabels: []
