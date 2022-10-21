@@ -499,6 +499,18 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
+			description: "POST publisher with alternativeId matching an existing id",
+			query: "POST /v1/publishers",
+			body:  `{"alternativeId": "2ded32eb-c45e-4167-9166-a44e18b8adde", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with id '2ded32eb-c45e-4167-9166-a44e18b8adde' already exists","status":409}`,
+		},
+		{
 			description: "POST publisher with empty alternativeId",
 			query: "POST /v1/publishers",
 			body:  `{"alternativeId": "", "description":"new description", "codeHosting": [{"url" : "https://gitlab.example.com/repo"}]}`,
@@ -891,6 +903,18 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				assert.Greater(t, updated, created)
 			},
+		},
+		{
+			description: "PATCH a publisher with alternativeId matching an existing id",
+			query: "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:  `{"alternativeId": "47807e0c-0613-4aea-9917-5455cc6eddad"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher with id '47807e0c-0613-4aea-9917-5455cc6eddad' already exists","status":409}`,
 		},
 		{
 			description: "PATCH publishers - wrong token",

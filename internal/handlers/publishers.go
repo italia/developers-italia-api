@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"sort"
 
@@ -94,6 +95,22 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 		return err //nolint:wrapcheck
 	}
 
+	if request.AlternativeID != nil {
+		// FIXME: Possible TOCTTOU race here
+		result := p.db.Limit(1).Find(&models.Publisher{ID: *request.AlternativeID})
+
+		if result.Error != nil {
+			return common.Error(fiber.StatusInternalServerError, "can't create Publisher", "db error")
+		}
+
+		if result.RowsAffected != 0 {
+			return common.Error(fiber.StatusConflict,
+				"can't create Publisher",
+				fmt.Sprintf("Publisher with id '%s' already exists", *request.AlternativeID),
+			)
+		}
+	}
+
 	normalizedEmail := common.NormalizeEmail(request.Email)
 
 	publisher := &models.Publisher{
@@ -158,6 +175,22 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop // mo
 
 	if err := common.ValidateRequestEntity(ctx, publisherReq, "can't update Publisher"); err != nil {
 		return err //nolint:wrapcheck
+	}
+
+	if publisherReq.AlternativeID != nil {
+		// FIXME: Possible TOCTTOU race here
+		result := p.db.Limit(1).Find(&models.Publisher{ID: *publisherReq.AlternativeID})
+
+		if result.Error != nil {
+			return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "db error")
+		}
+
+		if result.RowsAffected != 0 {
+			return common.Error(fiber.StatusConflict,
+				"can't update Publisher",
+				fmt.Sprintf("Publisher with id '%s' already exists", *publisherReq.AlternativeID),
+			)
+		}
 	}
 
 	// Slice of CodeHosting URLs that we expect in the database after the PATCH
