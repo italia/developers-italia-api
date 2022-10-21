@@ -399,6 +399,25 @@ func TestPublishersEndpoints(t *testing.T) {
 				}
 			},
 		},
+		{
+			description:         "GET publisher with alternativeId",
+			query:               "GET /v1/publishers/alternative-id-12345",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "15fda7c4-6bbf-4387-8f89-258c1e6facb0", response["id"])
+				assert.Equal(t, "alternative-id-12345", response["alternativeId"])
+
+				_, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active", "alternativeId"}, key)
+				}
+			},
+		},
 
 		// POST /publishers
 		{
@@ -843,6 +862,37 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedBody: `{"title":"can't update Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"codeHosting","rule":"gt"}]}`,
 		},
 		{
+			description: "PATCH a publisher via alternativeId",
+			query: "PATCH /v1/publishers/alternative-id-12345",
+			body:  `{"description": "new PATCHed description via alternativeId", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "new PATCHed description via alternativeId", response["description"])
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+
+				assert.Equal(t, "https://gitlab.example.org/patched-repo", firstCodeHosting["url"])
+				assert.Equal(t, "15fda7c4-6bbf-4387-8f89-258c1e6facb0", response["id"])
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
 			description: "PATCH publishers - wrong token",
 			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
 			body:        ``,
@@ -944,6 +994,17 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query:    "DELETE /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        204,
+			expectedBody:        "",
+			expectedContentType: "",
+		},
+		{
+			description: "DELETE publisher via alternativeId",
+			query: "DELETE /v1/publishers/alternative-id-12345",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},

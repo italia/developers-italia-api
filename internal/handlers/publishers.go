@@ -72,8 +72,9 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 // GetPublisher gets the publisher with the given ID and returns any error encountered.
 func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 	publisher := models.Publisher{}
+	id := ctx.Params("id")
 
-	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
+	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ? or alternative_id = ?", id, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't get Publisher", "Publisher was not found")
 		}
@@ -139,9 +140,10 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop // mostly error handling ifs
 	publisherReq := new(common.PublisherPatch)
 	publisher := models.Publisher{}
+	id := ctx.Params("id")
 
 	// Preload will load all the associated CodeHosting. We'll manually handle that later.
-	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ?", ctx.Params("id")).
+	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ? or alternative_id = ?", id, id).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
@@ -217,7 +219,8 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop // mo
 
 // DeletePublisher deletes the publisher with the given ID.
 func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
-	result := p.db.Select("CodeHosting").Delete(&models.Publisher{ID: ctx.Params("id")})
+	id := ctx.Params("id")
+	result := p.db.Select("CodeHosting").Where("id = ? or alternative_id = ?", id, id).Delete(&models.Publisher{})
 
 	if result.Error != nil {
 		return common.Error(fiber.StatusInternalServerError, "can't delete Publisher", "db error")
