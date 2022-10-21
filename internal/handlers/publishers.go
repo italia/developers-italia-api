@@ -96,6 +96,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	if request.AlternativeID != nil {
+		//nolint:godox // postpone the fix
 		// FIXME: Possible TOCTTOU race here
 		result := p.db.Limit(1).Find(&models.Publisher{ID: *request.AlternativeID})
 
@@ -154,7 +155,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 }
 
 // PatchPublisher updates the publisher with the given ID. CodeHosting URLs will be overwritten from the request.
-func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop // mostly error handling ifs
+func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funlen // mostly error handling ifs
 	publisherReq := new(common.PublisherPatch)
 	publisher := models.Publisher{}
 	id := ctx.Params("id")
@@ -178,6 +179,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop // mo
 	}
 
 	if publisherReq.AlternativeID != nil {
+		//nolint:godox // postpone the fix
 		// FIXME: Possible TOCTTOU race here
 		result := p.db.Limit(1).Find(&models.Publisher{ID: *publisherReq.AlternativeID})
 
