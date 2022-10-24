@@ -910,7 +910,7 @@ paths:
         required: true
     get:
       summary: Get a Publisher
-      description: Get a Publisher by its id
+      description: Get a Publisher by its id or alternativeId
       tags:
         - publishers
       responses:
@@ -927,7 +927,7 @@ paths:
       operationId: show-publisher-publisherId
     patch:
       summary: Update a Publisher
-      description: Update a Publisher by its id. Only the fields that are provided will be updated, codeHosting field will be overwritten entirely.
+      description: Update a Publisher by its id or alternativeId
       tags:
         - publishers
       security:
@@ -958,7 +958,7 @@ paths:
               $ref: '#/components/schemas/Publisher'
     delete:
       summary: Delete a Publisher
-      description: Delete a Publisher by its id
+      description: Delete a Publisher by its id or alternativeId
       tags:
         - publishers
       security:
@@ -1531,8 +1531,13 @@ components:
         alternativeId:
           type: string
           description: |
-            Optional alternative custom id for this Publisher. This is useful for example if this
-            Publisher has another id or code in a different database.
+            Optional alternative user-provided identifier for this Publisher.
+
+            If present, you can use it in place of the Publisher `id` as path query
+            argument.
+
+            This is useful for example if this Publisher has another id or code in a
+            different database.
           maxLength: 255
           example: 'ID-1234'
           pattern: '.*'

@@ -399,6 +399,25 @@ func TestPublishersEndpoints(t *testing.T) {
 				}
 			},
 		},
+		{
+			description:         "GET publisher with alternativeId",
+			query:               "GET /v1/publishers/alternative-id-12345",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "15fda7c4-6bbf-4387-8f89-258c1e6facb0", response["id"])
+				assert.Equal(t, "alternative-id-12345", response["alternativeId"])
+
+				_, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active", "alternativeId"}, key)
+				}
+			},
+		},
 
 		// POST /publishers
 		{
@@ -478,6 +497,18 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
 			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
+		},
+		{
+			description: "POST publisher with alternativeId matching an existing id",
+			query: "POST /v1/publishers",
+			body:  `{"alternativeId": "2ded32eb-c45e-4167-9166-a44e18b8adde", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with id '2ded32eb-c45e-4167-9166-a44e18b8adde' already exists","status":409}`,
 		},
 		{
 			description: "POST publisher with empty alternativeId",
@@ -843,6 +874,49 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedBody: `{"title":"can't update Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"codeHosting","rule":"gt"}]}`,
 		},
 		{
+			description: "PATCH a publisher via alternativeId",
+			query: "PATCH /v1/publishers/alternative-id-12345",
+			body:  `{"description": "new PATCHed description via alternativeId", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "new PATCHed description via alternativeId", response["description"])
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+
+				assert.Equal(t, "https://gitlab.example.org/patched-repo", firstCodeHosting["url"])
+				assert.Equal(t, "15fda7c4-6bbf-4387-8f89-258c1e6facb0", response["id"])
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH a publisher with alternativeId matching an existing id",
+			query: "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:  `{"alternativeId": "47807e0c-0613-4aea-9917-5455cc6eddad"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher with id '47807e0c-0613-4aea-9917-5455cc6eddad' already exists","status":409}`,
+		},
+		{
 			description: "PATCH publishers - wrong token",
 			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
 			body:        ``,
@@ -944,6 +1018,17 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query:    "DELETE /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        204,
+			expectedBody:        "",
+			expectedContentType: "",
+		},
+		{
+			description: "DELETE publisher via alternativeId",
+			query: "DELETE /v1/publishers/alternative-id-12345",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
