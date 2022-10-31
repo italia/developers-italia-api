@@ -25,8 +25,9 @@ type Log struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// Entity this Log entry is about (fe. Publisher, Software, etc.)
-	EntityID   string `json:"-"`
-	EntityType string `json:"-"`
+	EntityID   *string `json:"-"`
+	EntityType *string `json:"-"`
+	Entity     string  `json:"entity,omitempty" gorm:"->;type:text GENERATED ALWAYS AS (CASE WHEN entity_id IS NULL THEN NULL ELSE ('/' || entity_type || '/' || entity_id) END) STORED;default:(-);"` //nolint:lll
 }
 
 type Publisher struct {

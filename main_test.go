@@ -2101,6 +2101,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 					_, err = time.Parse(time.RFC3339, log["updatedAt"].(string))
 					assert.Nil(t, err)
 
+					assert.Equal(t, "/software/c353756e-8597-4e46-a99b-7da2e141603b", log["entity"])
+
 					for key := range log {
 						assert.Contains(t, []string{"id", "createdAt", "updatedAt", "message", "entity"}, key)
 					}
@@ -2112,8 +2114,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 					prevCreatedAt = &createdAt
 				}
-
-				// TODO assert.NotEmpty(t, firstLog["entity"])
 			},
 		},
 		{
@@ -2184,6 +2184,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
 				assert.Nil(t, err)
+
+				assert.Equal(t, "/software/c353756e-8597-4e46-a99b-7da2e141603b", response["entity"])
 
 				// TODO: check the record was actually created in the database
 			},
@@ -2533,12 +2535,24 @@ func TestLogsEndpoints(t *testing.T) {
 					_, err = time.Parse(time.RFC3339, log["updatedAt"].(string))
 					assert.Nil(t, err)
 
+					// Only certain logs from the fixtures have an associated entity.
+					//
+					// FIXME: This is ugly, see the issue about improving tests:
+					// https://github.com/italia/developers-italia-api/issues/91
+					if log["id"] == "2dfb2bc2-042d-11ed-9338-d8bbc146d165" ||
+						log["id"] == "12f30d9e-042e-11ed-8ddc-d8bbc146d165" ||
+						log["id"] == "18a70362-042e-11ed-b793-d8bbc146d165" {
+						assert.Equal(t, "/software/c353756e-8597-4e46-a99b-7da2e141603b", log["entity"])
+					} else if log["id"] == "53650508-042e-11ed-9b84-d8bbc146d165" {
+						assert.Equal(t, "/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde", log["entity"])
+					} else {
+						assert.Nil(t, log["entity"])
+					}
+
 					var prevCreatedAt *time.Time = nil
 					for key := range log {
 						assert.Contains(t, []string{"id", "createdAt", "updatedAt", "message", "entity"}, key)
 					}
-
-					// TODO assert.NotEmpty(t, firstLog["entity"])
 
 					// Check the logs are ordered by descending createdAt
 					if prevCreatedAt != nil {
@@ -2707,6 +2721,8 @@ func TestLogsEndpoints(t *testing.T) {
 
 				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
 				assert.Nil(t, err)
+
+				assert.Nil(t, response["entity"])
 
 				// TODO: check the record was actually created in the database
 			},
