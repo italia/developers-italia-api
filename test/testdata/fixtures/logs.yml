@@ -27,6 +27,8 @@
 - id: 53650508-042e-11ed-9b84-d8bbc146d165
   created_at: 2010-02-15 23:59:59
   updated_at: 2010-12-31 23:59:59
+  entity_id: 2ded32eb-c45e-4167-9166-a44e18b8adde
+  entity_type: publishers
   message: A log message
 
 - id: 55438aac-042e-11ed-848a-d8bbc146d165

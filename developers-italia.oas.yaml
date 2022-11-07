@@ -1577,6 +1577,12 @@ components:
           type: string
           maxLength: 255
           pattern: '.*'
+          description: >
+            The resource this log is about (fe. a particular Publisher / Software).
+            It might be absent if the log is not about a specific resource or if
+            the resource doesn't exist yet, like in case of the error log caused by
+            failure to create it.
+          example: /software/7589be36-f046-45c6-9223-b7de9dbf06cd
           readOnly: true
       required:
         - id

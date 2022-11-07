@@ -221,11 +221,13 @@ func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error {
 		return common.ErrorWithValidationErrors(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format", err)
 	}
 
+	table := models.Software{}.TableName()
+
 	log := models.Log{
 		ID:         utils.UUIDv4(),
 		Message:    logReq.Message,
-		EntityID:   software.ID,
-		EntityType: models.Software{}.TableName(),
+		EntityID:   &software.ID,
+		EntityType: &table,
 	}
 
 	if err := p.db.Create(&log).Error; err != nil {
