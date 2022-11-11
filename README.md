@@ -70,8 +70,13 @@ You can configure the API with environment variables:
   Supports PostgreSQL and SQLite.
 
 * `PASETO_KEY` (optional): Base64 encoded 32 bytes key used to check the
-  [PASETO](https://paseto.io/) authentication tokens.
-  If not set the API will run in read only mode.
+  [PASETO](https://paseto.io/) authentication tokens. You can generate it with
+
+  ```console
+  head -c 32 /dev/urandom | base64
+  ```
+
+  If not set, the API will run in read only mode.
 
 * `ENVIRONMENT` (optional): possible values `test`, `development`, `production`.
   Default `production`.
