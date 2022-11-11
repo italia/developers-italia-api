@@ -1,0 +1,41 @@
+# Push the staging Docker image (ghcr.italia/developers-italia-api:main)
+# on updates to main.
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  # To push Docker images to GitHub
+  packages: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18.x
+      -
+        uses: actions/checkout@v2
+        with:
+          # All history, required for goreleaser
+          fetch-depth: 0
+      -
+        # FIXME: goreleaser should already take care of the login
+        # (see https://github.com/goreleaser/goreleaser/blame/02a3486d4ba59505113a57b438ae567351ed3dab/scripts/entrypoint.sh#L17)
+        # but it doesn't work for some reason.
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u docker --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      -
+        # Tag with a temporary valid semantic version. This is required by goreleaser.
+        run: git tag $(git describe --tags --abbrev=0)-main-$(git rev-parse --short HEAD)
+
+      -
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: v1.9.2
+          args: release --config .goreleaser.staging.yaml
