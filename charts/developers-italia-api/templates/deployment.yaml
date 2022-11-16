@@ -6,7 +6,7 @@ metadata:
     {{- include "developers-italia-api.labels" . | nindent 4 }}
   {{- with .Values.deploymentAnnotations }}
   annotations:
-    timestamp: "{{ date "20060102150405" .Release.Time }}"
+    timestamp: {{ now | date "20060102150405" | quote }}
 
     {{- toYaml . | nindent 4 }}
   {{- end }}
