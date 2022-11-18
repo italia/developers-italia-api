@@ -32,7 +32,7 @@ jobs:
 
       -
         # Tag with a temporary valid semantic version. This is required by goreleaser.
-        run: git tag $(git describe --tags --abbrev=0)-main-$(git rev-parse --short HEAD)
+        run: git tag v0-main-$(git rev-parse --short HEAD)
 
       -
         uses: goreleaser/goreleaser-action@v2
