@@ -28,6 +28,8 @@ info:
 servers:
   - url: 'https://api.developers.italia.it/v1'
     description: The production server
+  - url: 'https://api-staging.developers.italia.it/v1'
+    description: The staging server
 tags:
   - name: software
     description: Operations on software
