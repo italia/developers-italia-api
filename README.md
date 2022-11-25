@@ -24,7 +24,7 @@
 
 <div align="center">
   <h3>
-    <a href="https://developers-italia-4gfxiabty-dip-trasformazione-digitale.vercel.app/it/api/developers-italia">
+    <a href="https://developers.italia.it/it/api/developers-italia">
       API documentation
     </a>
   </h3>
