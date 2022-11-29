@@ -98,6 +98,6 @@ who already contributed to this repository:
 
 # License
 
-Copyright © 2022 - Presidenza del Consiglio dei Ministri
+Copyright © 2022-present Presidenza del Consiglio dei Ministri
 
 The source code is released under the AGPL version 3.
