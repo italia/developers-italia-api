@@ -112,3 +112,7 @@ serviceMonitor:
   # -- (string) Timeout after which the scrape is ended (uses Prometheus default if unspecified, details [here](https://prometheus-operator.dev/docs/operator/api/#monitoring.coreos.com/v1.Endpoint)).
   scrapeTimeout:
   targetLabels: []
+
+extraVolumes: []
+
+extraVolumeMounts: []
