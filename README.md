@@ -42,7 +42,7 @@
 
 # Development
 
-The application uses [https://github.com/cosmtrek/air](Air) for live-reloading
+The application uses [Air](https://github.com/cosmtrek/air) for live-reloading
 in the development environment.
 
 To start developing:
