@@ -43,6 +43,11 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 				value = ""
 			}
 
+			valueRunes := []rune(value)
+			if len(valueRunes) > maxProvidedValue {
+				value = string(valueRunes[:maxProvidedValue])
+			}
+
 			validationErrors = append(validationErrors, ValidationError{
 				Field: err.Field(),
 				Value: value,
@@ -76,7 +81,7 @@ func ValidateRequestEntity(ctx *fiber.Ctx, request interface{}, errorMessage str
 		}
 
 		errorDetails := strings.Join(errors, ", ")
-		
+
 		return ErrorWithValidationErrors(
 			fiber.StatusUnprocessableEntity, errorMessage, errorDetails, err,
 		)
