@@ -17,7 +17,6 @@ const (
 
 type ValidationError struct {
 	Field string `json:"field"`
-	Rule  string `json:"rule"`
 	Value string `json:"value,omitempty"`
 }
 
@@ -51,7 +50,6 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 
 			validationErrors = append(validationErrors, ValidationError{
 				Field: err.Field(),
-				Rule:  err.Tag(),
 				Value: value,
 			})
 		}
