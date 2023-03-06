@@ -43,11 +43,6 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 				value = ""
 			}
 
-			valueRunes := []rune(value)
-			if len(valueRunes) > maxProvidedValue {
-				value = string(valueRunes[:maxProvidedValue])
-			}
-
 			validationErrors = append(validationErrors, ValidationError{
 				Field: err.Field(),
 				Value: value,
@@ -64,8 +59,26 @@ func ValidateRequestEntity(ctx *fiber.Ctx, request interface{}, errorMessage str
 	}
 
 	if err := ValidateStruct(request); err != nil {
+		var errors []string
+
+		for _, validationError := range err {
+			switch validationError.Field {
+				case "url":
+					errors = append(errors, "url is not a valid url")
+					break
+				case "alternativeId":
+					errors = append(errors, "alternativeId does not respect its size limit (max 255 characters, min 1 character)")
+					break
+				default:
+					errors = append(errors, validationError.Field + " is not valid")
+					break
+			}
+		}
+
+		errorDetails := strings.Join(errors, ", ")
+		
 		return ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, errorMessage, "invalid format", err,
+			fiber.StatusUnprocessableEntity, errorMessage, errorDetails, err,
 		)
 	}
 
