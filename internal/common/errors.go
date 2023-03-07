@@ -20,8 +20,10 @@ func Error(status int, title string, detail string) ProblemJSONError {
 }
 
 func ErrorWithValidationErrors(
-	status int, title string, detail string, validationErrors []ValidationError,
+	status int, title string, validationErrors []ValidationError,
 ) ProblemJSONError {
+	detail := GenerateErrorDetails(validationErrors)
+
 	return ProblemJSONError{Title: title, Detail: detail, Status: status, ValidationErrors: validationErrors}
 }
 

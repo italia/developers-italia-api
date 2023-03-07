@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -64,28 +65,39 @@ func ValidateRequestEntity(ctx *fiber.Ctx, request interface{}, errorMessage str
 	}
 
 	if err := ValidateStruct(request); err != nil {
-		var errors []string
-
-		for _, validationError := range err {
-			switch validationError.Field {
-				case "url":
-					errors = append(errors, "url is not a valid url")
-					break
-				case "alternativeId":
-					errors = append(errors, "alternativeId does not respect its size limit (max 255 characters, min 1 character)")
-					break
-				default:
-					errors = append(errors, validationError.Field + " is not valid")
-					break
-			}
-		}
-
-		errorDetails := strings.Join(errors, ", ")
-
 		return ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, errorMessage, errorDetails, err,
+			fiber.StatusUnprocessableEntity, errorMessage, err,
 		)
 	}
 
 	return nil
+}
+
+func GenerateErrorDetails(validationErrors []ValidationError) string {
+	var errors []string
+
+	for _, validationError := range validationErrors {
+		switch validationError.Field {
+			case "codeHosting":
+				errors = append(errors, "codeHosting is required and should contain at least an 'url' object")
+			case "url":
+				errors = append(errors, "url is not a valid url")
+			case "alternativeId":
+				errors = append(errors, "alternativeId does not respect its size limits (1-255)")
+			case "description":
+				errors = append(errors, "description is required")
+			case "email":
+				errors = append(errors, "email is not a valid email")
+			case "aliases":
+				errors = append(errors, "aliases must be an array of urls")
+			case "message": 
+				errors = append(errors, "message is required")
+			default:
+				errors = append(errors, validationError.Field + " is not valid")
+		}
+	}
+
+	errorDetails := fmt.Sprintf("invalid format: %s", strings.Join(errors, ", "))
+
+	return errorDetails
 }
