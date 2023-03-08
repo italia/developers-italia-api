@@ -19,6 +19,7 @@ const (
 type ValidationError struct {
 	Field string `json:"field"`
 	Value string `json:"value,omitempty"`
+	Tag   string `json:"tag"`
 }
 
 func ValidateStruct(validateStruct interface{}) []ValidationError {
@@ -52,6 +53,7 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 			validationErrors = append(validationErrors, ValidationError{
 				Field: err.Field(),
 				Value: value,
+				Tag: err.Tag(),
 			})
 		}
 	}
@@ -77,23 +79,19 @@ func GenerateErrorDetails(validationErrors []ValidationError) string {
 	var errors []string
 
 	for _, validationError := range validationErrors {
-		switch validationError.Field {
-			case "codeHosting":
-				errors = append(errors, "codeHosting is required and should contain at least an 'url' object")
-			case "url":
-				errors = append(errors, "url is not a valid url")
-			case "alternativeId":
-				errors = append(errors, "alternativeId does not respect its size limits (1-255)")
-			case "description":
-				errors = append(errors, "description is required")
+		switch validationError.Tag {
+			case "required":
+				errors = append(errors, fmt.Sprintf("%s is required", validationError.Field))
 			case "email":
-				errors = append(errors, "email is not a valid email")
-			case "aliases":
-				errors = append(errors, "aliases must be an array of urls")
-			case "message": 
-				errors = append(errors, "message is required")
+				errors = append(errors, fmt.Sprintf("%s is not a valid email", validationError.Field))
+			case "min":
+				errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too short)", validationError.Field))
+			case "max":
+				errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too long)", validationError.Field))
+			case "gt":
+				errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too few items)", validationError.Field))
 			default:
-				errors = append(errors, validationError.Field + " is not valid")
+				errors = append(errors, fmt.Sprintf("%s is invalid", validationError.Field))
 		}
 	}
 
