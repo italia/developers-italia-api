@@ -520,7 +520,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"alternativeId","rule":"min"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: alternativeId does not meet its size limits (too short)","status":422,"validationErrors":[{"field":"alternativeId","rule":"min","value":""}]}`,
 		},
 		{
 			query: "POST /v1/publishers - NOT normalized URL validation passed",
@@ -616,7 +616,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"email","rule":"email"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: email is not a valid email","status":422,"validationErrors":[{"field":"email","rule":"email","value":""}]}`,
 		},
 		{
 			query:    "POST /v1/publishers - Description already exist",
@@ -639,7 +639,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"description","rule":"required"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: description is required","status":422,"validationErrors":[{"field":"description","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST new publisher with empty description",
@@ -651,7 +651,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"description","rule":"required"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: description is required","status":422,"validationErrors":[{"field":"description","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST publisher with duplicate alternativeId",
@@ -675,7 +675,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"codeHosting","rule":"required"},{"field":"description","rule":"required"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: codeHosting is required, description is required","status":422,"validationErrors":[{"field":"codeHosting","rule":"required","value":""},{"field":"description","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST publishers - wrong token",
@@ -750,7 +750,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Publisher`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is invalid, description is required, email is not a valid email", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -871,7 +871,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody: `{"title":"can't update Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"codeHosting","rule":"gt"}]}`,
+			expectedBody: `{"title":"can't update Publisher","detail":"invalid format: codeHosting does not meet its size limits (too few items)","status":422,"validationErrors":[{"field":"codeHosting","rule":"gt","value":""}]}`,
 		},
 		{
 			description: "PATCH a publisher via alternativeId",
@@ -969,7 +969,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody: `{"title":"can't update Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"url","rule":"url","value":"INVALID_URL"}]}`,
+			expectedBody: `{"title":"can't update Publisher","detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"url","value":"INVALID_URL"}]}`,
 		},
 		{
 			description: "PATCH publishers with empty body",
@@ -1214,7 +1214,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is invalid", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -1706,7 +1706,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Software","detail":"invalid format","status":422,"validationErrors":[{"field":"url","rule":"required"}]}`,
+			expectedBody:        `{"title":"can't create Software","detail":"invalid format: url is required","status":422,"validationErrors":[{"field":"url","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST software - wrong token",
@@ -1776,7 +1776,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Software`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is required", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -1990,7 +1990,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Software`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is invalid", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -2244,7 +2244,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: message is required", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -2457,7 +2457,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is invalid", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -2737,7 +2737,7 @@ func TestLogsEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Log","detail":"invalid format","status":422,"validationErrors":[{"field":"message","rule":"required"}]}`,
+			expectedBody:        `{"title":"can't create Log","detail":"invalid format: message is required","status":422,"validationErrors":[{"field":"message","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST log - wrong token",
@@ -2793,7 +2793,7 @@ func TestLogsEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: message is required", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -2931,7 +2931,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Webhook`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is invalid", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
