@@ -19,7 +19,7 @@ const (
 type ValidationError struct {
 	Field string `json:"field"`
 	Value string `json:"value,omitempty"`
-	Rule   string `json:"rule"`
+	Rule  string `json:"rule"`
 }
 
 func ValidateStruct(validateStruct interface{}) []ValidationError {
@@ -53,7 +53,7 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 			validationErrors = append(validationErrors, ValidationError{
 				Field: err.Field(),
 				Value: value,
-				Rule: err.Tag(),
+				Rule:  err.Tag(),
 			})
 		}
 	}
@@ -80,18 +80,18 @@ func GenerateErrorDetails(validationErrors []ValidationError) string {
 
 	for _, validationError := range validationErrors {
 		switch validationError.Rule {
-			case "required":
-				errors = append(errors, fmt.Sprintf("%s is required", validationError.Field))
-			case "email":
-				errors = append(errors, fmt.Sprintf("%s is not a valid email", validationError.Field))
-			case "min":
-				errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too short)", validationError.Field))
-			case "max":
-				errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too long)", validationError.Field))
-			case "gt":
-				errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too few items)", validationError.Field))
-			default:
-				errors = append(errors, fmt.Sprintf("%s is invalid", validationError.Field))
+		case "required":
+			errors = append(errors, fmt.Sprintf("%s is required", validationError.Field))
+		case "email":
+			errors = append(errors, fmt.Sprintf("%s is not a valid email", validationError.Field))
+		case "min":
+			errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too short)", validationError.Field))
+		case "max":
+			errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too long)", validationError.Field))
+		case "gt":
+			errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too few items)", validationError.Field))
+		default:
+			errors = append(errors, fmt.Sprintf("%s is invalid", validationError.Field))
 		}
 	}
 
