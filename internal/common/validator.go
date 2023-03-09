@@ -19,7 +19,7 @@ const (
 type ValidationError struct {
 	Field string `json:"field"`
 	Value string `json:"value,omitempty"`
-	Tag   string `json:"tag"`
+	Rule   string `json:"rule"`
 }
 
 func ValidateStruct(validateStruct interface{}) []ValidationError {
@@ -53,7 +53,7 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 			validationErrors = append(validationErrors, ValidationError{
 				Field: err.Field(),
 				Value: value,
-				Tag: err.Tag(),
+				Rule: err.Tag(),
 			})
 		}
 	}
@@ -79,7 +79,7 @@ func GenerateErrorDetails(validationErrors []ValidationError) string {
 	var errors []string
 
 	for _, validationError := range validationErrors {
-		switch validationError.Tag {
+		switch validationError.Rule {
 			case "required":
 				errors = append(errors, fmt.Sprintf("%s is required", validationError.Field))
 			case "email":
