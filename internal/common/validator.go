@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -18,7 +19,7 @@ const (
 type ValidationError struct {
 	Field string `json:"field"`
 	Rule  string `json:"rule"`
-	Value string `json:"value,omitempty"`
+	Value string `json:"value"`
 }
 
 func ValidateStruct(validateStruct interface{}) []ValidationError {
@@ -67,9 +68,34 @@ func ValidateRequestEntity(ctx *fiber.Ctx, request interface{}, errorMessage str
 
 	if err := ValidateStruct(request); err != nil {
 		return ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, errorMessage, "invalid format", err,
+			fiber.StatusUnprocessableEntity, errorMessage, err,
 		)
 	}
 
 	return nil
+}
+
+func GenerateErrorDetails(validationErrors []ValidationError) string {
+	var errors []string
+
+	for _, validationError := range validationErrors {
+		switch validationError.Rule {
+		case "required":
+			errors = append(errors, fmt.Sprintf("%s is required", validationError.Field))
+		case "email":
+			errors = append(errors, fmt.Sprintf("%s is not a valid email", validationError.Field))
+		case "min":
+			errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too short)", validationError.Field))
+		case "max":
+			errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too long)", validationError.Field))
+		case "gt":
+			errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too few items)", validationError.Field))
+		default:
+			errors = append(errors, fmt.Sprintf("%s is invalid", validationError.Field))
+		}
+	}
+
+	errorDetails := fmt.Sprintf("invalid format: %s", strings.Join(errors, ", "))
+
+	return errorDetails
 }

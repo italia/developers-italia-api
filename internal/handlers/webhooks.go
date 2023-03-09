@@ -124,7 +124,7 @@ func (p *Webhook[T]) PostResourceWebhook(ctx *fiber.Ctx) error {
 
 	if err := common.ValidateStruct(*webhookReq); err != nil {
 		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't create Webhook", "invalid format", err,
+			fiber.StatusUnprocessableEntity, "can't create Webhook", err,
 		)
 	}
 
@@ -168,7 +168,7 @@ func (p *Webhook[T]) PostSingleResourceWebhook(ctx *fiber.Ctx) error {
 
 	if err := common.ValidateStruct(*webhookReq); err != nil {
 		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't create Webhook", "invalid format", err,
+			fiber.StatusUnprocessableEntity, "can't create Webhook", err,
 		)
 	}
 
@@ -197,7 +197,7 @@ func (p *Webhook[T]) PatchWebhook(ctx *fiber.Ctx) error {
 
 	if err := common.ValidateStruct(*webhookReq); err != nil {
 		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't update Webhook", "invalid format", err,
+			fiber.StatusUnprocessableEntity, "can't update Webhook", err,
 		)
 	}
 
