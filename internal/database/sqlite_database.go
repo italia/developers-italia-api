@@ -15,7 +15,7 @@ type SQLiteDB struct {
 func (d *SQLiteDB) Init(dsn string) (*gorm.DB, error) {
 	var err error
 
-	database, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	database, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{TranslateError: true})
 	if err != nil {
 		return nil, fmt.Errorf("can't open database: %w", err)
 	}

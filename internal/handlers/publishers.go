@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"sort"
 
-	"github.com/italia/developers-italia-api/internal/database"
 	"golang.org/x/exp/slices"
 
 	"github.com/italia/developers-italia-api/internal/handlers/general"
@@ -135,12 +134,12 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	if err := p.db.Create(&publisher).Error; err != nil {
-		switch database.WrapErrors(err) { //nolint:errorlint
-		case common.ErrDBRecordNotFound:
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
 			return common.Error(fiber.StatusNotFound,
 				"can't create Publisher",
 				"Publisher was not found")
-		case common.ErrDBUniqueConstraint:
+		case errors.Is(err, gorm.ErrDuplicatedKey):
 			return common.Error(fiber.StatusConflict,
 				"can't create Publisher",
 				"description, alternativeId or codeHosting URL already exists")

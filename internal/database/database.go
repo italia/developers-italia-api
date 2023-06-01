@@ -1,19 +1,10 @@
 package database
 
 import (
-	"errors"
 	"log"
-	"strings"
-
-	"github.com/jackc/pgconn"
 
 	"github.com/italia/developers-italia-api/internal/common"
-	"github.com/jackc/pgerrcode"
 	"gorm.io/gorm"
-)
-
-const (
-	uniqueConstraintFailedErrorSQLite = "UNIQUE constraint failed"
 )
 
 type Database interface {
@@ -35,23 +26,4 @@ func NewDatabase(env common.Environment) Database {
 	return &PostgresDB{
 		dsn: env.Database,
 	}
-}
-
-//nolint:errorlint
-func WrapErrors(dbError error) error {
-	if strings.Contains(dbError.Error(), uniqueConstraintFailedErrorSQLite) {
-		return common.ErrDBUniqueConstraint
-	}
-
-	if e, ok := dbError.(*pgconn.PgError); ok {
-		if e.Code == pgerrcode.UniqueViolation {
-			return common.ErrDBUniqueConstraint
-		}
-	}
-
-	if errors.Is(dbError, gorm.ErrRecordNotFound) {
-		return common.ErrDBRecordNotFound
-	}
-
-	return dbError
 }
