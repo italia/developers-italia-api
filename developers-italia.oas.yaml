@@ -1,5 +1,5 @@
 openapi: 3.0.0
-info:
+inf:
   title: Developers Italia API
   version: 1.0.0
   x-summary: Developers Italia API
