@@ -34,9 +34,7 @@ func Setup() *fiber.App {
 		panic(err)
 	}
 
-	db := database.NewDatabase(common.EnvironmentConfig)
-
-	gormDB, err := db.Init(common.EnvironmentConfig.Database)
+	gormDB, err := database.NewDatabase(common.EnvironmentConfig.Database)
 	if err != nil {
 		panic(err)
 	}

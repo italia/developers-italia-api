@@ -16,6 +16,9 @@ import (
 	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
+
+	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 const UUID_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
@@ -23,6 +26,7 @@ const UUID_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 var (
 	app       *fiber.App
 	db        *sql.DB
+	dbDriver  string
 	goodToken = "Bearer v2.local.TwwHUQEi8hr2Eo881_Bs5vK9dHOR5BgEU24QRf-U7VmUwI1yOEA6mFT0EsXioMkFT_T-jjrtIJ_Nv8f6hR6ifJXUOuzWEkm9Ijq1mqSjQatD3aDqKMyjjBA"
 	badToken  = "Bearer v2.local.UngfrCDNwGUw4pff2oBNoyxYvOErcbVVqLndl6nzONafUCzktaOeMSmoI7B0h62zoxXXLqTm_Phl"
 )
@@ -43,23 +47,36 @@ type TestCase struct {
 }
 
 func init() {
-	_ = os.Remove("./test.db")
+	// Test on SQLite by default if DATABASE_DSN is not set
+	if _, exists := os.LookupEnv("DATABASE_DSN"); !exists {
+		_ = os.Setenv("DATABASE_DSN", "file:./test.db")
+		_ = os.Remove("./test.db")
+	}
 
-	_ = os.Setenv("DATABASE_DSN", "file:./test.db")
 	_ = os.Setenv("ENVIRONMENT", "test")
 
 	// echo -n 'test-paseto-key-dont-use-in-prod'  | base64
 	_ = os.Setenv("PASETO_KEY", "dGVzdC1wYXNldG8ta2V5LWRvbnQtdXNlLWluLXByb2Q=")
 
+	dsn := os.Getenv("DATABASE_DSN")
+	switch {
+	case strings.HasPrefix(dsn, "postgres:"):
+		dbDriver = "postgres"
+	default:
+		dbDriver = "sqlite3"
+	}
+
 	var err error
-	db, err = sql.Open("sqlite3", os.Getenv("DATABASE_DSN"))
+	db, err = sql.Open(dbDriver, dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// This is needed, otherwise we get a database-locked error
 	// TODO: investigate the root cause
-	_, _ = db.Exec("PRAGMA journal_mode=WAL;")
+	if dbDriver == "sqlite3" {
+		_, _ = db.Exec("PRAGMA journal_mode=WAL;")
+	}
 
 	// Setup the app as it is done in the main function
 	app = Setup()
@@ -74,7 +91,7 @@ func TestMain(m *testing.M) {
 func loadFixtures(t *testing.T) {
 	fixtures, err := testfixtures.New(
 		testfixtures.Database(db),
-		testfixtures.Dialect("sqlite"),
+		testfixtures.Dialect(dbDriver),
 		testfixtures.Directory("test/testdata/fixtures/"),
 	)
 	assert.Nil(t, err)
