@@ -82,9 +82,6 @@ linters:
     - exhaustruct
     # False positives (https://github.com/daixiang0/gci/issues/54)
     - gci
-    # https://github.com/italia/developers-italia-api/issues/190)
-    # Don't feel about chasing this one down
-    # - musttag
     # Seems excessive
     - tagalign
 
