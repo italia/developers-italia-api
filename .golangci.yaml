@@ -74,6 +74,7 @@ linters:
     - interfacer
     - maligned
     - scopelint
+    - structcheck
 
     # We don't want to limit dependencies
     - depguard
