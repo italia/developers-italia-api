@@ -75,6 +75,8 @@ linters:
     - maligned
     - scopelint
 
+    # We don't want to limit dependencies
+    - depguard
     # Not terribly useful and ends up in too much boilerplate
     - exhaustruct
     # False positives (https://github.com/daixiang0/gci/issues/54)
