@@ -44,7 +44,7 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 
 	stmt := p.db.Preload("CodeHosting")
 
-	if all := ctx.Query("all", ""); all == "" {
+	if all := ctx.QueryBool("all", false); !all {
 		stmt = stmt.Scopes(models.Active)
 	}
 

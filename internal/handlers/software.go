@@ -63,7 +63,7 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mos
 
 		stmt.Where("id = ?", softwareURL.SoftwareID)
 	} else {
-		if all := ctx.Query("all", ""); all == "" {
+		if all := ctx.QueryBool("all", false); !all {
 			stmt = stmt.Scopes(models.Active)
 		}
 	}
