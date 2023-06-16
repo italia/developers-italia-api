@@ -2979,7 +2979,10 @@ func TestWebhooksEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        404,
-			expectedBody:        `{"title":"can't delete Webhook","detail":"Webhook was not found","status":404}`,
+			// This error is different from because it's returned directly from Fiber's
+			// route constraints, so we don't need to hit the database to find the resource
+			// because we already know that's not a valid webhook id looking at its format.
+			expectedBody:        `{"title":"Not Found","detail":"Cannot DELETE /v1/webhooks/NO_SUCH_WEBHOOK","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{

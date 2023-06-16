@@ -3,7 +3,6 @@ package general
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/pilagod/gorm-cursor-paginator/v2/paginator"
@@ -48,13 +47,10 @@ func NewPaginatorWithConfig(ctx *fiber.Ctx, config *paginator.Config) *paginator
 		paginator.SetBeforeCursor(before)
 	}
 
-	if size := ctx.Query("page[size]"); size != "" {
-		//nolint:godox // need to implement this in the future
-		// TODO: make the API return the error if limit is not an integer
-		if limit, err := strconv.Atoi(size); err == nil {
-			paginator.SetLimit(limit)
-		}
-	}
+	//nolint:godox // need to implement this in the future
+	// TODO: make the API return the error if limit is not an integer
+	size := ctx.QueryInt("page[size]", DefaultLimitCount)
+	paginator.SetLimit(size)
 
 	return paginator
 }
