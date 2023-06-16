@@ -133,16 +133,16 @@ func setupHandlers(app *fiber.App, gormDB *gorm.DB) {
 	v1.Delete("/software/:id", softwareHandler.DeleteSoftware)
 
 	v1.Get("/logs", logHandler.GetLogs)
-	v1.Get("/logs/:id", logHandler.GetLog)
+	v1.Get("/logs/:id<guid>", logHandler.GetLog)
 	v1.Post("/logs", logHandler.PostLog)
-	v1.Patch("/logs/:id", logHandler.PatchLog)
-	v1.Delete("/logs/:id", logHandler.DeleteLog)
+	v1.Patch("/logs/:id<guid>", logHandler.PatchLog)
+	v1.Delete("/logs/:id<guid>", logHandler.DeleteLog)
 	v1.Get("/software/:id/logs", logHandler.GetSoftwareLogs)
 	v1.Post("/software/:id/logs", logHandler.PostSoftwareLog)
 
 	v1.Get("/status", statusHandler.GetStatus)
 
-	v1.Get("/webhooks/:id", publisherWebhookHandler.GetWebhook)
-	v1.Patch("/webhooks/:id", publisherWebhookHandler.PatchWebhook)
-	v1.Delete("/webhooks/:id", publisherWebhookHandler.DeleteWebhook)
+	v1.Get("/webhooks/:id<guid>", publisherWebhookHandler.GetWebhook)
+	v1.Patch("/webhooks/:id<guid>", publisherWebhookHandler.PatchWebhook)
+	v1.Delete("/webhooks/:id<guid>", publisherWebhookHandler.DeleteWebhook)
 }
