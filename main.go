@@ -74,9 +74,10 @@ func Setup() *fiber.App {
 
 	app.Use(cache.New(cache.Config{
 		Next: func(ctx *fiber.Ctx) bool {
-			// Don't cache POST, PUT, PATCH or /status
-			return ctx.Method() != fiber.MethodGet || ctx.Route().Path == "/v1/status"
+			// Don't cache /status
+			return ctx.Route().Path == "/v1/status"
 		},
+		Methods:      []string{fiber.MethodGet, fiber.MethodHead},
 		CacheControl: true,
 		Expiration:   10 * time.Second, //nolint:gomnd
 		KeyGenerator: func(ctx *fiber.Ctx) string {
