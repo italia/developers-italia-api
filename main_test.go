@@ -2354,7 +2354,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyIwMDAxLTAxLTAxVDAwOjAwOjAwWiIsImU3ZjZkYmRhLWMzZjUtNGIyZi1iM2Q4LTM5YTM0MDI2ZTYwYSJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDE3LTA1LTAxVDAwOjAwOjAwWiIsImU3ZjZkYmRhLWMzZjUtNGIyZi1iM2Q4LTM5YTM0MDI2ZTYwYSJd", links["next"])
 			},
 		},
 
