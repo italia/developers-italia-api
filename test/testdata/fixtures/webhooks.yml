@@ -12,8 +12,8 @@
   entity_type: software
   secret:
   url: https://3-a.example.org/receiver
-  created_at: '2017-05-01t00:00:00+00:00'
-  updated_at: '2017-05-01t00:00:00+00:00'
+  created_at: '2017-05-01T00:00:00+00:00'
+  updated_at: '2017-05-01T00:00:00+00:00'
 - id: d6334000-69a8-43a1-ab43-50bb04e14eed
   entity_id: 9f135268-a37e-4ead-96ec-e4a24bb9344a
   entity_type: software
