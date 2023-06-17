@@ -37,7 +37,7 @@ func init() {
 	// TODO: investigate the root cause
 	sqlitedb.Exec("PRAGMA journal_mode=WAL;")
 
-	db, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	db, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{TranslateError: true})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func TestSoftwareCreate(t *testing.T) {
 			PubliccodeYml: "-",
 		},
 	).Error
-	assert.EqualError(t, err, "UNIQUE constraint failed: software.software_url_id")
+	assert.ErrorIs(t, err, gorm.ErrDuplicatedKey)
 }
 
 func TestSoftwareURLCreate(t *testing.T) {
@@ -117,7 +117,7 @@ func TestSoftwareURLCreate(t *testing.T) {
 			URL:        "https://new-2.example.org",
 		},
 	).Error
-	assert.EqualError(t, err, "UNIQUE constraint failed: software_urls.id")
+	assert.ErrorIs(t, err, gorm.ErrDuplicatedKey)
 }
 
 func TestPublisherCreate(t *testing.T) {
@@ -144,7 +144,7 @@ func TestPublisherCreate(t *testing.T) {
 			Email:       &email,
 		},
 	).Error
-	assert.EqualError(t, err, "UNIQUE constraint failed: publishers.description")
+	assert.ErrorIs(t, err, gorm.ErrDuplicatedKey)
 
 	// Duplicate alternativeId
 	alternativeID := "alternative-id-12345"
@@ -155,7 +155,7 @@ func TestPublisherCreate(t *testing.T) {
 			AlternativeID: &alternativeID,
 		},
 	).Error
-	assert.EqualError(t, err, "UNIQUE constraint failed: publishers.alternative_id")
+	assert.ErrorIs(t, err, gorm.ErrDuplicatedKey)
 }
 
 func TestWebhookCreate(t *testing.T) {
@@ -181,7 +181,7 @@ func TestWebhookCreate(t *testing.T) {
 			URL:        "https://new-webhook-2.example.org",
 		},
 	).Error
-	assert.EqualError(t, err, "UNIQUE constraint failed: webhooks.id")
+	assert.ErrorIs(t, err, gorm.ErrDuplicatedKey)
 }
 
 func TestEventCreate(t *testing.T) {
@@ -207,5 +207,5 @@ func TestEventCreate(t *testing.T) {
 			EntityType: "software",
 		},
 	).Error
-	assert.EqualError(t, err, "UNIQUE constraint failed: events.id")
+	assert.ErrorIs(t, err, gorm.ErrDuplicatedKey)
 }

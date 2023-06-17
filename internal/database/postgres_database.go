@@ -17,7 +17,8 @@ func (d *PostgresDB) Init(dsn string) (*gorm.DB, error) {
 	var err error
 
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		PrepareStmt: true,
+		TranslateError: true,
+		PrepareStmt:    true,
 		// Disable logging in production
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
