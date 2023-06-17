@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  tests:
+  tests-sqlite:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -13,3 +13,5 @@ jobs:
         with:
           go-version: 1.18.x
       - run: go test -race ./...
+        env:
+          DATABASE_DSN: "file:/tmp/test.db"
