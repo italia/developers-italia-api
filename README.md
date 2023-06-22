@@ -31,13 +31,13 @@
 </div>
 
 <p align="center">
-  Developers Italia API is the RESTful API of the Free and Open Source software catalog
+  <strong>Developers Italia API</strong> is the RESTful API of the Free and Open Source software catalog
   aimed at Italian Public Administrations.
 </p>
 
 ## Requirements
 
-* Golang 1.18
+* Golang 1.18+
 * [PostgreSQL](https://https://www.postgresql.org/)
 
 ## Development
