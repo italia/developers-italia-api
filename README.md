@@ -35,12 +35,12 @@
   aimed at Italian Public Administrations.
 </p>
 
-# Requirements
+## Requirements
 
 * Golang 1.18
 * [PostgreSQL](https://https://www.postgresql.org/)
 
-# Development
+## Development
 
 The application uses [Air](https://github.com/cosmtrek/air) for live-reloading
 in the development environment.
@@ -61,7 +61,7 @@ endpoints at `http://localhost:3000/v1/`.
 
 The application will automatically reload when a change is made.
 
-# Configuration
+## Configuration
 
 You can configure the API with environment variables:
 
@@ -85,7 +85,7 @@ You can configure the API with environment variables:
   will be ratelimited.
   Default: no limit.
 
-# Contributing
+## Contributing
 
 This project exists also thanks to your contributions! Here is a list of people
 who already contributed to this repository:
@@ -96,7 +96,7 @@ who already contributed to this repository:
   />
 </a>
 
-# License
+## License
 
 Copyright © 2022-present Presidenza del Consiglio dei Ministri
 
