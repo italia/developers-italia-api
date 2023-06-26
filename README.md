@@ -65,8 +65,8 @@ The application will automatically reload when a change is made.
 
 You can configure the API with environment variables:
 
-* `DATABASE_DSN`: the data source used to connect to the database,
-  fe `host=db user=postgres password=postgres dbname=postgres port=5432`.
+* `DATABASE_DSN`: the URI used to connect to the database,
+  fe `postgres://user:password@host:5432/dbname`.
   Supports PostgreSQL and SQLite.
 
 * `PASETO_KEY` (optional): Base64 encoded 32 bytes key used to check the
