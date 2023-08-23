@@ -43,7 +43,6 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 		&models.Publisher{},
 		&models.Event{},
 		&models.CodeHosting{},
-		&models.Log{},
 		&models.Software{},
 		&models.SoftwareURL{},
 		&models.Webhook{},
@@ -56,7 +55,7 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 	// This is a workaround for https://github.com/go-gorm/gorm/issues/5534 where GORM
 	// fails to migrate an existing generated column on PostgreSQL if it already exists.
 	var entity string
-	if database.Raw("SELECT entity from logs LIMIT 1").Scan(&entity).Error != nil {
+	if database.Raw("SELECT entity FROM logs LIMIT 1").Scan(&entity).Error != nil {
 		if err = database.AutoMigrate(&models.Log{}); err != nil {
 			return nil, fmt.Errorf("can't migrate database: %w", err)
 		}
