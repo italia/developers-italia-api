@@ -24,7 +24,7 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 		log.Println("using SQLite database")
 
 		database, err = gorm.Open(sqlite.Open(connection), &gorm.Config{TranslateError: true})
-	case strings.HasPrefix(connection, "postgres:"):
+	default:
 		log.Println("using Postgres database")
 
 		database, err = gorm.Open(postgres.Open(connection), &gorm.Config{
