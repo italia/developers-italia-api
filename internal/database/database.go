@@ -51,5 +51,16 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("can't migrate database: %w", err)
 	}
 
+	// Migrate logs only if there is no "entity" column yet, which should mean when the database
+	// is empty.
+	// This is a workaround for https://github.com/go-gorm/gorm/issues/5534 where GORM
+	// fails to migrate an existing generated column on PostgreSQL if it already exists.
+	var entity string
+	if database.Raw("SELECT entity from logs LIMIT 1").Scan(&entity).Error != nil {
+		if err = database.AutoMigrate(&models.Log{}); err != nil {
+			return nil, fmt.Errorf("can't migrate database: %w", err)
+		}
+	}
+
 	return database, nil
 }
