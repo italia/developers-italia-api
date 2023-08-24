@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -88,16 +89,22 @@ func (s Software) UUID() string {
 	return s.ID
 }
 
+//nolint:musttag // we are using a custom MarshalJSON method
 type SoftwareURL struct {
 	ID         string    `gorm:"primarykey"`
 	URL        string    `gorm:"uniqueIndex"`
 	SoftwareID string    `gorm:"not null"`
-	CreatedAt  time.Time `json:"createdAt" gorm:"index"`
-	UpdatedAt  time.Time `json:"updatedAt"`
+	CreatedAt  time.Time `gorm:"index"`
+	UpdatedAt  time.Time
 }
 
 func (su SoftwareURL) MarshalJSON() ([]byte, error) {
 	return ([]byte)(fmt.Sprintf(`"%s"`, su.URL)), nil
+}
+
+func (su *SoftwareURL) UnmarshalJSON(data []byte) error {
+	//nolint:wrapcheck // we want to pass along the error here
+	return json.Unmarshal(data, &su.URL)
 }
 
 type Webhook struct {

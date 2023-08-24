@@ -31,9 +31,9 @@ type SoftwarePost struct {
 }
 
 type SoftwarePatch struct {
-	URL           string    `json:"url" validate:"url"`
+	URL           *string   `json:"url" validate:"omitempty,url"`
 	Aliases       *[]string `json:"aliases" validate:"omitempty,dive,url"`
-	PubliccodeYml string    `json:"publiccodeYml"`
+	PubliccodeYml *string   `json:"publiccodeYml"`
 	Active        *bool     `json:"active"`
 }
 

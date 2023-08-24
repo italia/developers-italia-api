@@ -12,6 +12,10 @@ var (
 	ErrKeyLen          = errors.New("PASETO_KEY must be 32 bytes long once base64-decoded")
 )
 
+func InternalServerError(title string) ProblemJSONError {
+	return Error(fiber.StatusInternalServerError, title, fiber.ErrInternalServerError.Message)
+}
+
 func Error(status int, title string, detail string) ProblemJSONError {
 	return ProblemJSONError{Title: title, Detail: detail, Status: status}
 }

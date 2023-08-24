@@ -1835,6 +1835,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
+			description: "PATCH a software resource",
 			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
 			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": ["https://software.example.com", "https://software-old.example.org"]}`,
 			headers: map[string][]string{
@@ -1845,6 +1846,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, true, response["active"])
 				assert.Equal(t, "https://software-new.example.org", response["url"])
 
 				assert.IsType(t, []interface{}{}, response["aliases"])
@@ -1881,16 +1883,17 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
+			expectedBody: "",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, true, response["active"])
 				assert.Equal(t, "https://software-new.example.org", response["url"])
 
 				assert.IsType(t, []interface{}{}, response["aliases"])
 
 				aliases := response["aliases"].([]interface{})
-				assert.Equal(t, 2, len(aliases))
+				assert.Equal(t, 1, len(aliases))
 
-				assert.Equal(t, "https://18-a.example.org/code/repo", aliases[0])
-				assert.Equal(t, "https://18-b.example.org/code/repo", aliases[1])
+				assert.Equal(t, "https://18-b.example.org/code/repo", aliases[0])
 
 				assert.Equal(t, "publiccodedata", response["publiccodeYml"])
 
@@ -1919,6 +1922,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, true, response["active"])
 				assert.Equal(t, "https://software-new.example.org", response["url"])
 
 				assert.IsType(t, []interface{}{}, response["aliases"])
@@ -1940,6 +1944,118 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assert.Greater(t, updated, created)
 			},
+		},
+		{
+			description: "PATCH software with an already existing URL (of another software)",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"publiccodeYml": "publiccodedata", "url": "https://21-b.example.org/code/repo"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
+		},
+		{
+			description: "PATCH software, change active",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"active": false}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, false, response["active"])
+				assert.Equal(t, "https://18-a.example.org/code/repo", response["url"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+
+				aliases := response["aliases"].([]interface{})
+				assert.Equal(t, 1, len(aliases))
+
+				assert.Equal(t, "https://18-b.example.org/code/repo", aliases[0])
+
+				assert.Equal(t, "-", response["publiccodeYml"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH software, switch url and alias",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"url": "https://18-b.example.org/code/repo", "aliases": ["https://18-a.example.org/code/repo"]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "https://18-b.example.org/code/repo", response["url"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+
+				aliases := response["aliases"].([]interface{})
+				assert.Equal(t, 1, len(aliases))
+
+				assert.Equal(t, "https://18-a.example.org/code/repo", aliases[0])
+
+				assert.Equal(t, "-", response["publiccodeYml"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH software using an already taken URL as url",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"url": "https://15-b.example.org/code/repo"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
+		},
+		{
+			description: "PATCH software using an already taken URL as an alias",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"aliases": ["https://16-b.example.org/code/repo"]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
 		},
 		{
 			description: "PATCH software - wrong token",
@@ -2005,6 +2121,19 @@ func TestSoftwareEndpoints(t *testing.T) {
 					assert.Contains(t, []string{"field", "rule", "value"}, key)
 				}
 			},
+		},
+		{
+			description: "PATCH software with an empty url",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"url": ""}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"url","value":""}]}`,
 		},
 		{
 			description: "PATCH software with empty body",
