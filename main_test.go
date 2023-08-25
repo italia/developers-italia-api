@@ -685,14 +685,14 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers with invalid payload",
 			query:       "POST /v1/publishers",
-			body:        `{"url": "-"}`,
+			body:        `{"description": "-"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: codeHosting is required, description is required","status":422,"validationErrors":[{"field":"codeHosting","rule":"required","value":""},{"field":"description","rule":"required","value":""}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: codeHosting is required","status":422,"validationErrors":[{"field":"codeHosting","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST publishers - wrong token",
@@ -717,7 +717,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Publisher`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		{
@@ -793,7 +793,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Publisher`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 
@@ -957,25 +957,21 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Publisher`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	description: "PATCH publishers with JSON with extra fields",
-		// 	query: "PATCH /v1/publishers",
-		// 	body: `{"description": "new description", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Publisher`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "PATCH publishers with JSON with extra fields",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body: `{"description": "new description", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody: `{"title":"can't update Publisher","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "PATCH publisher with validation errors",
 			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
@@ -998,7 +994,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        400,
 			expectedContentType: "application/problem+json",
-			expectedBody: `{"title":"can't update Publisher","detail":"invalid json","status":400}`,
+			expectedBody: `{"title":"can't update Publisher","detail":"invalid or malformed JSON","status":400}`,
 		},
 		// TODO: enforce this?
 		// {
@@ -1201,24 +1197,21 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	description: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks with JSON with extra fields",
-		// 	body: `{"url": "https://new.example.org", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Webhook`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks with JSON with extra fields",
+			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
+			body: `{"url": "https://new.example.org", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Webhook","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "POST webhook with validation errors",
 			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
@@ -1257,7 +1250,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -1748,25 +1741,21 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Software`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	descrption: "POST /v1/software with JSON with extra fields",
-		// 	query: "POST /v1/software",
-		// 	body: `{"publiccodeYml": "-", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Software`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "POST /v1/software with JSON with extra fields",
+			query:       "POST /v1/software",
+			body: `{"publiccodeYml": "-", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Software","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "POST software with optional boolean field set to false",
 			query:       "POST /v1/software",
@@ -1819,7 +1808,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Software`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -1976,25 +1965,21 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Software`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	description: "PATCH software with JSON with extra fields",
-		// 	query: "PATCH /v1/software",
-		// 	body: `{"publiccodeYml": "-", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Software`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "PATCH software with JSON with extra fields",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"publiccodeYml": "-", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "PATCH software with validation errors",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
@@ -2033,7 +2018,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Software`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -2231,24 +2216,21 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	description: "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs with JSON with extra fields",
-		// 	body: `{"message": "new log", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Log`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs with JSON with extra fields",
+			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			body: `{"message": "new log", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Log","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "POST log with validation errors",
 			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
@@ -2287,7 +2269,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -2444,24 +2426,21 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	description: "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks with JSON with extra fields",
-		// 	body: `{"url": "https://new.example.org", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Webhook`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks with JSON with extra fields",
+			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			body: `{"url": "https://new.example.org", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Webhook","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "POST webhook with validation errors",
 			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
@@ -2500,7 +2479,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -2754,7 +2733,7 @@ func TestLogsEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Log","detail":"invalid format: message is required","status":422,"validationErrors":[{"field":"message","rule":"required","value":""}]}`,
+			expectedBody:        `{"title":"can't create Log","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "POST log - wrong token",
@@ -2780,24 +2759,21 @@ func TestLogsEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	query: "POST /v1/logs with JSON with extra fields",
-		// 	body: `{"message": "new log", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Log`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "POST /v1/logs with JSON with extra fields",
+			query:       "POST /v1/logs",
+			body: `{"message": "new log", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Log","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "POST log with validation errors",
 			query:       "POST /v1/logs",
@@ -2836,7 +2812,7 @@ func TestLogsEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -2918,24 +2894,21 @@ func TestWebhooksEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	query: "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7 with JSON with extra fields",
-		// 	body: `{"url": "https://new.example.org/receiver", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Webhook`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7 with JSON with extra fields",
+			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			body: `{"url": "https://new.example.org/receiver", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Webhook","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "PATCH webhook with validation errors",
 			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
@@ -2974,7 +2947,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?

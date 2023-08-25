@@ -11,6 +11,7 @@ import (
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/database"
 	"github.com/italia/developers-italia-api/internal/handlers"
+	"github.com/italia/developers-italia-api/internal/jsondecoder"
 	"github.com/italia/developers-italia-api/internal/middleware"
 	"github.com/italia/developers-italia-api/internal/models"
 	"github.com/italia/developers-italia-api/internal/webhooks"
@@ -54,6 +55,9 @@ func Setup() *fiber.App {
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: common.CustomErrorHandler,
+		// Fiber doesn't set DisallowUnknownFields by default
+		// (https://github.com/gofiber/fiber/issues/2601)
+		JSONDecoder: jsondecoder.UnmarshalDisallowUnknownFields,
 	})
 
 	// Automatically recover panics in handlers

@@ -9,6 +9,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/go-playground/validator/v10"
+
+	"github.com/italia/developers-italia-api/internal/jsondecoder"
 )
 
 const (
@@ -63,7 +65,11 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 
 func ValidateRequestEntity(ctx *fiber.Ctx, request interface{}, errorMessage string) error {
 	if err := ctx.BodyParser(request); err != nil {
-		return Error(fiber.StatusBadRequest, errorMessage, "invalid json")
+		if errors.Is(err, jsondecoder.ErrUnknownField) {
+			return Error(fiber.StatusUnprocessableEntity, errorMessage, err.Error())
+		}
+
+		return Error(fiber.StatusBadRequest, errorMessage, "invalid or malformed JSON")
 	}
 
 	if err := ValidateStruct(request); err != nil {
