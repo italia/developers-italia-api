@@ -149,16 +149,12 @@ func (p *Software) GetSoftware(ctx *fiber.Ctx) error {
 
 // PostSoftware creates a new software.
 func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
+	const errMsg = "can't create Software"
+
 	softwareReq := new(common.SoftwarePost)
 
-	if err := ctx.BodyParser(&softwareReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't create Software", "invalid json")
-	}
-
-	if err := common.ValidateStruct(*softwareReq); err != nil {
-		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't create Software", err,
-		)
+	if err := common.ValidateRequestEntity(ctx, softwareReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	aliases := []models.SoftwareURL{}
@@ -180,14 +176,16 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 	}
 
 	if err := p.db.Create(&software).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't create Software", err.Error())
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 	}
 
 	return ctx.JSON(&software)
 }
 
 // PatchSoftware updates the software with the given ID.
-func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mostly error handling ifs
+func (p *Software) PatchSoftware(ctx *fiber.Ctx) error {
+	const errMsg = "can't update Software"
+
 	softwareReq := new(common.SoftwarePatch)
 	software := models.Software{}
 
@@ -202,14 +200,8 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // most
 		return common.Error(fiber.StatusInternalServerError, "can't update Software", "internal server error")
 	}
 
-	if err := ctx.BodyParser(softwareReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't update Software", "invalid json")
-	}
-
-	if err := common.ValidateStruct(*softwareReq); err != nil {
-		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't update Software", err,
-		)
+	if err := common.ValidateRequestEntity(ctx, softwareReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	// Slice of urls that we expect in the database after the PATCH (url + aliases)
