@@ -43,6 +43,15 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 
 	stmt := p.db.Preload("CodeHosting")
 
+	stmt, err := general.Clauses(ctx, stmt, "")
+	if err != nil {
+		return common.Error(
+			fiber.StatusUnprocessableEntity,
+			"can't get Publishers",
+			err.Error(),
+		)
+	}
+
 	if all := ctx.QueryBool("all", false); !all {
 		stmt = stmt.Scopes(models.Active)
 	}

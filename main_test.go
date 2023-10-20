@@ -383,6 +383,53 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.Equal(t, "wrong cursor format in page[after] or page[before]", response["detail"])
 			},
 		},
+		{
+			description: `GET with "from" query param`,
+			query:       "GET /v1/publishers?from=2018-11-26T00:56:23Z",
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 13, len(data))
+			},
+		},
+		{
+			description: `GET with invalid "from" query param`,
+			query:       "GET /v1/publishers?from=3",
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Publishers`, response["title"])
+				assert.Equal(t, "invalid date time format (RFC 3339 needed)", response["detail"])
+			},
+		},
+		{
+			description: `GET with "to" query param`,
+			query:       "GET /v1/publishers?to=2018-11-01T09:56:23Z",
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 13, len(data))
+			},
+		},
+		{
+			description: `GET with invalid "to" query param`,
+			query:       "GET /v1/publishers?to=3",
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Publishers`, response["title"])
+				assert.Equal(t, "invalid date time format (RFC 3339 needed)", response["detail"])
+			},
+		},
 
 		// GET /publishers/:id
 		{
