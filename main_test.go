@@ -393,7 +393,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["data"])
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 13, len(data))
+				assert.Equal(t, 14, len(data))
 			},
 		},
 		{
