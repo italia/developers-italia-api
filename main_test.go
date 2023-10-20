@@ -385,7 +385,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: `GET with "from" query param`,
-			query:       "GET /v1/publishers?from=2018-11-26T00:56:23Z",
+			query:       "GET /v1/publishers?from=2018-11-10T00:56:23Z",
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
