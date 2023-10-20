@@ -729,6 +729,20 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only publishers created after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only publishers created before this time (RFC 3339 datetime)
     post:
       summary: Create a new Publisher
       description: Create a new Publisher
