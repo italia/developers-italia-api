@@ -17,7 +17,7 @@ require (
 
 require (
 	github.com/ansrivas/fiberprometheus/v2 v2.4.1
-	github.com/evanphx/json-patch v0.5.2
+	github.com/evanphx/json-patch/v5 v5.7.0
 	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
 )
 

@@ -14,7 +14,7 @@ import (
 	"github.com/italia/developers-italia-api/internal/models"
 	"gorm.io/gorm"
 
-	jsonpatch "github.com/evanphx/json-patch"
+	jsonpatch "github.com/evanphx/json-patch/v5"
 )
 
 type SoftwareInterface interface {
