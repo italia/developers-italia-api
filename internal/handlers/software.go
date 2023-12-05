@@ -30,8 +30,9 @@ type Software struct {
 }
 
 var (
-	errLoadNotFound = errors.New("Software was not found")
-	errLoad         = errors.New("error while loading Software")
+	errLoadNotFound       = errors.New("Software was not found")
+	errLoad               = errors.New("error while loading Software")
+	errMalformedJSONPatch = errors.New("malformed JSON Patch")
 )
 
 func NewSoftware(db *gorm.DB) *Software {
@@ -174,7 +175,6 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 	const errMsg = "can't update Software"
 
-	softwareReq := common.SoftwarePatch{}
 	software := models.Software{}
 
 	if err := loadSoftware(p.db, &software, ctx.Params("id")); err != nil {
@@ -185,18 +185,36 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
 	}
 
-	if err := common.ValidateRequestEntity(ctx, &softwareReq, errMsg); err != nil {
-		return err //nolint:wrapcheck
-	}
-
 	softwareJSON, err := json.Marshal(&software)
 	if err != nil {
 		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 	}
 
-	updatedJSON, err := jsonpatch.MergePatch(softwareJSON, ctx.Body())
-	if err != nil {
-		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	var updatedJSON []byte
+
+	switch ctx.Get(fiber.HeaderContentType) {
+	case "application/json-patch+json":
+		patch, err := jsonpatch.DecodePatch(ctx.Body())
+		if err != nil {
+			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
+		}
+
+		updatedJSON, err = patch.Apply(softwareJSON)
+		if err != nil {
+			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+		}
+
+	// application/merge-patch+json by default
+	default:
+		softwareReq := common.SoftwarePatch{}
+		if err := common.ValidateRequestEntity(ctx, &softwareReq, errMsg); err != nil {
+			return err //nolint:wrapcheck
+		}
+
+		updatedJSON, err = jsonpatch.MergePatch(softwareJSON, ctx.Body())
+		if err != nil {
+			return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+		}
 	}
 
 	var updatedSoftware models.Software
@@ -213,7 +231,7 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 	}
 
 	if err := p.db.Transaction(func(tran *gorm.DB) error {
-		//nolint:gocritic // it's fine, we want to another slice
+		//nolint:gocritic // it's fine, we want to append to another slice
 		currentURLs := append(software.Aliases, software.URL)
 
 		updatedURL, aliases, err := syncAliases(
