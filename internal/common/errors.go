@@ -51,11 +51,11 @@ func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 		}
 	}
 
-	err = ctx.Status(problemJSON.Status).JSON(problemJSON)
+	ctx.Status(problemJSON.Status)
 
-	// Needs to be after the call to JSON(), to override the
-	// automatic Content-Type
-	ctx.Set(fiber.HeaderContentType, "application/problem+json")
-
-	return err
+	return ctx.JSON(fiber.Map{
+		"title":  problemJSON.Title,
+		"detail": problemJSON.Detail,
+		"status": problemJSON.Status,
+	}, "application/problem+json")
 }
