@@ -53,9 +53,20 @@ func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 
 	ctx.Status(problemJSON.Status)
 
-	return ctx.JSON(fiber.Map{
-		"title":  problemJSON.Title,
-		"detail": problemJSON.Detail,
-		"status": problemJSON.Status,
-	}, "application/problem+json")
+	if problemJSON.ValidationErrors != nil {
+		err = ctx.JSON(fiber.Map{
+			"title":            problemJSON.Title,
+			"detail":           problemJSON.Detail,
+			"status":           problemJSON.Status,
+			"validationErrors": problemJSON.ValidationErrors,
+		}, "application/problem+json")
+	} else {
+		err = ctx.JSON(fiber.Map{
+			"title":  problemJSON.Title,
+			"detail": problemJSON.Detail,
+			"status": problemJSON.Status,
+		}, "application/problem+json")
+	}
+
+	return err
 }

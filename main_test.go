@@ -703,7 +703,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: description is required","status":422,"validationErrors":[{"field":"description","rule":"required","value":""}],"title":"can't create Publisher"}`,
+			expectedBody:        `{"detail":"invalid format: description is required","status":422,"title":"can't create Publisher","validationErrors":[{"field":"description","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST new publisher with empty description",
@@ -715,7 +715,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: description is required","status":422,"validationErrors":[{"field":"description","rule":"required","value":""}],"title":"can't create Publisher"}`,
+			expectedBody:        `{"detail":"invalid format: description is required","status":422,"title":"can't create Publisher","validationErrors":[{"field":"description","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST publisher with duplicate alternativeId",
@@ -739,7 +739,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: codeHosting is required","status":422,"validationErrors":[{"field":"codeHosting","rule":"required","value":""}],"title":"can't create Publisher"}`,
+			expectedBody:        `{"detail":"invalid format: codeHosting is required","status":422,"title":"can't create Publisher","validationErrors":[{"field":"codeHosting","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST publishers - wrong token",
@@ -935,7 +935,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: codeHosting does not meet its size limits (too few items)","status":422,"validationErrors":[{"field":"codeHosting","rule":"gt","value":""}],"title":"can't update Publisher"}`,
+			expectedBody:        `{"detail":"invalid format: codeHosting does not meet its size limits (too few items)","status":422,"title":"can't update Publisher","validationErrors":[{"field":"codeHosting","rule":"gt","value":""}]}`,
 		},
 		{
 			description: "PATCH a publisher via alternativeId",
@@ -1029,7 +1029,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"url","value":"INVALID_URL"}],"title":"can't update Publisher"}`,
+			expectedBody:        `{"detail":"invalid format: url is invalid","status":422,"title":"can't update Publisher","validationErrors":[{"field":"url","rule":"url","value":"INVALID_URL"}]}`,
 		},
 		{
 			description: "PATCH publishers with empty body",
@@ -1763,7 +1763,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: url is required","status":422,"validationErrors":[{"field":"url","rule":"required","value":""}],"title":"can't create Software"}`,
+			expectedBody:        `{"detail":"invalid format: url is required","status":422,"title":"can't create Software","validationErrors":[{"field":"url","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST software - wrong token",
@@ -2180,7 +2180,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"url","value":""}],"title":"can't update Software"}`,
+			expectedBody:        `{"detail":"invalid format: url is invalid","status":422,"title":"can't update Software","validationErrors":[{"field":"url","rule":"url","value":""}]}`,
 		},
 		{
 			description: "PATCH software with empty body",
