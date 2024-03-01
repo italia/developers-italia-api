@@ -53,5 +53,5 @@ func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 
 	ctx.Status(problemJSON.Status)
 
-    return ctx.JSON(problemJSON, "application/problem+json")
+	return ctx.JSON(problemJSON, "application/problem+json")
 }
