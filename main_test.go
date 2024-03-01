@@ -165,7 +165,7 @@ func TestApi(t *testing.T) {
 			query:       "GET /v1/i-dont-exist",
 
 			expectedCode:        404,
-			expectedBody:        `{"detail":"Cannot GET /v1/i-dont-exist","status":404,"title":"Not Found"}`,
+			expectedBody:        `{"title":"Not Found","detail":"Cannot GET /v1/i-dont-exist","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 	}
@@ -436,7 +436,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			description:         "Non-existent publisher",
 			query:               "GET /v1/publishers/eea19c82-0449-11ed-bd84-d8bbc146d165",
 			expectedCode:        404,
-			expectedBody:        `{"detail":"Publisher was not found","status":404,"title":"can't get Publisher"}`,
+			expectedBody:        `{"title":"can't get Publisher","detail":"Publisher was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -560,7 +560,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"description, alternativeId or codeHosting URL already exists","status":409,"title":"can't create Publisher"}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST publisher with alternativeId matching an existing id",
@@ -572,7 +572,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"Publisher with id '2ded32eb-c45e-4167-9166-a44e18b8adde' already exists","status":409,"title":"can't create Publisher"}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with id '2ded32eb-c45e-4167-9166-a44e18b8adde' already exists","status":409}`,
 		},
 		{
 			description: "POST publisher with empty alternativeId",
@@ -584,7 +584,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: alternativeId does not meet its size limits (too short)","status":422,"title":"can't create Publisher","validationErrors":[{"field":"alternativeId","rule":"min","value":""}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: alternativeId does not meet its size limits (too short)","status":422,"validationErrors":[{"field":"alternativeId","rule":"min","value":""}]}`,
 		},
 		{
 			query: "POST /v1/publishers - NOT normalized URL validation passed",
@@ -623,7 +623,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"description, alternativeId or codeHosting URL already exists","status":409,"title":"can't create Publisher"}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with an existing email",
@@ -680,7 +680,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: email is not a valid email","status":422,"title":"can't create Publisher","validationErrors":[{"field":"email","rule":"email","value":""}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: email is not a valid email","status":422,"validationErrors":[{"field":"email","rule":"email","value":""}]}`,
 		},
 		{
 			query: "POST /v1/publishers - Description already exist",
@@ -691,7 +691,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"description, alternativeId or codeHosting URL already exists","status":409,"title":"can't create Publisher"}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with no description",
@@ -703,7 +703,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: description is required","status":422,"title":"can't create Publisher","validationErrors":[{"field":"description","rule":"required","value":""}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: description is required","status":422,"validationErrors":[{"field":"description","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST new publisher with empty description",
@@ -715,7 +715,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: description is required","status":422,"title":"can't create Publisher","validationErrors":[{"field":"description","rule":"required","value":""}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: description is required","status":422,"validationErrors":[{"field":"description","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST publisher with duplicate alternativeId",
@@ -727,7 +727,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"description, alternativeId or codeHosting URL already exists","status":409,"title":"can't create Publisher"}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST publishers with invalid payload",
@@ -739,7 +739,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: codeHosting is required","status":422,"title":"can't create Publisher","validationErrors":[{"field":"codeHosting","rule":"required","value":""}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: codeHosting is required","status":422,"validationErrors":[{"field":"codeHosting","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST publishers - wrong token",
@@ -750,7 +750,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -854,7 +854,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        404,
-			expectedBody:        `{"detail":"Publisher was not found","status":404,"title":"can't update Publisher"}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -935,7 +935,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: codeHosting does not meet its size limits (too few items)","status":422,"title":"can't update Publisher","validationErrors":[{"field":"codeHosting","rule":"gt","value":""}]}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"invalid format: codeHosting does not meet its size limits (too few items)","status":422,"validationErrors":[{"field":"codeHosting","rule":"gt","value":""}]}`,
 		},
 		{
 			description: "PATCH a publisher via alternativeId",
@@ -978,7 +978,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"Publisher with id '47807e0c-0613-4aea-9917-5455cc6eddad' already exists","status":409,"title":"can't update Publisher"}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher with id '47807e0c-0613-4aea-9917-5455cc6eddad' already exists","status":409}`,
 		},
 		{
 			description: "PATCH publishers - wrong token",
@@ -989,7 +989,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -1017,7 +1017,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"unknown field in JSON input","status":422,"title":"can't update Publisher"}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "PATCH publisher with validation errors",
@@ -1029,7 +1029,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: url is invalid","status":422,"title":"can't update Publisher","validationErrors":[{"field":"url","rule":"url","value":"INVALID_URL"}]}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"url","value":"INVALID_URL"}]}`,
 		},
 		{
 			description: "PATCH publishers with empty body",
@@ -1041,7 +1041,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        400,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid or malformed JSON","status":400,"title":"can't update Publisher"}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"invalid or malformed JSON","status":400}`,
 		},
 		// TODO: enforce this?
 		// {
@@ -1062,7 +1062,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        404,
-			expectedBody:        `{"detail":"Publisher was not found","status":404,"title":"can't delete Publisher"}`,
+			expectedBody:        `{"title":"can't delete Publisher","detail":"Publisher was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -1073,7 +1073,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -1229,7 +1229,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -1257,7 +1257,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"unknown field in JSON input","status":422,"title":"can't create Webhook"}`,
+			expectedBody:        `{"title":"can't create Webhook","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "POST webhook with validation errors",
@@ -1645,7 +1645,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			description:         "Non-existent software",
 			query:               "GET /v1/software/eea19c82-0449-11ed-bd84-d8bbc146d165",
 			expectedCode:        404,
-			expectedBody:        `{"detail":"Software was not found","status":404,"title":"can't get Software"}`,
+			expectedBody:        `{"title":"can't get Software","detail":"Software was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -1763,7 +1763,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: url is required","status":422,"title":"can't create Software","validationErrors":[{"field":"url","rule":"required","value":""}]}`,
+			expectedBody:        `{"title":"can't create Software","detail":"invalid format: url is required","status":422,"validationErrors":[{"field":"url","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST software - wrong token",
@@ -1774,7 +1774,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -1801,7 +1801,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"unknown field in JSON input","status":422,"title":"can't create Software"}`,
+			expectedBody:        `{"title":"can't create Software","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "POST software with optional boolean field set to false",
@@ -1878,7 +1878,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        404,
-			expectedBody:        `{"detail":"Software was not found","status":404,"title":"can't update Software"}`,
+			expectedBody:        `{"title":"can't update Software","detail":"Software was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -2003,7 +2003,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"URL already exists","status":409,"title":"can't update Software"}`,
+			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
 		},
 		{
 			description: "PATCH software, change active",
@@ -2089,7 +2089,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"URL already exists","status":409,"title":"can't update Software"}`,
+			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
 		},
 		{
 			description: "PATCH software using an already taken URL as an alias",
@@ -2102,7 +2102,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"URL already exists","status":409,"title":"can't update Software"}`,
+			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
 		},
 		{
 			description: "PATCH software - wrong token",
@@ -2113,7 +2113,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -2141,7 +2141,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"unknown field in JSON input","status":422,"title":"can't update Software"}`,
+			expectedBody:        `{"title":"can't update Software","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "PATCH software with validation errors",
@@ -2180,7 +2180,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"invalid format: url is invalid","status":422,"title":"can't update Software","validationErrors":[{"field":"url","rule":"url","value":""}]}`,
+			expectedBody:        `{"title":"can't update Software","detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"url","value":""}]}`,
 		},
 		{
 			description: "PATCH software with empty body",
@@ -2216,7 +2216,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        404,
-			expectedBody:        `{"detail":"Software was not found","status":404,"title":"can't delete Software"}`,
+			expectedBody:        `{"title":"can't delete Software","detail":"Software was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -2227,7 +2227,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -2377,7 +2377,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -2405,7 +2405,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"unknown field in JSON input","status":422,"title":"can't create Log"}`,
+			expectedBody:        `{"title":"can't create Log","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "POST log with validation errors",
@@ -2587,7 +2587,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -2615,7 +2615,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"unknown field in JSON input","status":422,"title":"can't create Webhook"}`,
+			expectedBody:        `{"title":"can't create Webhook","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "POST webhook with validation errors",
@@ -2867,7 +2867,7 @@ func TestLogsEndpoints(t *testing.T) {
 			description:         "Non-existent log",
 			query:               "GET /v1/logs/eea19c82-0449-11ed-bd84-d8bbc146d165",
 			expectedCode:        404,
-			expectedBody:        `{"detail":"Log was not found","status":404,"title":"can't get Log"}`,
+			expectedBody:        `{"title":"can't get Log","detail":"Log was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		// POST /logs
@@ -2909,7 +2909,7 @@ func TestLogsEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"unknown field in JSON input","status":422,"title":"can't create Log"}`,
+			expectedBody:        `{"title":"can't create Log","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "POST log - wrong token",
@@ -2920,7 +2920,7 @@ func TestLogsEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -2948,7 +2948,7 @@ func TestLogsEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"unknown field in JSON input","status":422,"title":"can't create Log"}`,
+			expectedBody:        `{"title":"can't create Log","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "POST log with validation errors",
@@ -3018,7 +3018,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 			description:  "Non-existent webhook",
 			query:        "GET /v1/webhooks/eea19c82-0449-11ed-bd84-d8bbc146d165",
 			expectedCode: 404,
-			expectedBody: `{"detail":"Webhook was not found","status":404,"title":"can't get Webhook"}`,
+			expectedBody: `{"title":"can't get Webhook","detail":"Webhook was not found","status":404}`,
 
 			expectedContentType: "application/problem+json",
 		},
@@ -3055,7 +3055,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -3083,7 +3083,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"detail":"unknown field in JSON input","status":422,"title":"can't update Webhook"}`,
+			expectedBody:        `{"title":"can't update Webhook","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "PATCH webhook with validation errors",
@@ -3148,7 +3148,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 			// This error is different from because it's returned directly from Fiber's
 			// route constraints, so we don't need to hit the database to find the resource
 			// because we already know that's not a valid webhook id looking at its format.
-			expectedBody:        `{"detail":"Cannot DELETE /v1/webhooks/NO_SUCH_WEBHOOK","status":404,"title":"Not Found"}`,
+			expectedBody:        `{"title":"Not Found","detail":"Cannot DELETE /v1/webhooks/NO_SUCH_WEBHOOK","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -3159,7 +3159,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        401,
-			expectedBody:        `{"detail":"","status":401,"title":"token authentication failed"}`,
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
