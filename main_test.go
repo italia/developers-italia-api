@@ -17,8 +17,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 
-	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const UUID_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
@@ -35,9 +35,9 @@ type TestCase struct {
 	description string
 
 	// Test input
-	query    string
-	body     string
-	headers  map[string][]string
+	query   string
+	body    string
+	headers map[string][]string
 
 	// Expected output
 	expectedCode        int
@@ -552,8 +552,8 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST publisher with duplicate alternativeId",
-			query: "POST /v1/publishers",
-			body:  `{"alternativeId": "alternative-id-12345", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-pass@example.com"}`,
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId": "alternative-id-12345", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-pass@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -564,8 +564,8 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST publisher with alternativeId matching an existing id",
-			query: "POST /v1/publishers",
-			body:  `{"alternativeId": "2ded32eb-c45e-4167-9166-a44e18b8adde", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}]}`,
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId": "2ded32eb-c45e-4167-9166-a44e18b8adde", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -576,8 +576,8 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST publisher with empty alternativeId",
-			query: "POST /v1/publishers",
-			body:  `{"alternativeId": "", "description":"new description", "codeHosting": [{"url" : "https://gitlab.example.com/repo"}]}`,
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId": "", "description":"new description", "codeHosting": [{"url" : "https://gitlab.example.com/repo"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -616,7 +616,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers with duplicate URL (when normalized)",
 			query:       "POST /v1/publishers",
-			body: `{"codeHosting": [{"url" : "https://1-a.exAMple.org/code/repo"}], "description":"new description"}`,
+			body:        `{"codeHosting": [{"url" : "https://1-a.exAMple.org/code/repo"}], "description":"new description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -640,9 +640,9 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description:    "POST new publisher with an existing email (not normalized)",
-			query:          "POST /v1/publishers",
-			body:     `{"codeHosting": [{"url" : "https://new-url.example.com"}], "email":"FoobaR@1.example.org", "description": "new publisher description"}`,
+			description: "POST new publisher with an existing email (not normalized)",
+			query:       "POST /v1/publishers",
+			body:        `{"codeHosting": [{"url" : "https://new-url.example.com"}], "email":"FoobaR@1.example.org", "description": "new publisher description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -654,9 +654,9 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description:    "POST new publisher with no email",
-			query:          "POST /v1/publishers",
-			body: `{"codeHosting": [{"url" : "https://new-url.example.com"}], "description": "new publisher description"}`,
+			description: "POST new publisher with no email",
+			query:       "POST /v1/publishers",
+			body:        `{"codeHosting": [{"url" : "https://new-url.example.com"}], "description": "new publisher description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -671,9 +671,9 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description:    "POST new publisher with empty email",
-			query:          "POST /v1/publishers",
-			body: `{"email": "", "codeHosting": [{"url" : "https://new-url.example.com"}], "description": "new publisher description"}`,
+			description: "POST new publisher with empty email",
+			query:       "POST /v1/publishers",
+			body:        `{"email": "", "codeHosting": [{"url" : "https://new-url.example.com"}], "description": "new publisher description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -683,8 +683,8 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: email is not a valid email","status":422,"validationErrors":[{"field":"email","rule":"email","value":""}]}`,
 		},
 		{
-			query:    "POST /v1/publishers - Description already exist",
-			body:     `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "description": "Publisher description 1"}`,
+			query: "POST /v1/publishers - Description already exist",
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "description": "Publisher description 1"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -719,8 +719,8 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST publisher with duplicate alternativeId",
-			query: "POST /v1/publishers",
-			body:  `{"alternativeId": "alternative-id-12345", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}]}`,
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId": "alternative-id-12345", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -859,8 +859,8 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "PATCH a publisher",
-			query: "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
-			body:  `{"description": "new PATCHed description", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`,
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "new PATCHed description", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -935,12 +935,12 @@ func TestPublishersEndpoints(t *testing.T) {
 
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody: `{"title":"can't update Publisher","detail":"invalid format: codeHosting does not meet its size limits (too few items)","status":422,"validationErrors":[{"field":"codeHosting","rule":"gt","value":""}]}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"invalid format: codeHosting does not meet its size limits (too few items)","status":422,"validationErrors":[{"field":"codeHosting","rule":"gt","value":""}]}`,
 		},
 		{
 			description: "PATCH a publisher via alternativeId",
-			query: "PATCH /v1/publishers/alternative-id-12345",
-			body:  `{"description": "new PATCHed description via alternativeId", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`,
+			query:       "PATCH /v1/publishers/alternative-id-12345",
+			body:        `{"description": "new PATCHed description via alternativeId", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -970,8 +970,8 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "PATCH a publisher with alternativeId matching an existing id",
-			query: "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
-			body:  `{"alternativeId": "47807e0c-0613-4aea-9917-5455cc6eddad"}`,
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"alternativeId": "47807e0c-0613-4aea-9917-5455cc6eddad"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1010,14 +1010,14 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "PATCH publishers with JSON with extra fields",
 			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
-			body: `{"description": "new description", "EXTRA_FIELD": "extra field not in schema"}`,
+			body:        `{"description": "new description", "EXTRA_FIELD": "extra field not in schema"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody: `{"title":"can't update Publisher","detail":"unknown field in JSON input","status":422}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "PATCH publisher with validation errors",
@@ -1029,7 +1029,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody: `{"title":"can't update Publisher","detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"url","value":"INVALID_URL"}]}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"url","value":"INVALID_URL"}]}`,
 		},
 		{
 			description: "PATCH publishers with empty body",
@@ -1041,7 +1041,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        400,
 			expectedContentType: "application/problem+json",
-			expectedBody: `{"title":"can't update Publisher","detail":"invalid or malformed JSON","status":400}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"invalid or malformed JSON","status":400}`,
 		},
 		// TODO: enforce this?
 		// {
@@ -1077,7 +1077,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			query:    "DELETE /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			query: "DELETE /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1088,7 +1088,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "DELETE publisher via alternativeId",
-			query: "DELETE /v1/publishers/alternative-id-12345",
+			query:       "DELETE /v1/publishers/alternative-id-12345",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1102,7 +1102,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 		// GET /publishers/:id/webhooks
 		{
-			query:    "GET /v1/publishers/47807e0c-0613-4aea-9917-5455cc6eddad/webhooks",
+			query: "GET /v1/publishers/47807e0c-0613-4aea-9917-5455cc6eddad/webhooks",
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1192,8 +1192,8 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			query:    "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
-			body:     `{"url": "https://new.example.org", "secret": "xyz"}`,
+			query: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
+			body:  `{"url": "https://new.example.org", "secret": "xyz"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1250,7 +1250,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks with JSON with extra fields",
 			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
-			body: `{"url": "https://new.example.org", "EXTRA_FIELD": "extra field not in schema"}`,
+			body:        `{"url": "https://new.example.org", "EXTRA_FIELD": "extra field not in schema"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1794,7 +1794,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "POST /v1/software with JSON with extra fields",
 			query:       "POST /v1/software",
-			body: `{"publiccodeYml": "-", "EXTRA_FIELD": "extra field not in schema"}`,
+			body:        `{"publiccodeYml": "-", "EXTRA_FIELD": "extra field not in schema"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1883,8 +1883,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "PATCH a software resource",
-			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": ["https://software.example.com", "https://software-old.example.org"]}`,
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": ["https://software.example.com", "https://software-old.example.org"]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1930,7 +1930,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
-			expectedBody: "",
+			expectedBody:        "",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, true, response["active"])
 				assert.Equal(t, "https://software-new.example.org", response["url"])
@@ -2209,8 +2209,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 		// DELETE /software/:id
 		{
-			description:         "Delete non-existent software",
-			query:               "DELETE /v1/software/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			description: "Delete non-existent software",
+			query:       "DELETE /v1/software/eea19c82-0449-11ed-bd84-d8bbc146d165",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2231,7 +2231,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			query:    "DELETE /v1/software/11e101c4-f989-4cc4-a665-63f9f34e83f6",
+			query: "DELETE /v1/software/11e101c4-f989-4cc4-a665-63f9f34e83f6",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2244,7 +2244,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 		// GET /software/:id/logs
 		{
-			query:    "GET /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			query: "GET /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2342,8 +2342,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
-			query:    "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
-			body:     `{"message": "New software log from test suite"}`,
+			query: "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			body:  `{"message": "New software log from test suite"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2398,7 +2398,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs with JSON with extra fields",
 			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
-			body: `{"message": "new log", "EXTRA_FIELD": "extra field not in schema"}`,
+			body:        `{"message": "new log", "EXTRA_FIELD": "extra field not in schema"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2460,7 +2460,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 		// GET /software/:id/webhooks
 		{
-			query:    "GET /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			query: "GET /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2550,8 +2550,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
-			query:    "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
-			body:     `{"url": "https://new.example.org", "secret": "xyz"}`,
+			query: "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			body:  `{"url": "https://new.example.org", "secret": "xyz"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2608,7 +2608,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 		{
 			description: "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks with JSON with extra fields",
 			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
-			body: `{"url": "https://new.example.org", "EXTRA_FIELD": "extra field not in schema"}`,
+			body:        `{"url": "https://new.example.org", "EXTRA_FIELD": "extra field not in schema"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2941,7 +2941,7 @@ func TestLogsEndpoints(t *testing.T) {
 		{
 			description: "POST /v1/logs with JSON with extra fields",
 			query:       "POST /v1/logs",
-			body: `{"message": "new log", "EXTRA_FIELD": "extra field not in schema"}`,
+			body:        `{"message": "new log", "EXTRA_FIELD": "extra field not in schema"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -3025,8 +3025,8 @@ func TestWebhooksEndpoints(t *testing.T) {
 
 		// PATCH /webhooks/:id
 		{
-			query:    "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
-			body:     `{"url": "https://new.example.org/receiver"}`,
+			query: "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			body:  `{"url": "https://new.example.org/receiver"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -3076,7 +3076,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 		{
 			description: "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7 with JSON with extra fields",
 			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
-			body: `{"url": "https://new.example.org/receiver", "EXTRA_FIELD": "extra field not in schema"}`,
+			body:        `{"url": "https://new.example.org/receiver", "EXTRA_FIELD": "extra field not in schema"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -3138,13 +3138,13 @@ func TestWebhooksEndpoints(t *testing.T) {
 
 		// DELETE /webhooks/:id
 		{
-			description:         "Delete non-existent webhook",
-			query:               "DELETE /v1/webhooks/NO_SUCH_WEBHOOK",
+			description: "Delete non-existent webhook",
+			query:       "DELETE /v1/webhooks/NO_SUCH_WEBHOOK",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
-			expectedCode:        404,
+			expectedCode: 404,
 			// This error is different from because it's returned directly from Fiber's
 			// route constraints, so we don't need to hit the database to find the resource
 			// because we already know that's not a valid webhook id looking at its format.
@@ -3163,7 +3163,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			query:    "DELETE /v1/webhooks/24bc1b5d-fe81-47be-9d55-910f820bdd04",
+			query: "DELETE /v1/webhooks/24bc1b5d-fe81-47be-9d55-910f820bdd04",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
