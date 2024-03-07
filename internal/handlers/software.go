@@ -182,7 +182,7 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 			return common.Error(fiber.StatusNotFound, errMsg, "Software was not found")
 		}
 
-		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
 	}
 
 	if err := common.ValidateRequestEntity(ctx, &softwareReq, errMsg); err != nil {
