@@ -28,11 +28,11 @@ info:
 servers:
   - url: 'https://api.developers.italia.it/v1'
     description: The production server
+  - url: 'https://api-staging.developers.italia.it/v1'
+    description: The staging server
 tags:
   - name: software
     description: Operations on software
-  - name: bundles
-    description: Operations on bundles
   - name: logs
     description: Operations on logs
   - name: publishers
@@ -576,144 +576,6 @@ paths:
           $ref: '#/components/callbacks/ResourceUpdate'
         delete:
           $ref: '#/components/callbacks/ResourceDelete'
-  /bundles:
-    get:
-      summary: List all Bundles
-      description: List all Bundles
-      tags:
-        - bundles
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: false
-                properties:
-                  data:
-                    type: array
-                    minItems: 0
-                    maxItems: 100
-                    items:
-                      $ref: '#/components/schemas/Bundle'
-                  links:
-                    $ref: '#/components/schemas/Links'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      operationId: list-bundles
-    post:
-      summary: Create a Bundle
-      description: Create a Bundle
-      tags:
-        - bundles
-      security:
-        - bearerAuth: []
-      operationId: create-bundles
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Bundle'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Bundle'
-            examples: {}
-  '/bundle/{bundleId}':
-    parameters:
-      - schema:
-          type: string
-          maxLength: 36
-          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-        name: bundleId
-        in: path
-        required: true
-    get:
-      summary: Get a Bundle
-      description: Get a Bundle by its id
-      tags:
-        - bundles
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Bundle'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      operationId: show-bundle-bundleId
-    patch:
-      summary: Update a Bundle
-      description: Update a Bundle by its id
-      tags:
-        - bundles
-      security:
-        - bearerAuth: []
-      operationId: update-bundle-bundleId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Software'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-      requestBody:
-        required: true
-        content:
-          application/merge-patch+json:
-            schema:
-              $ref: '#/components/schemas/Bundle'
-    delete:
-      summary: Delete a Bundle
-      description: Delete a Bundle by its id
-      tags:
-        - bundles
-      security:
-        - bearerAuth: []
-      operationId: remove-bundle-bundleId
-      responses:
-        '204':
-          $ref: '#/components/responses/NoContent'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
   /logs:
     get:
       summary: List all Logs
@@ -867,6 +729,20 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T09:56:23Z'
+          in: query
+          name: from
+          description: Only publishers created after this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            format: date-time
+            example: '2022-06-07T14:56:23Z'
+          in: query
+          name: to
+          description: Only publishers created before this time (RFC 3339 datetime)
     post:
       summary: Create a new Publisher
       description: Create a new Publisher
@@ -910,7 +786,7 @@ paths:
         required: true
     get:
       summary: Get a Publisher
-      description: Get a Publisher by its id
+      description: Get a Publisher by its id or alternativeId
       tags:
         - publishers
       responses:
@@ -927,7 +803,7 @@ paths:
       operationId: show-publisher-publisherId
     patch:
       summary: Update a Publisher
-      description: Update a Publisher by its id. Only the fields that are provided will be updated, codeHosting field will be overwritten entirely.
+      description: Update a Publisher by its id or alternativeId
       tags:
         - publishers
       security:
@@ -958,7 +834,7 @@ paths:
               $ref: '#/components/schemas/Publisher'
     delete:
       summary: Delete a Publisher
-      description: Delete a Publisher by its id
+      description: Delete a Publisher by its id or alternativeId
       tags:
         - publishers
       security:
@@ -1531,8 +1407,13 @@ components:
         alternativeId:
           type: string
           description: |
-            Optional alternative custom id for this Publisher. This is useful for example if this
-            Publisher has another id or code in a different database.
+            Optional alternative user-provided identifier for this Publisher.
+
+            If present, you can use it in place of the Publisher `id` as path query
+            argument.
+
+            This is useful for example if this Publisher has another id or code in a
+            different database.
           maxLength: 255
           example: 'ID-1234'
           pattern: '.*'
@@ -1572,21 +1453,18 @@ components:
           type: string
           maxLength: 255
           pattern: '.*'
+          description: >
+            The resource this log is about (fe. a particular Publisher / Software).
+            It might be absent if the log is not about a specific resource or if
+            the resource doesn't exist yet, like in case of the error log caused by
+            failure to create it.
+          example: /software/7589be36-f046-45c6-9223-b7de9dbf06cd
           readOnly: true
       required:
         - id
         - createdAt
         - updatedAt
         - message
-    Bundle:
-      title: Bundle
-      type: object
-      additionalProperties: false
-      properties:
-        id:
-          type: string
-          maxLength: 36
-          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
     Links:
       type: object
       additionalProperties: false

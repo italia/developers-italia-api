@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"sort"
 
-	"github.com/italia/developers-italia-api/internal/database"
+	"golang.org/x/exp/slices"
 
 	"github.com/italia/developers-italia-api/internal/handlers/general"
 
@@ -42,7 +43,16 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 
 	stmt := p.db.Preload("CodeHosting")
 
-	if all := ctx.Query("all", ""); all == "" {
+	stmt, err := general.Clauses(ctx, stmt, "")
+	if err != nil {
+		return common.Error(
+			fiber.StatusUnprocessableEntity,
+			"can't get Publishers",
+			err.Error(),
+		)
+	}
+
+	if all := ctx.QueryBool("all", false); !all {
 		stmt = stmt.Scopes(models.Active)
 	}
 
@@ -71,8 +81,9 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 // GetPublisher gets the publisher with the given ID and returns any error encountered.
 func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 	publisher := models.Publisher{}
+	id := ctx.Params("id")
 
-	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
+	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ? or alternative_id = ?", id, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't get Publisher", "Publisher was not found")
 		}
@@ -94,6 +105,23 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	err := common.ValidateRequestEntity(ctx, request, "can't create Publisher")
 	if err != nil {
 		return err //nolint:wrapcheck
+	}
+
+	if request.AlternativeID != nil {
+		//nolint:godox // postpone the fix
+		// FIXME: Possible TOCTTOU race here
+		result := p.db.Limit(1).Find(&models.Publisher{ID: *request.AlternativeID})
+
+		if result.Error != nil {
+			return common.Error(fiber.StatusInternalServerError, "can't create Publisher", "db error")
+		}
+
+		if result.RowsAffected != 0 {
+			return common.Error(fiber.StatusConflict,
+				"can't create Publisher",
+				fmt.Sprintf("Publisher with id '%s' already exists", *request.AlternativeID),
+			)
+		}
 	}
 
 	normalizedEmail := common.NormalizeEmail(request.Email)
@@ -119,15 +147,15 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	if err := p.db.Create(&publisher).Error; err != nil {
-		switch database.WrapErrors(err) { //nolint:errorlint
-		case common.ErrDBRecordNotFound:
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
 			return common.Error(fiber.StatusNotFound,
 				"can't create Publisher",
 				"Publisher was not found")
-		case common.ErrDBUniqueConstraint:
+		case errors.Is(err, gorm.ErrDuplicatedKey):
 			return common.Error(fiber.StatusConflict,
 				"can't create Publisher",
-				"Publisher with provided description, email, alternativeId or CodeHosting URL already exists")
+				"description, alternativeId or codeHosting URL already exists")
 		default:
 			return common.Error(fiber.StatusInternalServerError,
 				"can't create Publisher",
@@ -139,74 +167,107 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 }
 
 // PatchPublisher updates the publisher with the given ID. CodeHosting URLs will be overwritten from the request.
-func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error {
-	requests := new(common.PublisherPatch)
-
-	if err := common.ValidateRequestEntity(ctx, requests, "can't update Publisher"); err != nil {
-		return err //nolint:wrapcheck
-	}
-
+func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funlen // mostly error handling ifs
+	publisherReq := new(common.PublisherPatch)
 	publisher := models.Publisher{}
+	id := ctx.Params("id")
 
-	if err := p.db.Transaction(func(gormTrx *gorm.DB) error {
-		return p.updatePublisherTrx(gormTrx, publisher, ctx, requests)
-	}); err != nil {
+	// Preload will load all the associated CodeHosting. We'll manually handle that later.
+	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ? or alternative_id = ?", id, id).
+		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
+		}
+
+		return common.Error(
+			fiber.StatusInternalServerError,
+			"can't update Publisher",
+			fiber.ErrInternalServerError.Message,
+		)
+	}
+
+	if err := common.ValidateRequestEntity(ctx, publisherReq, "can't update Publisher"); err != nil {
 		return err //nolint:wrapcheck
 	}
+
+	if publisherReq.AlternativeID != nil {
+		//nolint:godox // postpone the fix
+		// FIXME: Possible TOCTTOU race here
+		result := p.db.Limit(1).Find(&models.Publisher{ID: *publisherReq.AlternativeID})
+
+		if result.Error != nil {
+			return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "db error")
+		}
+
+		if result.RowsAffected != 0 {
+			return common.Error(fiber.StatusConflict,
+				"can't update Publisher",
+				fmt.Sprintf("Publisher with id '%s' already exists", *publisherReq.AlternativeID),
+			)
+		}
+	}
+
+	// Slice of CodeHosting URLs that we expect in the database after the PATCH
+	var expectedURLs []string
+
+	// application/merge-patch+json semantics: change CodeHosting only if
+	// the request specifies a "CodeHosting" key.
+	if publisherReq.CodeHosting != nil {
+		for _, ch := range *publisherReq.CodeHosting {
+			expectedURLs = append(expectedURLs, purell.MustNormalizeURLString(ch.URL, normalizeFlags))
+		}
+	} else {
+		for _, ch := range publisher.CodeHosting {
+			expectedURLs = append(expectedURLs, ch.URL)
+		}
+	}
+
+	if err := p.db.Transaction(func(tran *gorm.DB) error {
+		codeHosting, err := syncCodeHosting(tran, publisher, expectedURLs)
+		if err != nil {
+			return err
+		}
+
+		if publisherReq.Description != nil {
+			publisher.Description = *publisherReq.Description
+		}
+		if publisherReq.Email != nil {
+			publisher.Email = common.NormalizeEmail(publisherReq.Email)
+		}
+		if publisherReq.Active != nil {
+			publisher.Active = publisherReq.Active
+		}
+		if publisher.AlternativeID != nil {
+			publisher.AlternativeID = publisherReq.AlternativeID
+		}
+
+		// Set CodeHosting to a zero value, so it's not touched by gorm's Update(),
+		// because we handle the alias manually
+		publisher.CodeHosting = []models.CodeHosting{}
+
+		if err := tran.Updates(&publisher).Error; err != nil {
+			return err
+		}
+
+		publisher.CodeHosting = codeHosting
+
+		return nil
+	}); err != nil {
+		return common.Error(fiber.StatusInternalServerError, "can't update Publisher", err.Error())
+	}
+
+	// Sort the aliases to always have a consistent output
+	sort.Slice(publisher.CodeHosting, func(a int, b int) bool {
+		return publisher.CodeHosting[a].URL < publisher.CodeHosting[b].URL
+	})
 
 	return ctx.JSON(&publisher)
 }
 
-func (p *Publisher) updatePublisherTrx(
-	gormTrx *gorm.DB,
-	publisher models.Publisher,
-	ctx *fiber.Ctx,
-	request *common.PublisherPatch,
-) error {
-	if err := gormTrx.Model(&models.Publisher{}).Preload("CodeHosting").
-		First(&publisher, "id = ?", ctx.Params("id")).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "Not found", "can't update Publisher. Publisher was not found")
-		}
-
-		return common.Error(fiber.StatusInternalServerError,
-			"can't update Publisher",
-			fmt.Errorf("db error: %w", err).Error())
-	}
-
-	if request.Description != "" {
-		publisher.Description = request.Description
-	}
-
-	if request.Email != "" {
-		normalizedEmail := common.NormalizeEmail(&request.Email)
-		publisher.Email = normalizedEmail
-	}
-
-	if request.AlternativeID != "" {
-		publisher.AlternativeID = &request.AlternativeID
-	}
-
-	if request.CodeHosting != nil && len(request.CodeHosting) > 0 {
-		gormTrx.Delete(&publisher.CodeHosting)
-
-		for _, URLAddress := range request.CodeHosting {
-			publisher.CodeHosting = append(publisher.CodeHosting, models.CodeHosting{ID: utils.UUIDv4(), URL: URLAddress.URL})
-		}
-	}
-
-	if err := gormTrx.Updates(&publisher).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError,
-			"can't update Publisher",
-			fmt.Errorf("db error: %w", err).Error())
-	}
-
-	return nil
-}
-
 // DeletePublisher deletes the publisher with the given ID.
 func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
-	result := p.db.Select("CodeHosting").Delete(&models.Publisher{ID: ctx.Params("id")})
+	id := ctx.Params("id")
+	result := p.db.Select("CodeHosting").Where("id = ? or alternative_id = ?", id, id).Delete(&models.Publisher{})
 
 	if result.Error != nil {
 		return common.Error(fiber.StatusInternalServerError, "can't delete Publisher", "db error")
@@ -217,4 +278,60 @@ func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
+// syncCodeHosting synchs the CodeHosting for a `publisher` in the database to reflect the
+// passed slice of `codeHosting` URLs.
+//
+// It returns the slice of CodeHosting in the database.
+func syncCodeHosting( //nolint:cyclop // mostly error handling ifs
+	gormdb *gorm.DB, publisher models.Publisher, codeHosting []string,
+) ([]models.CodeHosting, error) {
+	toRemove := []string{}          // Slice of CodeHosting ids to remove from the database
+	toAdd := []models.CodeHosting{} // Slice of CodeHosting to add to the database
+
+	// Map mirroring the state of CodeHosting for this software in the database,
+	// keyed by url
+	urlMap := map[string]models.CodeHosting{}
+
+	for _, ch := range publisher.CodeHosting {
+		urlMap[ch.URL] = ch
+	}
+
+	for url, ch := range urlMap {
+		if !slices.Contains(codeHosting, url) {
+			toRemove = append(toRemove, ch.ID)
+
+			delete(urlMap, url)
+		}
+	}
+
+	for _, url := range codeHosting {
+		_, exists := urlMap[url]
+		if !exists {
+			ch := models.CodeHosting{ID: utils.UUIDv4(), URL: url, PublisherID: publisher.ID}
+
+			toAdd = append(toAdd, ch)
+			urlMap[url] = ch
+		}
+	}
+
+	if len(toRemove) > 0 {
+		if err := gormdb.Delete(&models.CodeHosting{}, toRemove).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	if len(toAdd) > 0 {
+		if err := gormdb.Create(toAdd).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	retCodeHosting := make([]models.CodeHosting, 0, len(urlMap))
+	for _, ch := range urlMap {
+		retCodeHosting = append(retCodeHosting, ch)
+	}
+
+	return retCodeHosting, nil
 }

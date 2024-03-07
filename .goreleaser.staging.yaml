@@ -1,0 +1,21 @@
+# Goreleases configuration for staging builds, just builds and pushes
+# the Docker image for the main branch.
+#
+# Make sure to check the documentation at https://goreleaser.com
+
+# Don't create a GitHub release
+release:
+  disable: true
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    ldflags:
+     - -s -w
+    goos:
+      - linux
+dockers:
+ -
+   dockerfile: Dockerfile.goreleaser
+   image_templates:
+     - "ghcr.io/italia/developers-italia-api:main"

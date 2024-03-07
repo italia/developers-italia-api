@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -25,20 +26,20 @@ type Log struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// Entity this Log entry is about (fe. Publisher, Software, etc.)
-	EntityID   string `json:"-"`
-	EntityType string `json:"-"`
+	EntityID   *string `json:"-"`
+	EntityType *string `json:"-"`
+	Entity     string  `json:"entity,omitempty" gorm:"->;type:text GENERATED ALWAYS AS (CASE WHEN entity_id IS NULL THEN NULL ELSE ('/' || entity_type || '/' || entity_id) END) STORED;default:(-);"` //nolint:lll
 }
 
 type Publisher struct {
-	ID            string         `json:"id" gorm:"primaryKey"`
-	Email         *string        `json:"email,omitempty"`
-	Description   string         `json:"description" gorm:"uniqueIndex;not null"`
-	CodeHosting   []CodeHosting  `json:"codeHosting" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique"`
-	Active        *bool          `json:"active" gorm:"default:true;not null"`
-	AlternativeID *string        `json:"alternativeId,omitempty" gorm:"uniqueIndex"`
-	CreatedAt     time.Time      `json:"createdAt" gorm:"index"`
-	UpdatedAt     time.Time      `json:"updatedAt"`
-	DeletedAt     gorm.DeletedAt `json:"-" gorm:"index"`
+	ID            string        `json:"id" gorm:"primaryKey"`
+	Email         *string       `json:"email,omitempty"`
+	Description   string        `json:"description" gorm:"uniqueIndex;not null"`
+	CodeHosting   []CodeHosting `json:"codeHosting" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;unique"`
+	Active        *bool         `json:"active" gorm:"default:true;not null"`
+	AlternativeID *string       `json:"alternativeId,omitempty" gorm:"uniqueIndex"`
+	CreatedAt     time.Time     `json:"createdAt" gorm:"index"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
 }
 
 func (Publisher) TableName() string {
@@ -54,13 +55,12 @@ func (CodeHosting) TableName() string {
 }
 
 type CodeHosting struct {
-	ID          string         `json:"-" gorm:"primaryKey"`
-	URL         string         `json:"url" gorm:"not null;uniqueIndex"`
-	Group       *bool          `json:"group" gorm:"default:true;not null"`
-	PublisherID string         `json:"-"`
-	CreatedAt   time.Time      `json:"createdAt" gorm:"index"`
-	UpdatedAt   time.Time      `json:"updatedAt"`
-	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+	ID          string    `json:"-" gorm:"primaryKey"`
+	URL         string    `json:"url" gorm:"not null;uniqueIndex"`
+	Group       *bool     `json:"group" gorm:"default:true;not null"`
+	PublisherID string    `json:"-"`
+	CreatedAt   time.Time `json:"createdAt" gorm:"index"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 type Software struct {
@@ -89,25 +89,30 @@ func (s Software) UUID() string {
 	return s.ID
 }
 
+//nolint:musttag // we are using a custom MarshalJSON method
 type SoftwareURL struct {
 	ID         string    `gorm:"primarykey"`
 	URL        string    `gorm:"uniqueIndex"`
 	SoftwareID string    `gorm:"not null"`
-	CreatedAt  time.Time `json:"createdAt" gorm:"index"`
-	UpdatedAt  time.Time `json:"updatedAt"`
+	CreatedAt  time.Time `gorm:"index"`
+	UpdatedAt  time.Time
 }
 
 func (su SoftwareURL) MarshalJSON() ([]byte, error) {
 	return ([]byte)(fmt.Sprintf(`"%s"`, su.URL)), nil
 }
 
+func (su *SoftwareURL) UnmarshalJSON(data []byte) error {
+	//nolint:wrapcheck // we want to pass along the error here
+	return json.Unmarshal(data, &su.URL)
+}
+
 type Webhook struct {
-	ID        string         `json:"id" gorm:"primaryKey"`
-	URL       string         `json:"url" gorm:"index:idx_webhook_url,unique"`
-	Secret    string         `json:"-"`
-	CreatedAt time.Time      `json:"createdAt" gorm:"index"`
-	UpdatedAt time.Time      `json:"updatedAt"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	ID        string    `json:"id" gorm:"primaryKey"`
+	URL       string    `json:"url" gorm:"index:idx_webhook_url,unique"`
+	Secret    string    `json:"-"`
+	CreatedAt time.Time `json:"createdAt" gorm:"index"`
+	UpdatedAt time.Time `json:"updatedAt"`
 
 	// Entity this Webhook is for (fe. Publisher, Software, etc.)
 	EntityID   string `json:"-" gorm:"index:idx_webhook_url,unique"`

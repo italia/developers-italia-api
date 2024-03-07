@@ -2,22 +2,25 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/caarlos0/env/v6"
 	"gorm.io/gorm"
 
 	"github.com/italia/developers-italia-api/internal/common"
+	"github.com/italia/developers-italia-api/internal/database"
 	"github.com/italia/developers-italia-api/internal/handlers"
+	"github.com/italia/developers-italia-api/internal/jsondecoder"
 	"github.com/italia/developers-italia-api/internal/middleware"
 	"github.com/italia/developers-italia-api/internal/models"
 	"github.com/italia/developers-italia-api/internal/webhooks"
 
+	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cache"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/italia/developers-italia-api/internal/database"
 )
 
 func main() {
@@ -32,9 +35,7 @@ func Setup() *fiber.App {
 		panic(err)
 	}
 
-	db := database.NewDatabase(common.EnvironmentConfig)
-
-	gormDB, err := db.Init(common.EnvironmentConfig.Database)
+	gormDB, err := database.NewDatabase(common.EnvironmentConfig.Database)
 	if err != nil {
 		panic(err)
 	}
@@ -54,6 +55,9 @@ func Setup() *fiber.App {
 
 	app := fiber.New(fiber.Config{
 		ErrorHandler: common.CustomErrorHandler,
+		// Fiber doesn't set DisallowUnknownFields by default
+		// (https://github.com/gofiber/fiber/issues/2601)
+		JSONDecoder: jsondecoder.UnmarshalDisallowUnknownFields,
 	})
 
 	// Automatically recover panics in handlers
@@ -72,9 +76,10 @@ func Setup() *fiber.App {
 
 	app.Use(cache.New(cache.Config{
 		Next: func(ctx *fiber.Ctx) bool {
-			// Don't cache POST, PUT, PATCH or /status
-			return ctx.Method() != fiber.MethodGet || ctx.Route().Path == "/v1/status"
+			// Don't cache /status
+			return ctx.Route().Path == "/v1/status"
 		},
+		Methods:      []string{fiber.MethodGet, fiber.MethodHead},
 		CacheControl: true,
 		Expiration:   10 * time.Second, //nolint:gomnd
 		KeyGenerator: func(ctx *fiber.Ctx) string {
@@ -87,6 +92,10 @@ func Setup() *fiber.App {
 
 		common.EnvironmentConfig.PasetoKey = middleware.NewRandomPasetoKey()
 	}
+
+	prometheus := fiberprometheus.New(os.Args[0])
+	prometheus.RegisterAt(app, "/metrics")
+	app.Use(prometheus.Middleware)
 
 	app.Use(middleware.NewPasetoMiddleware(common.EnvironmentConfig))
 
@@ -127,16 +136,16 @@ func setupHandlers(app *fiber.App, gormDB *gorm.DB) {
 	v1.Delete("/software/:id", softwareHandler.DeleteSoftware)
 
 	v1.Get("/logs", logHandler.GetLogs)
-	v1.Get("/logs/:id", logHandler.GetLog)
+	v1.Get("/logs/:id<guid>", logHandler.GetLog)
 	v1.Post("/logs", logHandler.PostLog)
-	v1.Patch("/logs/:id", logHandler.PatchLog)
-	v1.Delete("/logs/:id", logHandler.DeleteLog)
+	v1.Patch("/logs/:id<guid>", logHandler.PatchLog)
+	v1.Delete("/logs/:id<guid>", logHandler.DeleteLog)
 	v1.Get("/software/:id/logs", logHandler.GetSoftwareLogs)
 	v1.Post("/software/:id/logs", logHandler.PostSoftwareLog)
 
 	v1.Get("/status", statusHandler.GetStatus)
 
-	v1.Get("/webhooks/:id", publisherWebhookHandler.GetWebhook)
-	v1.Patch("/webhooks/:id", publisherWebhookHandler.PatchWebhook)
-	v1.Delete("/webhooks/:id", publisherWebhookHandler.DeleteWebhook)
+	v1.Get("/webhooks/:id<guid>", publisherWebhookHandler.GetWebhook)
+	v1.Patch("/webhooks/:id<guid>", publisherWebhookHandler.PatchWebhook)
+	v1.Delete("/webhooks/:id<guid>", publisherWebhookHandler.DeleteWebhook)
 }

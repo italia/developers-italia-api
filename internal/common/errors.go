@@ -10,18 +10,21 @@ var (
 	ErrAuthentication  = errors.New("token authentication failed")
 	ErrInvalidDateTime = errors.New("invalid date time format (RFC 3339 needed)")
 	ErrKeyLen          = errors.New("PASETO_KEY must be 32 bytes long once base64-decoded")
-
-	ErrDBUniqueConstraint = errors.New("db constraint violation")
-	ErrDBRecordNotFound   = errors.New("record not found")
 )
+
+func InternalServerError(title string) ProblemJSONError {
+	return Error(fiber.StatusInternalServerError, title, fiber.ErrInternalServerError.Message)
+}
 
 func Error(status int, title string, detail string) ProblemJSONError {
 	return ProblemJSONError{Title: title, Detail: detail, Status: status}
 }
 
 func ErrorWithValidationErrors(
-	status int, title string, detail string, validationErrors []ValidationError,
+	status int, title string, validationErrors []ValidationError,
 ) ProblemJSONError {
+	detail := GenerateErrorDetails(validationErrors)
+
 	return ProblemJSONError{Title: title, Detail: detail, Status: status, ValidationErrors: validationErrors}
 }
 
@@ -48,11 +51,7 @@ func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 		}
 	}
 
-	err = ctx.Status(problemJSON.Status).JSON(problemJSON)
+	ctx.Status(problemJSON.Status)
 
-	// Needs to be after the call to JSON(), to override the
-	// automatic Content-Type
-	ctx.Set(fiber.HeaderContentType, "application/problem+json")
-
-	return err
+	return ctx.JSON(problemJSON, "application/problem+json")
 }

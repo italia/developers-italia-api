@@ -74,11 +74,16 @@ linters:
     - interfacer
     - maligned
     - scopelint
+    - structcheck
 
+    # We don't want to limit dependencies
+    - depguard
     # Not terribly useful and ends up in too much boilerplate
     - exhaustruct
     # False positives (https://github.com/daixiang0/gci/issues/54)
     - gci
+    # Seems excessive
+    - tagalign
 
   # Run only fast linters from enabled linters set (first run won't be fast)
   # Default: false

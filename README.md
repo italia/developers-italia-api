@@ -24,25 +24,25 @@
 
 <div align="center">
   <h3>
-    <a href="https://developers-italia-4gfxiabty-dip-trasformazione-digitale.vercel.app/it/api/developers-italia">
+    <a href="https://developers.italia.it/it/api/developers-italia">
       API documentation
     </a>
   </h3>
 </div>
 
 <p align="center">
-  Developers Italia API is the RESTful API of the Free and Open Source software catalog
+  <strong>Developers Italia API</strong> is the RESTful API of the Free and Open Source software catalog
   aimed at Italian Public Administrations.
 </p>
 
-# Requirements
+## Requirements
 
-* Golang 1.18
+* Golang 1.18+
 * [PostgreSQL](https://https://www.postgresql.org/)
 
-# Development
+## Development
 
-The application uses [https://github.com/cosmtrek/air](Air) for live-reloading
+The application uses [Air](https://github.com/cosmtrek/air) for live-reloading
 in the development environment.
 
 To start developing:
@@ -61,17 +61,22 @@ endpoints at `http://localhost:3000/v1/`.
 
 The application will automatically reload when a change is made.
 
-# Configuration
+## Configuration
 
 You can configure the API with environment variables:
 
-* `DATABASE_DSN`: the data source used to connect to the database,
-  fe `host=db user=postgres password=postgres dbname=postgres port=5432`.
+* `DATABASE_DSN`: the URI used to connect to the database,
+  fe `postgres://user:password@host:5432/dbname`.
   Supports PostgreSQL and SQLite.
 
 * `PASETO_KEY` (optional): Base64 encoded 32 bytes key used to check the
-  [PASETO](https://paseto.io/) authentication tokens.
-  If not set the API will run in read only mode.
+  [PASETO](https://paseto.io/) authentication tokens. You can generate it with
+
+  ```console
+  head -c 32 /dev/urandom | base64
+  ```
+
+  If not set, the API will run in read only mode.
 
 * `ENVIRONMENT` (optional): possible values `test`, `development`, `production`.
   Default `production`.
@@ -80,7 +85,7 @@ You can configure the API with environment variables:
   will be ratelimited.
   Default: no limit.
 
-# Contributing
+## Contributing
 
 This project exists also thanks to your contributions! Here is a list of people
 who already contributed to this repository:
@@ -91,8 +96,8 @@ who already contributed to this repository:
   />
 </a>
 
-# License
+## License
 
-Copyright © 2022 - Presidenza del Consiglio dei Ministri
+Copyright © 2022-present Presidenza del Consiglio dei Ministri
 
 The source code is released under the AGPL version 3.

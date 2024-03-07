@@ -88,20 +88,18 @@ func (p *Log) GetLog(ctx *fiber.Ctx) error {
 
 // PostLog creates a new log.
 func (p *Log) PostLog(ctx *fiber.Ctx) error {
+	const errMsg = "can't create Log"
+
 	logReq := new(common.Log)
 
-	if err := ctx.BodyParser(&logReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't create Log", "invalid json")
-	}
-
-	if err := common.ValidateStruct(*logReq); err != nil {
-		return common.ErrorWithValidationErrors(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format", err)
+	if err := common.ValidateRequestEntity(ctx, logReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	log := models.Log{ID: utils.UUIDv4(), Message: logReq.Message}
 
 	if err := p.db.Create(&log).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't create Log", "db error")
+		return common.Error(fiber.StatusInternalServerError, errMsg, "db error")
 	}
 
 	return ctx.JSON(&log)
@@ -109,34 +107,28 @@ func (p *Log) PostLog(ctx *fiber.Ctx) error {
 
 // PatchLog updates the log with the given ID.
 func (p *Log) PatchLog(ctx *fiber.Ctx) error {
+	const errMsg = "can't update Log"
+
 	logReq := new(common.Log)
 
-	if err := ctx.BodyParser(logReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't update Log", "invalid json")
-	}
-
-	if err := common.ValidateStruct(*logReq); err != nil {
-		return common.ErrorWithValidationErrors(fiber.StatusUnprocessableEntity, "can't update Log", "invalid format", err)
+	if err := common.ValidateRequestEntity(ctx, logReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	log := models.Log{}
 
 	if err := p.db.First(&log, "id = ?", ctx.Params("id")).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "can't update Log", "Log was not found")
+			return common.Error(fiber.StatusNotFound, errMsg, "Log was not found")
 		}
 
-		return common.Error(
-			fiber.StatusInternalServerError,
-			"can't update Log",
-			fiber.ErrInternalServerError.Message,
-		)
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
 	}
 
 	log.Message = logReq.Message
 
 	if err := p.db.Updates(&log).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't update Log", "db error")
+		return common.Error(fiber.StatusInternalServerError, errMsg, "db error")
 	}
 
 	return ctx.JSON(&log)
@@ -206,6 +198,8 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 
 // PostSoftwareLog creates a new log associated to a Software with the given ID and returns any error encountered.
 func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error {
+	const errMsg = "can't create Log"
+
 	logReq := new(common.Log)
 
 	software := models.Software{}
@@ -221,23 +215,21 @@ func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error {
 		)
 	}
 
-	if err := ctx.BodyParser(&logReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't create Log", "invalid json")
+	if err := common.ValidateRequestEntity(ctx, logReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
-	if err := common.ValidateStruct(*logReq); err != nil {
-		return common.ErrorWithValidationErrors(fiber.StatusUnprocessableEntity, "can't create Log", "invalid format", err)
-	}
+	table := models.Software{}.TableName()
 
 	log := models.Log{
 		ID:         utils.UUIDv4(),
 		Message:    logReq.Message,
-		EntityID:   software.ID,
-		EntityType: models.Software{}.TableName(),
+		EntityID:   &software.ID,
+		EntityType: &table,
 	}
 
 	if err := p.db.Create(&log).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't create Log", "db error")
+		return common.Error(fiber.StatusInternalServerError, errMsg, "db error")
 	}
 
 	return ctx.JSON(&log)

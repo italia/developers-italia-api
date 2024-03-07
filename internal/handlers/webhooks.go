@@ -118,18 +118,14 @@ func (p *Webhook[T]) GetSingleResourceWebhooks(ctx *fiber.Ctx) error {
 // PostSingleResourceWebhook creates a new webhook associated to resources
 // (fe. Software, Publishers) and returns any error encountered.
 func (p *Webhook[T]) PostResourceWebhook(ctx *fiber.Ctx) error {
+	const errMsg = "can't create Webhook"
+
 	webhookReq := new(common.Webhook)
 
 	var resource T
 
-	if err := ctx.BodyParser(&webhookReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't create Webhook", "invalid json")
-	}
-
-	if err := common.ValidateStruct(*webhookReq); err != nil {
-		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't create Webhook", "invalid format", err,
-		)
+	if err := common.ValidateRequestEntity(ctx, webhookReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	webhook := models.Webhook{
@@ -141,7 +137,7 @@ func (p *Webhook[T]) PostResourceWebhook(ctx *fiber.Ctx) error {
 	}
 
 	if err := p.db.Create(&webhook).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't create Webhook", "db error")
+		return common.Error(fiber.StatusInternalServerError, errMsg, "db error")
 	}
 
 	return ctx.JSON(&webhook)
@@ -150,6 +146,8 @@ func (p *Webhook[T]) PostResourceWebhook(ctx *fiber.Ctx) error {
 // PostResourceWebhook creates a new webhook associated to a resource with the given ID
 // (fe. a specific Software or Publisher) and returns any error encountered.
 func (p *Webhook[T]) PostSingleResourceWebhook(ctx *fiber.Ctx) error {
+	const errMsg = "can't create Webhook"
+
 	webhookReq := new(common.Webhook)
 
 	var resource T
@@ -166,14 +164,8 @@ func (p *Webhook[T]) PostSingleResourceWebhook(ctx *fiber.Ctx) error {
 		)
 	}
 
-	if err := ctx.BodyParser(&webhookReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't create Webhook", "invalid json")
-	}
-
-	if err := common.ValidateStruct(*webhookReq); err != nil {
-		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't create Webhook", "invalid format", err,
-		)
+	if err := common.ValidateRequestEntity(ctx, webhookReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	webhook := models.Webhook{
@@ -185,7 +177,7 @@ func (p *Webhook[T]) PostSingleResourceWebhook(ctx *fiber.Ctx) error {
 	}
 
 	if err := p.db.Create(&webhook).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't create Webhook", "db error")
+		return common.Error(fiber.StatusInternalServerError, errMsg, "db error")
 	}
 
 	return ctx.JSON(&webhook)
@@ -193,28 +185,24 @@ func (p *Webhook[T]) PostSingleResourceWebhook(ctx *fiber.Ctx) error {
 
 // PatchWebhook updates the webhook with the given ID.
 func (p *Webhook[T]) PatchWebhook(ctx *fiber.Ctx) error {
+	const errMsg = "can't update Webhook"
+
 	webhookReq := new(common.Webhook)
 
-	if err := ctx.BodyParser(webhookReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't update Webhook", "invalid json")
-	}
-
-	if err := common.ValidateStruct(*webhookReq); err != nil {
-		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't update Webhook", "invalid format", err,
-		)
+	if err := common.ValidateRequestEntity(ctx, webhookReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	webhook := models.Webhook{}
 
 	if err := p.db.First(&webhook, "id = ?", ctx.Params("id")).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "can't update Webhook", "Webhook was not found")
+			return common.Error(fiber.StatusNotFound, errMsg, "Webhook was not found")
 		}
 
 		return common.Error(
 			fiber.StatusInternalServerError,
-			"can't update Webhook",
+			errMsg,
 			fiber.ErrInternalServerError.Message,
 		)
 	}
@@ -222,7 +210,7 @@ func (p *Webhook[T]) PatchWebhook(ctx *fiber.Ctx) error {
 	webhook.URL = webhookReq.URL
 
 	if err := p.db.Updates(&webhook).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't update Webhook", "db error")
+		return common.Error(fiber.StatusInternalServerError, errMsg, "db error")
 	}
 
 	return ctx.JSON(&webhook)

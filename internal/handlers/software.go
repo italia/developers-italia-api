@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"sort"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/italia/developers-italia-api/internal/handlers/general"
 	"github.com/italia/developers-italia-api/internal/models"
 	"gorm.io/gorm"
+
+	jsonpatch "github.com/evanphx/json-patch/v5"
 )
 
 type SoftwareInterface interface {
@@ -25,6 +28,11 @@ type SoftwareInterface interface {
 type Software struct {
 	db *gorm.DB
 }
+
+var (
+	errLoadNotFound = errors.New("Software was not found")
+	errLoad         = errors.New("error while loading Software")
+)
 
 func NewSoftware(db *gorm.DB) *Software {
 	return &Software{db: db}
@@ -63,7 +71,7 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mos
 
 		stmt.Where("id = ?", softwareURL.SoftwareID)
 	} else {
-		if all := ctx.Query("all", ""); all == "" {
+		if all := ctx.QueryBool("all", false); !all {
 			stmt = stmt.Scopes(models.Active)
 		}
 	}
@@ -112,36 +120,16 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mos
 
 // GetSoftware gets the software with the given ID and returns any error encountered.
 func (p *Software) GetSoftware(ctx *fiber.Ctx) error {
+	const errMsg = "can't get Software"
+
 	software := models.Software{}
 
-	if err := p.db.First(&software, "id = ?", ctx.Params("id")).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "can't get Software", "Software was not found")
+	if err := loadSoftware(p.db, &software, ctx.Params("id")); err != nil {
+		if errors.Is(err, errLoadNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Software was not found")
 		}
 
-		return common.Error(
-			fiber.StatusInternalServerError,
-			"can't get Software",
-			fiber.ErrInternalServerError.Message,
-		)
-	}
-
-	if err := p.db.
-		Where("software_id = ? AND id <> ?", software.ID, software.SoftwareURLID).Find(&software.Aliases).
-		Error; err != nil {
-		return common.Error(
-			fiber.StatusInternalServerError,
-			"can't get Software",
-			fiber.ErrInternalServerError.Message,
-		)
-	}
-
-	if err := p.db.Where("id = ?", software.SoftwareURLID).First(&software.URL).Error; err != nil {
-		return common.Error(
-			fiber.StatusInternalServerError,
-			"can't get Software",
-			fiber.ErrInternalServerError.Message,
-		)
+		return common.InternalServerError(errMsg)
 	}
 
 	return ctx.JSON(&software)
@@ -149,16 +137,12 @@ func (p *Software) GetSoftware(ctx *fiber.Ctx) error {
 
 // PostSoftware creates a new software.
 func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
+	const errMsg = "can't create Software"
+
 	softwareReq := new(common.SoftwarePost)
 
-	if err := ctx.BodyParser(&softwareReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't create Software", "invalid json")
-	}
-
-	if err := common.ValidateStruct(*softwareReq); err != nil {
-		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't create Software", "invalid format", err,
-		)
+	if err := common.ValidateRequestEntity(ctx, softwareReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
 	aliases := []models.SoftwareURL{}
@@ -180,98 +164,100 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 	}
 
 	if err := p.db.Create(&software).Error; err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't create Software", err.Error())
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 	}
 
 	return ctx.JSON(&software)
 }
 
 // PatchSoftware updates the software with the given ID.
-func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mostly error handling ifs
-	softwareReq := new(common.SoftwarePatch)
+func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
+	const errMsg = "can't update Software"
+
+	softwareReq := common.SoftwarePatch{}
 	software := models.Software{}
 
-	// Preload will load all the associated aliases, which include
-	// also the canonical url. We'll manually handle that later.
-	if err := p.db.Preload("Aliases").First(&software, "id = ?", ctx.Params("id")).
-		Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "can't update Software", "Software was not found")
+	if err := loadSoftware(p.db, &software, ctx.Params("id")); err != nil {
+		if errors.Is(err, errLoadNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Software was not found")
 		}
 
-		return common.Error(
-			fiber.StatusInternalServerError,
-			"can't update Software",
-			fiber.ErrInternalServerError.Message,
-		)
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
 	}
 
-	if err := ctx.BodyParser(softwareReq); err != nil {
-		return common.Error(fiber.StatusBadRequest, "can't update Software", "invalid json")
+	if err := common.ValidateRequestEntity(ctx, &softwareReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
 	}
 
-	if err := common.ValidateStruct(*softwareReq); err != nil {
-		return common.ErrorWithValidationErrors(
-			fiber.StatusUnprocessableEntity, "can't update Software", "invalid format", err,
-		)
+	softwareJSON, err := json.Marshal(&software)
+	if err != nil {
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 	}
 
-	// Slice of urls that we expect in the database after the PATCH (url + aliases)
-	var expectedURLs []string
-
-	// application/merge-patch+json semantics: change url only if
-	// the request specifies an "url" key.
-	url := software.URL.URL
-	if softwareReq.URL != "" {
-		url = softwareReq.URL
+	updatedJSON, err := jsonpatch.MergePatch(softwareJSON, ctx.Body())
+	if err != nil {
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 	}
 
-	// application/merge-patch+json semantics: change aliases only if
-	// the request specifies an "aliases" key.
-	if softwareReq.Aliases != nil {
-		expectedURLs = *softwareReq.Aliases
-	} else {
-		for _, alias := range software.Aliases {
-			expectedURLs = append(expectedURLs, alias.URL)
-		}
+	var updatedSoftware models.Software
+
+	err = json.Unmarshal(updatedJSON, &updatedSoftware)
+	if err != nil {
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 	}
 
-	expectedURLs = append(expectedURLs, url)
+	// Slice of aliases that we expect to be in the database after the PATCH
+	expectedAliases := make([]string, 0, len(updatedSoftware.Aliases))
+	for _, alias := range updatedSoftware.Aliases {
+		expectedAliases = append(expectedAliases, alias.URL)
+	}
 
 	if err := p.db.Transaction(func(tran *gorm.DB) error {
-		updatedURL, aliases, err := syncAliases(tran, software, url, expectedURLs)
+		//nolint:gocritic // it's fine, we want to another slice
+		currentURLs := append(software.Aliases, software.URL)
+
+		updatedURL, aliases, err := syncAliases(
+			tran,
+			software.ID,
+			currentURLs,
+			updatedSoftware.URL.URL,
+			expectedAliases,
+		)
 		if err != nil {
 			return err
 		}
 
-		software.PubliccodeYml = softwareReq.PubliccodeYml
-		software.Active = softwareReq.Active
-
 		// Manually set the canonical URL via the foreign key because of a limitation in gorm
-		software.SoftwareURLID = updatedURL.ID
-		software.URL = *updatedURL
+		updatedSoftware.SoftwareURLID = updatedURL.ID
+		updatedSoftware.URL = *updatedURL
 
 		// Set Aliases to a zero value, so it's not touched by gorm's Update(),
 		// because we handle the alias manually
-		software.Aliases = []models.SoftwareURL{}
+		updatedSoftware.Aliases = []models.SoftwareURL{}
 
-		if err := tran.Updates(&software).Error; err != nil {
+		if err := tran.Updates(&updatedSoftware).Error; err != nil {
 			return err
 		}
 
-		software.Aliases = aliases
+		updatedSoftware.Aliases = aliases
 
 		return nil
 	}); err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't update Software", err.Error())
+		switch {
+		case errors.Is(err, gorm.ErrDuplicatedKey):
+			return common.Error(fiber.StatusConflict, errMsg, "URL already exists")
+		default:
+			//nolint:wrapcheck // default to not wrap other errors, the handler will take care of this
+			return err
+		}
 	}
 
 	// Sort the aliases to always have a consistent output
-	sort.Slice(software.Aliases, func(a int, b int) bool {
-		return software.Aliases[a].URL < software.Aliases[b].URL
+	sort.Slice(updatedSoftware.Aliases, func(a int, b int) bool {
+		return updatedSoftware.Aliases[a].URL < updatedSoftware.Aliases[b].URL
 	})
 
-	return ctx.JSON(&software)
+	return ctx.JSON(&updatedSoftware)
 }
 
 // DeleteSoftware deletes the software with the given ID.
@@ -289,12 +275,38 @@ func (p *Software) DeleteSoftware(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
-// syncAliases synchs the SoftwareURLs for a `software` in the database to reflect the
-// passed list of `expectedURLs` and the canonical `url`.
+func loadSoftware(gormdb *gorm.DB, software *models.Software, id string) error {
+	if err := gormdb.First(&software, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errLoadNotFound
+		}
+
+		return errLoad
+	}
+
+	if err := gormdb.
+		Where("software_id = ? AND id <> ?", software.ID, software.SoftwareURLID).Find(&software.Aliases).
+		Error; err != nil {
+		return errLoad
+	}
+
+	if err := gormdb.Debug().Where("id = ?", software.SoftwareURLID).First(&software.URL).Error; err != nil {
+		return errLoad
+	}
+
+	return nil
+}
+
+// syncAliases synchs the SoftwareURLs for a `Software` in the database to reflect the
+// passed list of `expectedAliases` and the canonical `url`.
 //
 // It returns the new canonical SoftwareURL and the new slice of aliases or an error if any.
 func syncAliases( //nolint:cyclop // mostly error handling ifs
-	gormdb *gorm.DB, software models.Software, canonicalURL string, expectedURLs []string,
+	gormdb *gorm.DB,
+	softwareID string,
+	currentURLs []models.SoftwareURL,
+	expectedURL string,
+	expectedAliases []string,
 ) (*models.SoftwareURL, []models.SoftwareURL, error) {
 	toRemove := []string{}          // Slice of SoftwareURL ids to remove from the database
 	toAdd := []models.SoftwareURL{} // Slice of SoftwareURLs to add to the database
@@ -303,25 +315,28 @@ func syncAliases( //nolint:cyclop // mostly error handling ifs
 	// keyed by url
 	urlMap := map[string]models.SoftwareURL{}
 
-	for _, alias := range software.Aliases {
-		urlMap[alias.URL] = alias
+	for _, url := range currentURLs {
+		urlMap[url.URL] = url
 	}
 
-	for url, alias := range urlMap {
-		if !slices.Contains(expectedURLs, url) {
-			toRemove = append(toRemove, alias.ID)
+	//nolint:gocritic // it's fine, we want to another slice
+	allSoftwareURLs := append(expectedAliases, expectedURL)
 
-			delete(urlMap, url)
+	for urlStr, softwareURL := range urlMap {
+		if !slices.Contains(allSoftwareURLs, urlStr) {
+			toRemove = append(toRemove, softwareURL.ID)
+
+			delete(urlMap, urlStr)
 		}
 	}
 
-	for _, url := range expectedURLs {
-		_, exists := urlMap[url]
+	for _, urlStr := range allSoftwareURLs {
+		_, exists := urlMap[urlStr]
 		if !exists {
-			alias := models.SoftwareURL{ID: utils.UUIDv4(), URL: url, SoftwareID: software.ID}
+			su := models.SoftwareURL{ID: utils.UUIDv4(), URL: urlStr, SoftwareID: softwareID}
 
-			toAdd = append(toAdd, alias)
-			urlMap[url] = alias
+			toAdd = append(toAdd, su)
+			urlMap[urlStr] = su
 		}
 	}
 
@@ -337,17 +352,16 @@ func syncAliases( //nolint:cyclop // mostly error handling ifs
 		}
 	}
 
-	updatedCanonicalURL := urlMap[canonicalURL]
+	updatedURL := urlMap[expectedURL]
 
-	// Remove the canonical URL from the aliases, because it need to be its own
-	// field. It was loaded previously together with the other aliases in Preload(),
-	// because of limitation in gorm.
-	delete(urlMap, canonicalURL)
+	// Remove the canonical URL from the rest of the URLs, so we can return
+	// URL and aliases in different fields.
+	delete(urlMap, expectedURL)
 
 	aliases := make([]models.SoftwareURL, 0, len(urlMap))
 	for _, alias := range urlMap {
 		aliases = append(aliases, alias)
 	}
 
-	return &updatedCanonicalURL, aliases, nil
+	return &updatedURL, aliases, nil
 }

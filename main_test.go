@@ -16,6 +16,9 @@ import (
 	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
+
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const UUID_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
@@ -23,6 +26,7 @@ const UUID_REGEXP = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 var (
 	app       *fiber.App
 	db        *sql.DB
+	dbDriver  string
 	goodToken = "Bearer v2.local.TwwHUQEi8hr2Eo881_Bs5vK9dHOR5BgEU24QRf-U7VmUwI1yOEA6mFT0EsXioMkFT_T-jjrtIJ_Nv8f6hR6ifJXUOuzWEkm9Ijq1mqSjQatD3aDqKMyjjBA"
 	badToken  = "Bearer v2.local.UngfrCDNwGUw4pff2oBNoyxYvOErcbVVqLndl6nzONafUCzktaOeMSmoI7B0h62zoxXXLqTm_Phl"
 )
@@ -31,9 +35,9 @@ type TestCase struct {
 	description string
 
 	// Test input
-	query    string
-	body     string
-	headers  map[string][]string
+	query   string
+	body    string
+	headers map[string][]string
 
 	// Expected output
 	expectedCode        int
@@ -43,23 +47,36 @@ type TestCase struct {
 }
 
 func init() {
-	_ = os.Remove("./test.db")
+	// Test on SQLite by default if DATABASE_DSN is not set
+	if _, exists := os.LookupEnv("DATABASE_DSN"); !exists {
+		_ = os.Setenv("DATABASE_DSN", "file:./test.db")
+		_ = os.Remove("./test.db")
+	}
 
-	_ = os.Setenv("DATABASE_DSN", "file:./test.db")
 	_ = os.Setenv("ENVIRONMENT", "test")
 
 	// echo -n 'test-paseto-key-dont-use-in-prod'  | base64
 	_ = os.Setenv("PASETO_KEY", "dGVzdC1wYXNldG8ta2V5LWRvbnQtdXNlLWluLXByb2Q=")
 
+	dsn := os.Getenv("DATABASE_DSN")
+	switch {
+	case strings.HasPrefix(dsn, "postgres:"):
+		dbDriver = "postgres"
+	default:
+		dbDriver = "sqlite3"
+	}
+
 	var err error
-	db, err = sql.Open("sqlite3", os.Getenv("DATABASE_DSN"))
+	db, err = sql.Open(dbDriver, dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// This is needed, otherwise we get a database-locked error
 	// TODO: investigate the root cause
-	_, _ = db.Exec("PRAGMA journal_mode=WAL;")
+	if dbDriver == "sqlite3" {
+		_, _ = db.Exec("PRAGMA journal_mode=WAL;")
+	}
 
 	// Setup the app as it is done in the main function
 	app = Setup()
@@ -74,7 +91,7 @@ func TestMain(m *testing.M) {
 func loadFixtures(t *testing.T) {
 	fixtures, err := testfixtures.New(
 		testfixtures.Database(db),
-		testfixtures.Dialect("sqlite"),
+		testfixtures.Dialect(dbDriver),
 		testfixtures.Directory("test/testdata/fixtures/"),
 	)
 	assert.Nil(t, err)
@@ -366,6 +383,53 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.Equal(t, "wrong cursor format in page[after] or page[before]", response["detail"])
 			},
 		},
+		{
+			description: `GET with "from" query param`,
+			query:       "GET /v1/publishers?from=2018-11-10T00:56:23Z",
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 14, len(data))
+			},
+		},
+		{
+			description: `GET with invalid "from" query param`,
+			query:       "GET /v1/publishers?from=3",
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Publishers`, response["title"])
+				assert.Equal(t, "invalid date time format (RFC 3339 needed)", response["detail"])
+			},
+		},
+		{
+			description: `GET with "to" query param`,
+			query:       "GET /v1/publishers?to=2018-11-01T09:56:23Z",
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 13, len(data))
+			},
+		},
+		{
+			description: `GET with invalid "to" query param`,
+			query:       "GET /v1/publishers?to=3",
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Publishers`, response["title"])
+				assert.Equal(t, "invalid date time format (RFC 3339 needed)", response["detail"])
+			},
+		},
 
 		// GET /publishers/:id
 		{
@@ -396,6 +460,25 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				for key := range response {
 					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active"}, key)
+				}
+			},
+		},
+		{
+			description:         "GET publisher with alternativeId",
+			query:               "GET /v1/publishers/alternative-id-12345",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "15fda7c4-6bbf-4387-8f89-258c1e6facb0", response["id"])
+				assert.Equal(t, "alternative-id-12345", response["alternativeId"])
+
+				_, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active", "alternativeId"}, key)
 				}
 			},
 		},
@@ -469,27 +552,39 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			description: "POST publisher with duplicate alternativeId",
-			query: "POST /v1/publishers",
-			body:  `{"alternativeId": "alternative-id-12345", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-pass@example.com"}`,
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId": "alternative-id-12345", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-pass@example.com"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
+		},
+		{
+			description: "POST publisher with alternativeId matching an existing id",
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId": "2ded32eb-c45e-4167-9166-a44e18b8adde", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with id '2ded32eb-c45e-4167-9166-a44e18b8adde' already exists","status":409}`,
 		},
 		{
 			description: "POST publisher with empty alternativeId",
-			query: "POST /v1/publishers",
-			body:  `{"alternativeId": "", "description":"new description", "codeHosting": [{"url" : "https://gitlab.example.com/repo"}]}`,
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId": "", "description":"new description", "codeHosting": [{"url" : "https://gitlab.example.com/repo"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"alternativeId","rule":"min"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: alternativeId does not meet its size limits (too short)","status":422,"validationErrors":[{"field":"alternativeId","rule":"min","value":""}]}`,
 		},
 		{
 			query: "POST /v1/publishers - NOT normalized URL validation passed",
@@ -521,14 +616,14 @@ func TestPublishersEndpoints(t *testing.T) {
 		{
 			description: "POST publishers with duplicate URL (when normalized)",
 			query:       "POST /v1/publishers",
-			body: `{"codeHosting": [{"url" : "https://1-a.exAMple.org/code/repo"}], "description":"new description"}`,
+			body:        `{"codeHosting": [{"url" : "https://1-a.exAMple.org/code/repo"}], "description":"new description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with an existing email",
@@ -545,9 +640,9 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description:    "POST new publisher with an existing email (not normalized)",
-			query:          "POST /v1/publishers",
-			body:     `{"codeHosting": [{"url" : "https://new-url.example.com"}], "email":"FoobaR@1.example.org", "description": "new publisher description"}`,
+			description: "POST new publisher with an existing email (not normalized)",
+			query:       "POST /v1/publishers",
+			body:        `{"codeHosting": [{"url" : "https://new-url.example.com"}], "email":"FoobaR@1.example.org", "description": "new publisher description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -559,9 +654,9 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description:    "POST new publisher with no email",
-			query:          "POST /v1/publishers",
-			body: `{"codeHosting": [{"url" : "https://new-url.example.com"}], "description": "new publisher description"}`,
+			description: "POST new publisher with no email",
+			query:       "POST /v1/publishers",
+			body:        `{"codeHosting": [{"url" : "https://new-url.example.com"}], "description": "new publisher description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -576,27 +671,27 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description:    "POST new publisher with empty email",
-			query:          "POST /v1/publishers",
-			body: `{"email": "", "codeHosting": [{"url" : "https://new-url.example.com"}], "description": "new publisher description"}`,
+			description: "POST new publisher with empty email",
+			query:       "POST /v1/publishers",
+			body:        `{"email": "", "codeHosting": [{"url" : "https://new-url.example.com"}], "description": "new publisher description"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"email","rule":"email"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: email is not a valid email","status":422,"validationErrors":[{"field":"email","rule":"email","value":""}]}`,
 		},
 		{
-			query:    "POST /v1/publishers - Description already exist",
-			body:     `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "description": "Publisher description 1"}`,
+			query: "POST /v1/publishers - Description already exist",
+			body:  `{"codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "description": "Publisher description 1"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with no description",
@@ -608,7 +703,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"description","rule":"required"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: description is required","status":422,"validationErrors":[{"field":"description","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST new publisher with empty description",
@@ -620,31 +715,31 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"description","rule":"required"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: description is required","status":422,"validationErrors":[{"field":"description","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST publisher with duplicate alternativeId",
-			query: "POST /v1/publishers",
-			body:  `{"alternativeId": "alternative-id-12345", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}]}`,
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId": "alternative-id-12345", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with provided description, email, alternativeId or CodeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
 		},
 		{
 			description: "POST publishers with invalid payload",
 			query:       "POST /v1/publishers",
-			body:        `{"url": "-"}`,
+			body:        `{"description": "-"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format","status":422,"validationErrors":[{"field":"codeHosting","rule":"required"},{"field":"description","rule":"required"}]}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: codeHosting is required","status":422,"validationErrors":[{"field":"codeHosting","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST publishers - wrong token",
@@ -669,7 +764,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Publisher`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		{
@@ -719,7 +814,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Publisher`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is invalid, description is required, email is not a valid email", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -745,53 +840,149 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Publisher`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
+
+		// PATCH /publishers/:id
 		{
-			description: "PATCH non-existing publishers",
-			query:       "PATCH /v1/publishers/NO_SUCH_publishers",
-			body:        `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
+			description: "PATCH non existing publisher",
+			query:       "PATCH /v1/publishers/NO_SUCH_PUBLISHER",
+			body:        ``,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
 			expectedCode:        404,
-			expectedBody:        `{"title":"Not found","detail":"can't update Publisher. Publisher was not found","status":404}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher was not found","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
-		//TODO fix database locked test
-		/*
-			{
-				query: "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
-				body:  `{"codeHosting": [{"url" : "https://www.example.com"}], "email":"example@example.com"}`,
-				headers: map[string][]string{
-					"Authorization": {goodToken},
-					"Content-Type":  {"application/json"},
-				},
+		{
+			description: "PATCH a publisher",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "new PATCHed description", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "new PATCHed description", response["description"])
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
 
-				expectedCode:        200,
-				expectedContentType: "application/json",
-				validateFunc: func(t *testing.T, response map[string]interface{}) {
-					assert.IsType(t, []interface{}{}, response["codeHosting"])
-					assert.Equal(t, 3, len(response["codeHosting"].([]interface{})))
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
 
-					match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
-					assert.Nil(t, err)
-					assert.True(t, match)
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
 
-					created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
-					assert.Nil(t, err)
+				assert.Equal(t, "https://gitlab.example.org/patched-repo", firstCodeHosting["url"])
+				assert.Equal(t, "2ded32eb-c45e-4167-9166-a44e18b8adde", response["id"])
 
-					updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
-					assert.Nil(t, err)
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
 
-					assert.Greater(t, updated, created)
-				},
-			},*/
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH publishers with no codeHosting (should leave current codeHosting untouched)",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "new description"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "2ded32eb-c45e-4167-9166-a44e18b8adde", response["id"])
+				assert.Equal(t, "new description", response["description"])
+				assert.Equal(t, "foobar@1.example.org", response["email"])
+
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 2, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+				assert.Equal(t, "https://1-a.example.org/code/repo", firstCodeHosting["url"])
+				secondCodeHosting := codeHosting[1].(map[string]interface{})
+				assert.Equal(t, "https://1-b.example.org/code/repo", secondCodeHosting["url"])
+
+				assert.Equal(t, "2018-05-01T00:00:00Z", response["createdAt"])
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH publishers with empty codeHosting",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "new description", "codeHosting": []}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Publisher","detail":"invalid format: codeHosting does not meet its size limits (too few items)","status":422,"validationErrors":[{"field":"codeHosting","rule":"gt","value":""}]}`,
+		},
+		{
+			description: "PATCH a publisher via alternativeId",
+			query:       "PATCH /v1/publishers/alternative-id-12345",
+			body:        `{"description": "new PATCHed description via alternativeId", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "new PATCHed description via alternativeId", response["description"])
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+
+				assert.Equal(t, "https://gitlab.example.org/patched-repo", firstCodeHosting["url"])
+				assert.Equal(t, "15fda7c4-6bbf-4387-8f89-258c1e6facb0", response["id"])
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH a publisher with alternativeId matching an existing id",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"alternativeId": "47807e0c-0613-4aea-9917-5455cc6eddad"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher with id '47807e0c-0613-4aea-9917-5455cc6eddad' already exists","status":409}`,
+		},
 		{
 			description: "PATCH publishers - wrong token",
-			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
 			body:        ``,
 			headers: map[string][]string{
 				"Authorization": {badToken},
@@ -802,8 +993,8 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			description: "PATCH publishers with invalid JSON",
-			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			description: "PATCH publisher with invalid JSON",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
 			body:        `INVALID_JSON`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -813,40 +1004,36 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Publisher`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		//TODO fix database locked test
-		/*
-			{
-				description: "PATCH publishers with validation errors",
-				query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
-				body:        `{"codeHosting": [{"url" : "INVALID_URL"}], "email":"example@example.com"}`,
-				headers: map[string][]string{
-					"Authorization": {goodToken},
-					"Content-Type":  {"application/json"},
-				},
-				expectedCode:        422,
-				expectedContentType: "application/problem+json",
-				validateFunc: func(t *testing.T, response map[string]interface{}) {
-					assert.Equal(t, `can't update Publisher`, response["title"])
-					assert.Equal(t, "invalid format", response["detail"])
-
-					assert.IsType(t, []interface{}{}, response["validationErrors"])
-
-					validationErrors := response["validationErrors"].([]interface{})
-					assert.Equal(t, 1, len(validationErrors))
-
-					firstValidationError := validationErrors[0].(map[string]interface{})
-
-					for key := range firstValidationError {
-						assert.Contains(t, []string{"field", "rule", "value"}, key)
-					}
-				},
-			},*/
+		{
+			description: "PATCH publishers with JSON with extra fields",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "new description", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Publisher","detail":"unknown field in JSON input","status":422}`,
+		},
+		{
+			description: "PATCH publisher with validation errors",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "new description", "codeHosting": [{"url": "INVALID_URL"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Publisher","detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"url","value":"INVALID_URL"}]}`,
+		},
 		{
 			description: "PATCH publishers with empty body",
-			query:       "PATCH /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
 			body:        "",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
@@ -854,11 +1041,17 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        400,
 			expectedContentType: "application/problem+json",
-			validateFunc: func(t *testing.T, response map[string]interface{}) {
-				assert.Equal(t, `can't update Publisher`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
-			},
+			expectedBody:        `{"title":"can't update Publisher","detail":"invalid or malformed JSON","status":400}`,
 		},
+		// TODO: enforce this?
+		// {
+		// 	query: "PATCH /v1/publishers with no Content-Type",
+		// 	body:  "",
+		// 	headers: map[string][]string{
+		// 		"Authorization": {goodToken},
+		// 	},
+		// 	expectedCode:        404,
+		// }
 
 		// DELETE /publishers/:id
 		{
@@ -884,7 +1077,18 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			query:    "DELETE /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			query: "DELETE /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        204,
+			expectedBody:        "",
+			expectedContentType: "",
+		},
+		{
+			description: "DELETE publisher via alternativeId",
+			query:       "DELETE /v1/publishers/alternative-id-12345",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -898,7 +1102,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 		// GET /publishers/:id/webhooks
 		{
-			query:    "GET /v1/publishers/47807e0c-0613-4aea-9917-5455cc6eddad/webhooks",
+			query: "GET /v1/publishers/47807e0c-0613-4aea-9917-5455cc6eddad/webhooks",
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -988,8 +1192,8 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
-			query:    "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
-			body:     `{"url": "https://new.example.org", "secret": "xyz"}`,
+			query: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
+			body:  `{"url": "https://new.example.org", "secret": "xyz"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1040,24 +1244,21 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	description: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks with JSON with extra fields",
-		// 	body: `{"url": "https://new.example.org", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Webhook`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks with JSON with extra fields",
+			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
+			body:        `{"url": "https://new.example.org", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Webhook","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "POST webhook with validation errors",
 			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
@@ -1070,7 +1271,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is invalid", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -1096,7 +1297,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -1562,7 +1763,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Software","detail":"invalid format","status":422,"validationErrors":[{"field":"url","rule":"required"}]}`,
+			expectedBody:        `{"title":"can't create Software","detail":"invalid format: url is required","status":422,"validationErrors":[{"field":"url","rule":"required","value":""}]}`,
 		},
 		{
 			description: "POST software - wrong token",
@@ -1587,25 +1788,21 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Software`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	descrption: "POST /v1/software with JSON with extra fields",
-		// 	query: "POST /v1/software",
-		// 	body: `{"publiccodeYml": "-", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Software`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "POST /v1/software with JSON with extra fields",
+			query:       "POST /v1/software",
+			body:        `{"publiccodeYml": "-", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Software","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "POST software with optional boolean field set to false",
 			query:       "POST /v1/software",
@@ -1632,7 +1829,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Software`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is required", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -1658,7 +1855,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Software`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -1685,8 +1882,9 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": ["https://software.example.com", "https://software-old.example.org"]}`,
+			description: "PATCH a software resource",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": ["https://software.example.com", "https://software-old.example.org"]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1695,6 +1893,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, true, response["active"])
 				assert.Equal(t, "https://software-new.example.org", response["url"])
 
 				assert.IsType(t, []interface{}{}, response["aliases"])
@@ -1731,16 +1930,17 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
+			expectedBody:        "",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, true, response["active"])
 				assert.Equal(t, "https://software-new.example.org", response["url"])
 
 				assert.IsType(t, []interface{}{}, response["aliases"])
 
 				aliases := response["aliases"].([]interface{})
-				assert.Equal(t, 2, len(aliases))
+				assert.Equal(t, 1, len(aliases))
 
-				assert.Equal(t, "https://18-a.example.org/code/repo", aliases[0])
-				assert.Equal(t, "https://18-b.example.org/code/repo", aliases[1])
+				assert.Equal(t, "https://18-b.example.org/code/repo", aliases[0])
 
 				assert.Equal(t, "publiccodedata", response["publiccodeYml"])
 
@@ -1769,6 +1969,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, true, response["active"])
 				assert.Equal(t, "https://software-new.example.org", response["url"])
 
 				assert.IsType(t, []interface{}{}, response["aliases"])
@@ -1790,6 +1991,118 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assert.Greater(t, updated, created)
 			},
+		},
+		{
+			description: "PATCH software with an already existing URL (of another software)",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"publiccodeYml": "publiccodedata", "url": "https://21-b.example.org/code/repo"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
+		},
+		{
+			description: "PATCH software, change active",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"active": false}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, false, response["active"])
+				assert.Equal(t, "https://18-a.example.org/code/repo", response["url"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+
+				aliases := response["aliases"].([]interface{})
+				assert.Equal(t, 1, len(aliases))
+
+				assert.Equal(t, "https://18-b.example.org/code/repo", aliases[0])
+
+				assert.Equal(t, "-", response["publiccodeYml"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH software, switch url and alias",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"url": "https://18-b.example.org/code/repo", "aliases": ["https://18-a.example.org/code/repo"]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "https://18-b.example.org/code/repo", response["url"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+
+				aliases := response["aliases"].([]interface{})
+				assert.Equal(t, 1, len(aliases))
+
+				assert.Equal(t, "https://18-a.example.org/code/repo", aliases[0])
+
+				assert.Equal(t, "-", response["publiccodeYml"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH software using an already taken URL as url",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"url": "https://15-b.example.org/code/repo"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
+		},
+		{
+			description: "PATCH software using an already taken URL as an alias",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"aliases": ["https://16-b.example.org/code/repo"]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
 		},
 		{
 			description: "PATCH software - wrong token",
@@ -1815,25 +2128,21 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Software`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	description: "PATCH software with JSON with extra fields",
-		// 	query: "PATCH /v1/software",
-		// 	body: `{"publiccodeYml": "-", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Software`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "PATCH software with JSON with extra fields",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"publiccodeYml": "-", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "PATCH software with validation errors",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
@@ -1846,7 +2155,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Software`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is invalid", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -1861,6 +2170,19 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description: "PATCH software with an empty url",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"url": ""}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"url","value":""}]}`,
+		},
+		{
 			description: "PATCH software with empty body",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
 			body:        "",
@@ -1872,7 +2194,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Software`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -1887,8 +2209,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 		// DELETE /software/:id
 		{
-			description:         "Delete non-existent software",
-			query:               "DELETE /v1/software/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			description: "Delete non-existent software",
+			query:       "DELETE /v1/software/eea19c82-0449-11ed-bd84-d8bbc146d165",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1909,7 +2231,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			query:    "DELETE /v1/software/11e101c4-f989-4cc4-a665-63f9f34e83f6",
+			query: "DELETE /v1/software/11e101c4-f989-4cc4-a665-63f9f34e83f6",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1922,7 +2244,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 		// GET /software/:id/logs
 		{
-			query:    "GET /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			query: "GET /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1957,6 +2279,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 					_, err = time.Parse(time.RFC3339, log["updatedAt"].(string))
 					assert.Nil(t, err)
 
+					assert.Equal(t, "/software/c353756e-8597-4e46-a99b-7da2e141603b", log["entity"])
+
 					for key := range log {
 						assert.Contains(t, []string{"id", "createdAt", "updatedAt", "message", "entity"}, key)
 					}
@@ -1968,8 +2292,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 					prevCreatedAt = &createdAt
 				}
-
-				// TODO assert.NotEmpty(t, firstLog["entity"])
 			},
 		},
 		{
@@ -2020,8 +2342,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
-			query:    "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
-			body:     `{"message": "New software log from test suite"}`,
+			query: "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			body:  `{"message": "New software log from test suite"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2040,6 +2362,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
 				assert.Nil(t, err)
+
+				assert.Equal(t, "/software/c353756e-8597-4e46-a99b-7da2e141603b", response["entity"])
 
 				// TODO: check the record was actually created in the database
 			},
@@ -2068,24 +2392,21 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	description: "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs with JSON with extra fields",
-		// 	body: `{"message": "new log", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Log`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs with JSON with extra fields",
+			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
+			body:        `{"message": "new log", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Log","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "POST log with validation errors",
 			query:       "POST /v1/software/c353756e-8597-4e46-a99b-7da2e141603b/logs",
@@ -2098,7 +2419,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: message is required", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -2124,7 +2445,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -2139,7 +2460,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 		// GET /software/:id/webhooks
 		{
-			query:    "GET /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			query: "GET /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -2208,7 +2529,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyIwMDAxLTAxLTAxVDAwOjAwOjAwWiIsImU3ZjZkYmRhLWMzZjUtNGIyZi1iM2Q4LTM5YTM0MDI2ZTYwYSJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDE3LTA1LTAxVDAwOjAwOjAwWiIsImU3ZjZkYmRhLWMzZjUtNGIyZi1iM2Q4LTM5YTM0MDI2ZTYwYSJd", links["next"])
 			},
 		},
 
@@ -2229,8 +2550,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
-			query:    "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
-			body:     `{"url": "https://new.example.org", "secret": "xyz"}`,
+			query: "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			body:  `{"url": "https://new.example.org", "secret": "xyz"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2281,24 +2602,21 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	description: "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks with JSON with extra fields",
-		// 	body: `{"url": "https://new.example.org", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Webhook`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks with JSON with extra fields",
+			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
+			body:        `{"url": "https://new.example.org", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Webhook","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "POST webhook with validation errors",
 			query:       "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
@@ -2311,7 +2629,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is invalid", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -2337,7 +2655,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -2389,12 +2707,24 @@ func TestLogsEndpoints(t *testing.T) {
 					_, err = time.Parse(time.RFC3339, log["updatedAt"].(string))
 					assert.Nil(t, err)
 
+					// Only certain logs from the fixtures have an associated entity.
+					//
+					// FIXME: This is ugly, see the issue about improving tests:
+					// https://github.com/italia/developers-italia-api/issues/91
+					if log["id"] == "2dfb2bc2-042d-11ed-9338-d8bbc146d165" ||
+						log["id"] == "12f30d9e-042e-11ed-8ddc-d8bbc146d165" ||
+						log["id"] == "18a70362-042e-11ed-b793-d8bbc146d165" {
+						assert.Equal(t, "/software/c353756e-8597-4e46-a99b-7da2e141603b", log["entity"])
+					} else if log["id"] == "53650508-042e-11ed-9b84-d8bbc146d165" {
+						assert.Equal(t, "/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde", log["entity"])
+					} else {
+						assert.Nil(t, log["entity"])
+					}
+
 					var prevCreatedAt *time.Time = nil
 					for key := range log {
 						assert.Contains(t, []string{"id", "createdAt", "updatedAt", "message", "entity"}, key)
 					}
-
-					// TODO assert.NotEmpty(t, firstLog["entity"])
 
 					// Check the logs are ordered by descending createdAt
 					if prevCreatedAt != nil {
@@ -2564,6 +2894,8 @@ func TestLogsEndpoints(t *testing.T) {
 				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
 				assert.Nil(t, err)
 
+				assert.Nil(t, response["entity"])
+
 				// TODO: check the record was actually created in the database
 			},
 		},
@@ -2577,7 +2909,7 @@ func TestLogsEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Log","detail":"invalid format","status":422,"validationErrors":[{"field":"message","rule":"required"}]}`,
+			expectedBody:        `{"title":"can't create Log","detail":"unknown field in JSON input","status":422}`,
 		},
 		{
 			description: "POST log - wrong token",
@@ -2603,24 +2935,21 @@ func TestLogsEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	query: "POST /v1/logs with JSON with extra fields",
-		// 	body: `{"message": "new log", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Log`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "POST /v1/logs with JSON with extra fields",
+			query:       "POST /v1/logs",
+			body:        `{"message": "new log", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Log","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "POST log with validation errors",
 			query:       "POST /v1/logs",
@@ -2633,7 +2962,7 @@ func TestLogsEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: message is required", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -2659,7 +2988,7 @@ func TestLogsEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't create Log`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -2696,8 +3025,8 @@ func TestWebhooksEndpoints(t *testing.T) {
 
 		// PATCH /webhooks/:id
 		{
-			query:    "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
-			body:     `{"url": "https://new.example.org/receiver"}`,
+			query: "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			body:  `{"url": "https://new.example.org/receiver"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -2741,24 +3070,21 @@ func TestWebhooksEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: make this pass
-		// {
-		// 	query: "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7 with JSON with extra fields",
-		// 	body: `{"url": "https://new.example.org/receiver", EXTRA_FIELD: "extra field not in schema"}`,
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 		"Content-Type":  {"application/json"},
-		// 	},
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/problem+json",
-		// 	validateFunc: func(t *testing.T, response map[string]interface{}) {
-		// 		assert.Equal(t, `can't create Webhook`, response["title"])
-		// 		assert.Equal(t, "invalid json", response["detail"])
-		// 	},
-		// },
+		{
+			description: "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7 with JSON with extra fields",
+			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			body:        `{"url": "https://new.example.org/receiver", "EXTRA_FIELD": "extra field not in schema"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Webhook","detail":"unknown field in JSON input","status":422}`,
+		},
 		{
 			description: "PATCH webhook with validation errors",
 			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
@@ -2771,7 +3097,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Webhook`, response["title"])
-				assert.Equal(t, "invalid format", response["detail"])
+				assert.Equal(t, "invalid format: url is invalid", response["detail"])
 
 				assert.IsType(t, []interface{}{}, response["validationErrors"])
 
@@ -2797,7 +3123,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Webhook`, response["title"])
-				assert.Equal(t, "invalid json", response["detail"])
+				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
 		// TODO: enforce this?
@@ -2812,14 +3138,17 @@ func TestWebhooksEndpoints(t *testing.T) {
 
 		// DELETE /webhooks/:id
 		{
-			description:         "Delete non-existent webhook",
-			query:               "DELETE /v1/webhooks/NO_SUCH_WEBHOOK",
+			description: "Delete non-existent webhook",
+			query:       "DELETE /v1/webhooks/NO_SUCH_WEBHOOK",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
 			},
-			expectedCode:        404,
-			expectedBody:        `{"title":"can't delete Webhook","detail":"Webhook was not found","status":404}`,
+			expectedCode: 404,
+			// This error is different from because it's returned directly from Fiber's
+			// route constraints, so we don't need to hit the database to find the resource
+			// because we already know that's not a valid webhook id looking at its format.
+			expectedBody:        `{"title":"Not Found","detail":"Cannot DELETE /v1/webhooks/NO_SUCH_WEBHOOK","status":404}`,
 			expectedContentType: "application/problem+json",
 		},
 		{
@@ -2834,7 +3163,7 @@ func TestWebhooksEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 		},
 		{
-			query:    "DELETE /v1/webhooks/24bc1b5d-fe81-47be-9d55-910f820bdd04",
+			query: "DELETE /v1/webhooks/24bc1b5d-fe81-47be-9d55-910f820bdd04",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
