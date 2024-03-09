@@ -2079,6 +2079,91 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description: "PATCH a software resource with JSON Patch - replace",
+			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:  `[{"op": "replace", "path": "/publiccodeYml", "value": "new publiccode data"}]`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json-patch+json"},
+			},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, true, response["active"])
+				assert.Equal(t, "https://18-a.example.org/code/repo", response["url"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+
+				aliases := response["aliases"].([]interface{})
+				assert.Equal(t, 1, len(aliases))
+
+				assert.Equal(t, "https://18-b.example.org/code/repo", aliases[0])
+
+				assert.Equal(t, "new publiccode data", response["publiccodeYml"])
+				assert.Equal(t, "59803fb7-8eec-4fe5-a354-8926009c364a", response["id"])
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH a software resource with JSON Patch - add",
+			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:  `[{"op": "add", "path": "/aliases/-", "value": "https://18-c.example.org"}]`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json-patch+json"},
+			},
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, true, response["active"])
+				assert.Equal(t, "https://18-a.example.org/code/repo", response["url"])
+
+				assert.IsType(t, []interface{}{}, response["aliases"])
+
+				aliases := response["aliases"].([]interface{})
+				assert.Equal(t, 2, len(aliases))
+
+				assert.Equal(t, "https://18-b.example.org/code/repo", aliases[0])
+				assert.Equal(t, "https://18-c.example.org", aliases[1])
+
+				assert.Equal(t, "-", response["publiccodeYml"])
+				assert.Equal(t, "59803fb7-8eec-4fe5-a354-8926009c364a", response["id"])
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH a software resource with JSON Patch as Content-Type, but non JSON Patch payload",
+			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json-patch+json"},
+			},
+
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't update Software`, response["title"])
+				assert.Equal(t, "malformed JSON Patch", response["detail"])
+			},
+		},
+		{
 			description: "PATCH software using an already taken URL as url",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
 			body:        `{"url": "https://15-b.example.org/code/repo"}`,

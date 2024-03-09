@@ -71,13 +71,13 @@ type Software struct {
 	// with SoftwareURLs (belongs to and has many).
 	SoftwareURLID string `json:"-" gorm:"uniqueIndex;not null"`
 
-	URL           SoftwareURL   `json:"url"`
-	Aliases       []SoftwareURL `json:"aliases"`
-	PubliccodeYml string        `json:"publiccodeYml"`
-	Logs          []Log         `json:"-" gorm:"polymorphic:Entity;"`
-	Active        *bool         `json:"active" gorm:"default:true;not null"`
-	CreatedAt     time.Time     `json:"createdAt" gorm:"index"`
-	UpdatedAt     time.Time     `json:"updatedAt"`
+	URL           SoftwareURL      `json:"url"`
+	Aliases       SoftwareURLSlice `json:"aliases"`
+	PubliccodeYml string           `json:"publiccodeYml"`
+	Logs          []Log            `json:"-" gorm:"polymorphic:Entity;"`
+	Active        *bool            `json:"active" gorm:"default:true;not null"`
+	CreatedAt     time.Time        `json:"createdAt" gorm:"index"`
+	UpdatedAt     time.Time        `json:"updatedAt"`
 }
 
 func (Software) TableName() string {
@@ -105,6 +105,34 @@ func (su SoftwareURL) MarshalJSON() ([]byte, error) {
 func (su *SoftwareURL) UnmarshalJSON(data []byte) error {
 	//nolint:wrapcheck // we want to pass along the error here
 	return json.Unmarshal(data, &su.URL)
+}
+
+type SoftwareURLSlice []SoftwareURL
+
+func (slice SoftwareURLSlice) MarshalJSON() ([]byte, error) {
+	urls := make([]string, len(slice))
+
+	for i, su := range slice {
+		urls[i] = su.URL
+	}
+
+	return json.Marshal(urls)
+}
+
+func (slice *SoftwareURLSlice) UnmarshalJSON(data []byte) error {
+	var urls []string
+	if err := json.Unmarshal(data, &urls); err != nil {
+		//nolint:wrapcheck // we want to pass along the error here
+		return err
+	}
+
+	// Convert each string URL into a SoftwareURL object.
+	*slice = make(SoftwareURLSlice, len(urls))
+	for i, urlStr := range urls {
+		(*slice)[i] = SoftwareURL{URL: urlStr}
+	}
+
+	return nil
 }
 
 type Webhook struct {
