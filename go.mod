@@ -40,7 +40,7 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/tinylib/msgp v1.1.8 // indirect
 	golang.org/x/net v0.17.0 // indirect
-	google.golang.org/protobuf v1.26.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 )
 
 require (
