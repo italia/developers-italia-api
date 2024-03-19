@@ -2080,8 +2080,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "PATCH a software resource with JSON Patch - replace",
-			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:  `[{"op": "replace", "path": "/publiccodeYml", "value": "new publiccode data"}]`,
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `[{"op": "replace", "path": "/publiccodeYml", "value": "new publiccode data"}]`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json-patch+json"},
@@ -2114,8 +2114,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "PATCH a software resource with JSON Patch - add",
-			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:  `[{"op": "add", "path": "/aliases/-", "value": "https://18-c.example.org"}]`,
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `[{"op": "add", "path": "/aliases/-", "value": "https://18-c.example.org"}]`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json-patch+json"},
@@ -2149,8 +2149,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			description: "PATCH a software resource with JSON Patch as Content-Type, but non JSON Patch payload",
-			query: "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:  `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org"}`,
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json-patch+json"},
