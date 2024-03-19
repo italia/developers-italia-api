@@ -2778,6 +2778,7 @@ func TestLogsEndpoints(t *testing.T) {
 				assert.Nil(t, links["prev"])
 				assert.Nil(t, links["next"])
 
+				var prevCreatedAt *time.Time = nil
 				for _, l := range data {
 					assert.IsType(t, map[string]interface{}{}, l)
 					log := l.(map[string]interface{})
@@ -2806,7 +2807,6 @@ func TestLogsEndpoints(t *testing.T) {
 						assert.Nil(t, log["entity"])
 					}
 
-					var prevCreatedAt *time.Time = nil
 					for key := range log {
 						assert.Contains(t, []string{"id", "createdAt", "updatedAt", "message", "entity"}, key)
 					}
