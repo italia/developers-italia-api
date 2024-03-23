@@ -28,6 +28,7 @@ type SoftwarePost struct {
 	Aliases       []string `json:"aliases" validate:"dive,url"`
 	PubliccodeYml string   `json:"publiccodeYml" validate:"required"`
 	Active        *bool    `json:"active"`
+	Vitality      *string  `json:"vitality"`
 }
 
 type SoftwarePatch struct {
@@ -35,6 +36,7 @@ type SoftwarePatch struct {
 	Aliases       *[]string `json:"aliases" validate:"omitempty,dive,url"`
 	PubliccodeYml *string   `json:"publiccodeYml"`
 	Active        *bool     `json:"active"`
+	Vitality      *string   `json:"vitality"`
 }
 
 type Log struct {

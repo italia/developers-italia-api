@@ -1321,6 +1321,21 @@ components:
             software (fe. when the repository is empty or there's something malicious going on,
             but the problem is expected to be fixed in the near future) without removing it.
           default: true
+        vitality:
+          type: string
+          description: >
+            The vitality of the software repository, indicating
+            health, activity, or metrics relevant to its condition.
+            This is a opaque string, and users of the API can choose their
+            own format.
+
+            The Italian catalog, for example, uses comma-separated values for
+            daily vitality scores (0-100) (see https://github.com/italia/publiccode-crawler/blob/main/vitality-ranges.yml).
+          minLength: 1
+          maxLength: 99999
+          pattern: '.*'
+          default: null
+          example: "90,100,94,12"
         createdAt:
           type: string
           format: date-time
