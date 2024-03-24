@@ -76,6 +76,7 @@ type Software struct {
 	PubliccodeYml string           `json:"publiccodeYml"`
 	Logs          []Log            `json:"-" gorm:"polymorphic:Entity;"`
 	Active        *bool            `json:"active" gorm:"default:true;not null"`
+	Vitality      *string          `json:"vitality"`
 	CreatedAt     time.Time        `json:"createdAt" gorm:"index"`
 	UpdatedAt     time.Time        `json:"updatedAt"`
 }

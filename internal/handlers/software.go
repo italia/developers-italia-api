@@ -162,6 +162,7 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 		Aliases:       aliases,
 		PubliccodeYml: softwareReq.PubliccodeYml,
 		Active:        softwareReq.Active,
+		Vitality:      softwareReq.Vitality,
 	}
 
 	if err := p.db.Create(&software).Error; err != nil {
