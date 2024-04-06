@@ -37,5 +37,9 @@ func Clauses(ctx *fiber.Ctx, stmt *gorm.DB, searchFieldName string) (*gorm.DB, e
 		ret = stmt.Where("created_at < ?", at)
 	}
 
+	if search := ctx.Query("search", ""); search != "" {
+		ret = stmt.Where("message LIKE ?", "%"+search+"%")
+	}
+
 	return ret, nil
 }
