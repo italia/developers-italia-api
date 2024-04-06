@@ -3086,6 +3086,18 @@ func TestLogsEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description: `GET with "search" query param`,
+			query:       "GET /v1/logs?search=log%20m",
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 21, len(data))
+			},
+		},
+		{
 			description:         "Non-existent log",
 			query:               "GET /v1/logs/eea19c82-0449-11ed-bd84-d8bbc146d165",
 			expectedCode:        404,
