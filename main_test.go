@@ -2905,7 +2905,7 @@ func TestLogsEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["data"])
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 21, len(data))
+				assert.Equal(t, 25, len(data))
 
 				// Default pagination size is 25, so all the logs fit into a page
 				// and cursors should be empty
@@ -2913,7 +2913,7 @@ func TestLogsEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Nil(t, links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDEwLTAxLTE1VDIzOjU5OjU5WiIsIjEyZjMwZDllLTA0MmUtMTFlZC04ZGRjLWQ4YmJjMTQ2ZDE2NSJd", links["next"])
 
 				var prevCreatedAt *time.Time = nil
 				for _, l := range data {
@@ -2973,7 +2973,7 @@ func TestLogsEndpoints(t *testing.T) {
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
-				assert.Equal(t, "?page[after]=WyIyMDEwLTA3LTAxVDIzOjU5OjU5WiIsIjg1MWZlMGY0LTA0MmUtMTFlZC05MzNlLWQ4YmJjMTQ2ZDE2NSJd", links["next"])
+				assert.Equal(t, "?page[after]=WyIyMDEwLTA4LTAxVDIzOjU5OjU5WiIsIjRiNGExYjljLTA0MmUtMTFlZC04MmE4LWQ4YmJjMTQ2ZDE2NSJd", links["next"])
 			},
 		},
 		// TODO
@@ -3020,7 +3020,7 @@ func TestLogsEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["data"])
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 3, len(data))
+				assert.Equal(t, 8, len(data))
 
 				links := response["links"].(map[string]interface{})
 				assert.Nil(t, links["prev"])
@@ -3048,7 +3048,7 @@ func TestLogsEndpoints(t *testing.T) {
 				assert.IsType(t, []interface{}{}, response["data"])
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 15, len(data))
+				assert.Equal(t, 20, len(data))
 			},
 		},
 		{
@@ -3087,14 +3087,14 @@ func TestLogsEndpoints(t *testing.T) {
 		},
 		{
 			description: `GET with "search" query param`,
-			query:       "GET /v1/logs?search=log%20m",
+			query:       "GET /v1/logs?search=BulkOpsClient.",
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				data := response["data"].([]interface{})
 
-				assert.Equal(t, 21, len(data))
+				assert.Equal(t, 5, len(data))
 			},
 		},
 		{
