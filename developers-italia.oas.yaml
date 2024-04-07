@@ -643,6 +643,13 @@ paths:
           in: query
           name: to
           description: Only logs before this time (RFC 3339 datetime)
+        - schema:
+            type: string
+            maxLength: 255
+            example: 'SUCCESS'
+          in: query
+          name: search
+          description: Only logs message like this parameter
     post:
       summary: Create Logs
       description: Create Logs
