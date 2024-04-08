@@ -1673,7 +1673,8 @@ func TestSoftwareEndpoints(t *testing.T) {
 					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality"}, key)
 				}
 			},
-		}, {
+		},
+		{
 			description:         "GET software with vitality field",
 			query:               "GET /v1/software/9f135268-a37e-4ead-96ec-e4a24bb9344a",
 			expectedCode:        200,
