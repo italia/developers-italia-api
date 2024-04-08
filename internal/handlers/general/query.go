@@ -1,6 +1,7 @@
 package general
 
 import (
+	"github.com/gofiber/fiber/v2/utils"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -38,7 +39,7 @@ func Clauses(ctx *fiber.Ctx, stmt *gorm.DB, searchFieldName string) (*gorm.DB, e
 	}
 
 	if search := ctx.Query("search", ""); search != "" {
-		ret = stmt.Where("message LIKE ?", "%"+search+"%")
+		ret = stmt.Where("LOWER(message) LIKE ?", "%"+utils.ToLower(search)+"%")
 	}
 
 	return ret, nil

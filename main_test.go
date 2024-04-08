@@ -3087,7 +3087,7 @@ func TestLogsEndpoints(t *testing.T) {
 		},
 		{
 			description: `GET with "search" query param`,
-			query:       "GET /v1/logs?search=BulkOpsClient.",
+			query:       "GET /v1/logs?search=debug",
 
 			expectedCode:        200,
 			expectedContentType: "application/json",

@@ -1,5 +1,6 @@
 dist/
 tmp/
+.idea/
 
 test.db
 test.db-shm
@@ -10,3 +11,5 @@ test.db-wal
 
 # Helm chart package
 /developers-italia-api-*.tgz
+
+
