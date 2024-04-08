@@ -1,6 +1,7 @@
 dist/
 tmp/
 .idea/
+.vscode
 
 test.db
 test.db-shm
