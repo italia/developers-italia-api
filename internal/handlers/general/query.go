@@ -3,6 +3,8 @@ package general
 import (
 	"time"
 
+	"github.com/gofiber/fiber/v2/utils"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/italia/developers-italia-api/internal/common"
 	"gorm.io/gorm"
@@ -35,6 +37,10 @@ func Clauses(ctx *fiber.Ctx, stmt *gorm.DB, searchFieldName string) (*gorm.DB, e
 		}
 
 		ret = stmt.Where("created_at < ?", at)
+	}
+
+	if search := ctx.Query("search", ""); search != "" {
+		ret = stmt.Where("LOWER(message) LIKE ?", "%"+utils.ToLower(search)+"%")
 	}
 
 	return ret, nil

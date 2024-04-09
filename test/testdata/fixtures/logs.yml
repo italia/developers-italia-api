@@ -110,3 +110,28 @@
   created_at: 2010-07-30 23:59:59
   updated_at: 2010-12-31 23:59:59
   message: A log message
+
+- id: 06666ecc-042e-11ed-83b0-d8bbc146d165
+  created_at: 2010-08-01 23:59:59+00:00
+  updated_at: 2010-12-31 23:59:59+00:00
+  message: "[github.com/foobar/baz] BAD publiccode.yml"
+
+- id: 37f904ea-042e-11ed-8176-d8bbc146d165
+  created_at: 2010-08-01 23:59:59+00:00
+  updated_at: 2010-12-31 23:59:59+00:00
+  message: "[github.com/foobar/baz2] BAD publiccode.yml"
+
+- id: 4b4a1b9c-042e-11ed-82a8-d8bbc146d165
+  created_at: 2010-08-01 23:59:59+00:00
+  updated_at: 2010-12-31 23:59:59+00:00
+  message: "[github.com/foobar/baz3] BAD publiccode.yml"
+
+- id: 5332f73e-042e-11ed-8e74-d8bbc146d165
+  created_at: 2010-08-01 23:59:59+00:00
+  updated_at: 2010-12-31 23:59:59+00:00
+  message: "[github.com/foobar/baz4] BAD publiccode.yml"
+
+- id: 5b45111e-042e-11ed-8d60-d8bbc146d165
+  created_at: 2010-08-01 23:59:59+00:00
+  updated_at: 2010-12-31 23:59:59+00:00
+  message: "[github.com/foobar/baz5] BAD publiccode.yml"
