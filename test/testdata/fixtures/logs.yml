@@ -114,7 +114,7 @@
 - id: 06666ecc-042e-11ed-83b0-d8bbc146d165
   created_at: 2010-08-01 23:59:59+00:00
   updated_at: 2010-12-31 23:59:59+00:00
-  message: "DEBUG - [main] BulkOpsClient.main(): List of all configurations loaded: {numofthreads=1, impstatchkinterval=30, maxloginattempts=1}"
+  message: "[github.com/foobar/baz] BAD publiccode.yml"
 
 - id: 37f904ea-042e-11ed-8176-d8bbc146d165
   created_at: 2010-08-01 23:59:59+00:00
