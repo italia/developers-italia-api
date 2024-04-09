@@ -3088,7 +3088,7 @@ func TestLogsEndpoints(t *testing.T) {
 		},
 		{
 			description: `GET with "search" query param`,
-			query:       "GET /v1/logs?search=debug",
+			query:       "GET /v1/logs?search=bad publiccode.yml",
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
