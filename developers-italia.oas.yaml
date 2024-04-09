@@ -649,7 +649,7 @@ paths:
             example: 'BAD publiccode'
           in: query
           name: search
-          description: Only logs message like this parameter
+          description: Only logs matching the search string in their message
     post:
       summary: Create Logs
       description: Create Logs
