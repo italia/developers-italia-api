@@ -3,11 +3,13 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -44,6 +46,20 @@ type TestCase struct {
 	expectedBody        string
 	expectedContentType string
 	validateFunc        func(t *testing.T, response map[string]interface{})
+}
+
+type TempTestCaseNew struct {
+	description string
+
+	// Test input
+	query   string
+	body    string
+	headers map[string][]string
+
+	// Expected output
+	expectedCode        int
+	expectedBody        interface{}
+	expectedContentType string
 }
 
 func init() {
@@ -156,6 +172,59 @@ func runTestCases(t *testing.T, tests []TestCase) {
 			assert.Equal(t, test.expectedContentType, res.Header.Get("Content-Type"))
 		})
 	}
+}
+
+func CompareTestInterfaces(a, b interface{}) (bool, error) {
+	if reflect.TypeOf(a) != reflect.TypeOf(b) {
+		return false, errors.New("types are different")
+	}
+
+	return a == b, nil
+}
+
+func TempRunTestsNew(t *testing.T, tests []TempTestCaseNew) {
+	responseFromApi := `{"title":"Not Found","detail":"Cannot GET /v1/i-dont-exist","status":404}`
+
+	test := tests[0]
+
+	resultBody := reflect.New(reflect.TypeOf(test.expectedBody)).Interface()
+
+	err := json.Unmarshal([]byte(responseFromApi), &resultBody)
+	if err != nil {
+		return
+	}
+
+	result, err := CompareTestInterfaces(test.expectedBody, reflect.ValueOf(resultBody).Elem().Interface())
+	if err != nil {
+		return
+	}
+
+	if !result {
+		t.Fail()
+	}
+}
+
+func TestApiNew(t *testing.T) {
+	type TestApiExpectedBody struct {
+		Title  string
+		Detail string
+		Status int
+	}
+
+	expectedBody := TestApiExpectedBody{Title: "Not Found", Detail: "Cannot GET /v1/i-dont-exist", Status: 404}
+
+	tests := []TempTestCaseNew{
+		{
+			description: "non existing route",
+			query:       "GET /v1/i-dont-exist",
+
+			expectedCode:        404,
+			expectedBody:        expectedBody,
+			expectedContentType: "application/problem+json",
+		},
+	}
+
+	TempRunTestsNew(t, tests)
 }
 
 func TestApi(t *testing.T) {
