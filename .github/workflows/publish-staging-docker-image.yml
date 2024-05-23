@@ -35,7 +35,7 @@ jobs:
         run: git tag v0-main-$(git rev-parse --short HEAD)
 
       -
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v5
         with:
           version: v1.9.2
           args: release --config .goreleaser.staging.yaml
