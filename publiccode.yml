@@ -2,7 +2,7 @@
 # metadata file that makes public software easily discoverable.
 # More info at https://github.com/publiccodeyml/publiccode.yml
 
-publiccodeYmlVersion: '0.3'
+publiccodeYmlVersion: '0.4'
 categories:
   - data-collection
 description:
@@ -58,7 +58,6 @@ dependsOn:
   open:
     - name: PostgreSQL
       optional: true
-releaseDate: '2023-11-04'
 softwareType: standalone/backend
-softwareVersion: v0.10.1
+softwareVersion: v0.12.0
 url: 'https://github.com/italia/developers-italia-api'
