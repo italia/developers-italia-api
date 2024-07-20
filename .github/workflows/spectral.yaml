@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: curl https://italia.github.io/api-oas-checker/spectral-full.yml > .spectral.yml
+      - run: curl --fail -L https://github.com/italia/api-oas-checker-rules/releases/download/1.1/spectral-full.yml > .spectral.yml
 
       # Get additional module required by spectral-full
       - run: mkdir functions
-      - run: curl https://raw.githubusercontent.com/italia/api-oas-checker/f6f4e6e360b2ce9816dcca29396571dda1c6027d/security/functions/checkSecurity.js > functions/checkSecurity.js
+      - run: curl --fail -L https://raw.githubusercontent.com/italia/api-oas-checker/f6f4e6e360b2ce9816dcca29396571dda1c6027d/security/functions/checkSecurity.js > functions/checkSecurity.js
 
       - uses: stoplightio/spectral-action@v0.8.11
