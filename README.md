@@ -37,7 +37,7 @@
 
 ## Requirements
 
-* Golang 1.18+
+* Golang 1.21+
 * [PostgreSQL](https://https://www.postgresql.org/)
 
 ## Development

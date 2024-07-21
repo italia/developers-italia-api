@@ -3,7 +3,7 @@
 # See Dockerfile.goreleaser for the image published on release or staging.
 #
 
-FROM golang:1.18 as base
+FROM golang:1.21 as base
 
 SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 
