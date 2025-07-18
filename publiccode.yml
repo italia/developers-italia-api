@@ -24,7 +24,7 @@ description:
       the catalog for their software needs.
     shortDescription: |-
       RESTful API for the free and open-source software catalog aimed at Italian
-      public administrations. This API serves
+      public administrations.
 developmentStatus: beta
 it:
   conforme:
