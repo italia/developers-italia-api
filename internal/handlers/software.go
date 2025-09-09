@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 	"sort"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
@@ -11,7 +12,6 @@ import (
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/handlers/general"
 	"github.com/italia/developers-italia-api/internal/models"
-	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 )
 
