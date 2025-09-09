@@ -6,16 +6,13 @@ import (
 	"net/url"
 	"sort"
 
-	"golang.org/x/exp/slices"
-
-	"github.com/italia/developers-italia-api/internal/handlers/general"
-
-	"github.com/gofiber/fiber/v2/utils"
-
 	"github.com/PuerkitoBio/purell"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
 	"github.com/italia/developers-italia-api/internal/common"
+	"github.com/italia/developers-italia-api/internal/handlers/general"
 	"github.com/italia/developers-italia-api/internal/models"
+	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 )
 

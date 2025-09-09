@@ -18,7 +18,7 @@ import (
 func DispatchWebhooks(event models.Event, gorm *gorm.DB) error {
 	var webhooks []models.Webhook
 
-	subject := fmt.Sprintf("/%s", event.EntityType)
+	subject := "/" + event.EntityType
 	if event.EntityID != "" {
 		subject += "/" + event.EntityID
 	}

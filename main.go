@@ -5,9 +5,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/caarlos0/env/v6"
-	"gorm.io/gorm"
-
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cache"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/database"
 	"github.com/italia/developers-italia-api/internal/handlers"
@@ -15,12 +18,7 @@ import (
 	"github.com/italia/developers-italia-api/internal/middleware"
 	"github.com/italia/developers-italia-api/internal/models"
 	"github.com/italia/developers-italia-api/internal/webhooks"
-
-	"github.com/ansrivas/fiberprometheus/v2"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cache"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
-	"github.com/gofiber/fiber/v2/middleware/recover"
+	"gorm.io/gorm"
 )
 
 func main() {

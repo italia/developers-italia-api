@@ -3,9 +3,8 @@ package general
 import (
 	"time"
 
-	"github.com/gofiber/fiber/v2/utils"
-
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
 	"github.com/italia/developers-italia-api/internal/common"
 	"gorm.io/gorm"
 )

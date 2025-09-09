@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/italia/developers-italia-api/internal/models"
-
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
