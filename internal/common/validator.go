@@ -2,14 +2,11 @@ package common
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
-
 	"github.com/go-playground/validator/v10"
-
+	"github.com/gofiber/fiber/v2"
 	"github.com/italia/developers-italia-api/internal/jsondecoder"
 )
 
@@ -41,6 +38,7 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 
 		for _, err := range ve {
 			var value string
+
 			value, ok := err.Value().(string)
 
 			if !ok {
@@ -87,21 +85,21 @@ func GenerateErrorDetails(validationErrors []ValidationError) string {
 	for _, validationError := range validationErrors {
 		switch validationError.Rule {
 		case "required":
-			errors = append(errors, fmt.Sprintf("%s is required", validationError.Field))
+			errors = append(errors, validationError.Field+" is required")
 		case "email":
-			errors = append(errors, fmt.Sprintf("%s is not a valid email", validationError.Field))
+			errors = append(errors, validationError.Field+" is not a valid email")
 		case "min":
-			errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too short)", validationError.Field))
+			errors = append(errors, validationError.Field+" does not meet its size limits (too short)")
 		case "max":
-			errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too long)", validationError.Field))
+			errors = append(errors, validationError.Field+" does not meet its size limits (too long)")
 		case "gt":
-			errors = append(errors, fmt.Sprintf("%s does not meet its size limits (too few items)", validationError.Field))
+			errors = append(errors, validationError.Field+" does not meet its size limits (too few items)")
 		default:
-			errors = append(errors, fmt.Sprintf("%s is invalid", validationError.Field))
+			errors = append(errors, validationError.Field+" is invalid")
 		}
 	}
 
-	errorDetails := fmt.Sprintf("invalid format: %s", strings.Join(errors, ", "))
+	errorDetails := "invalid format: " + strings.Join(errors, ", ")
 
 	return errorDetails
 }

@@ -5,16 +5,14 @@ import (
 	"errors"
 	"sort"
 
-	"golang.org/x/exp/slices"
-
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/handlers/general"
 	"github.com/italia/developers-italia-api/internal/models"
+	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
-
-	jsonpatch "github.com/evanphx/json-patch/v5"
 )
 
 type SoftwareInterface interface {

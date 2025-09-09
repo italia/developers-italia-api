@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/italia/developers-italia-api/internal/common"
-
 	pasetoware "github.com/gofiber/contrib/paseto"
 	"github.com/gofiber/fiber/v2"
+	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/o1egl/paseto"
 )
 
@@ -40,9 +39,7 @@ func NewPasetoMiddleware(envs common.Environment) fiber.Handler {
 
 			return payload, nil
 		},
-		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
-			//nolint:wrapcheck // we don't want to wrap the error, we just call the error
-			//                    handler with the correct error
+		ErrorHandler: func(ctx *fiber.Ctx, _ error) error {
 			return common.CustomErrorHandler(ctx, common.ErrAuthentication)
 		},
 	})
