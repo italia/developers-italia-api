@@ -1,6 +1,6 @@
 module github.com/italia/developers-italia-api
 
-go 1.18
+go 1.24
 
 require (
 	github.com/PuerkitoBio/purell v1.2.0
