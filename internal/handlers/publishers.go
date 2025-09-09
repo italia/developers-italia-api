@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"slices"
 	"sort"
 
 	"github.com/PuerkitoBio/purell"
@@ -12,7 +13,6 @@ import (
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/handlers/general"
 	"github.com/italia/developers-italia-api/internal/models"
-	"golang.org/x/exp/slices"
 	"gorm.io/gorm"
 )
 
