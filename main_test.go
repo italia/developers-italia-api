@@ -1178,7 +1178,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		// POST /publishers/:id/webhooks
 		{
 			description: "POST webhook for non existing publisher",
-			query:       "POST /v1/publishers/NO_SUCH_publishers/webhooks",
+			query:       "POST /v1/publishers/NO_SUCH_PUBLISHER/webhooks",
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -1309,6 +1309,353 @@ func TestPublishersEndpoints(t *testing.T) {
 		// 	},
 		// 	expectedCode:        404,
 		// },
+	}
+
+	runTestCases(t, tests)
+}
+
+func TestPublishersEndpointsWithAlternativeIDNamespace(t *testing.T) {
+	t.Setenv("PUBLISHERS_NAMESPACE", "urn:foobar:")
+
+	tests := []TestCase{
+		// GET /publishers
+		{
+			description:         "GET the first page on publishers",
+			query:               "GET /v1/publishers",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]any) {
+				assert.IsType(t, []any{}, response["data"])
+				// data := response["data"].([]any)
+
+				// assert.IsType(t, map[string]any{}, data[24])
+				// lastPub := data[0].(map[string]any)
+				//
+				// assert.Equal(t, "xxx", lastPub["alternativeId"])
+			},
+		},
+
+		// GET /publishers/:id
+		{
+			description:         "Non-existent publisher",
+			query:               "GET /v1/publishers/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			expectedCode:        404,
+			expectedBody:        `{"title":"can't get Publisher","detail":"Publisher was not found","status":404}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description:         "GET publisher with alternativeId",
+			query:               "GET /v1/publishers/alternative-id-12345",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]any) {
+				assert.Equal(t, "15fda7c4-6bbf-4387-8f89-258c1e6facb0", response["id"])
+				assert.Equal(t, "alternative-id-12345", response["alternativeId"])
+
+				_, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active", "alternativeId"}, key)
+				}
+			},
+		},
+
+		// POST /publishers
+		{
+			description: "POST publisher with alternativeId",
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId":"12345", "description":"new description", "codeHosting": [{"url" : "https://www.example-testcase-2.com"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+				assert.Equal(t, 1, len(response["codeHosting"].([]interface{})))
+
+				// TODO: check codeHosting content
+				assert.NotEmpty(t, response["codeHosting"])
+
+				assert.Equal(t, "12345", response["alternativeId"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+			},
+		},
+		{
+			description: "POST publisher with duplicate alternativeId",
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId": "alternative-id-12345", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}], "email":"example-testcase-3-pass@example.com"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
+		},
+		{
+			description: "POST publisher with alternativeId matching an existing id",
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId": "2ded32eb-c45e-4167-9166-a44e18b8adde", "description":"new description", "codeHosting": [{"url" : "https://example-testcase-xx3.com"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Publisher","detail":"Publisher with id '2ded32eb-c45e-4167-9166-a44e18b8adde' already exists","status":409}`,
+		},
+		{
+			description: "POST publisher with empty alternativeId",
+			query:       "POST /v1/publishers",
+			body:        `{"alternativeId": "", "description":"new description", "codeHosting": [{"url" : "https://gitlab.example.com/repo"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Publisher","detail":"invalid format: alternativeId does not meet its size limits (too short)","status":422,"validationErrors":[{"field":"alternativeId","rule":"min","value":""}]}`,
+		},
+
+		// PATCH /publishers/:id
+		{
+			description: "PATCH non existing publisher",
+			query:       "PATCH /v1/publishers/NO_SUCH_PUBLISHER",
+			body:        ``,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher was not found","status":404}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			description: "PATCH a publisher",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "new PATCHed description", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "new PATCHed description", response["description"])
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+
+				assert.Equal(t, "https://gitlab.example.org/patched-repo", firstCodeHosting["url"])
+				assert.Equal(t, "2ded32eb-c45e-4167-9166-a44e18b8adde", response["id"])
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH a publisher via alternativeId",
+			query:       "PATCH /v1/publishers/alternative-id-12345",
+			body:        `{"description": "new PATCHed description via alternativeId", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "new PATCHed description via alternativeId", response["description"])
+				assert.IsType(t, []interface{}{}, response["codeHosting"])
+
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+
+				assert.Equal(t, "https://gitlab.example.org/patched-repo", firstCodeHosting["url"])
+				assert.Equal(t, "15fda7c4-6bbf-4387-8f89-258c1e6facb0", response["id"])
+
+				created, err := time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				updated, err := time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH a publisher with alternativeId matching an existing id",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"alternativeId": "47807e0c-0613-4aea-9917-5455cc6eddad"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher with id '47807e0c-0613-4aea-9917-5455cc6eddad' already exists","status":409}`,
+		},
+
+		// DELETE /publishers/:id
+		{
+			description: "Delete non-existent publishers",
+			query:       "DELETE /v1/publishers/eea19c82-0449-11ed-bd84-d8bbc146d165",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedBody:        `{"title":"can't delete Publisher","detail":"Publisher was not found","status":404}`,
+			expectedContentType: "application/problem+json",
+		},
+		{
+			query: "DELETE /v1/publishers/15fda7c4-6bbf-4387-8f89-258c1e6fafb1",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        204,
+			expectedBody:        "",
+			expectedContentType: "",
+		},
+		{
+			description: "DELETE publisher via alternativeId",
+			query:       "DELETE /v1/publishers/alternative-id-12345",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        204,
+			expectedBody:        "",
+			expectedContentType: "",
+		},
+
+		// WebHooks
+
+		// GET /publishers/:id/webhooks
+		{
+			query: "GET /v1/publishers/47807e0c-0613-4aea-9917-5455cc6eddad/webhooks",
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 1, len(data))
+
+				// Default pagination size is 25, so all this publishers's logs fit into a page
+				// and cursors should be empty
+				assert.IsType(t, map[string]interface{}{}, response["links"])
+
+				links := response["links"].(map[string]interface{})
+				assert.Nil(t, links["prev"])
+				assert.Nil(t, links["next"])
+
+				assert.IsType(t, map[string]interface{}{}, data[0])
+				firstWebhook := data[0].(map[string]interface{})
+				assert.Equal(t, "https://6-b.example.org/receiver", firstWebhook["url"])
+				assert.Equal(t, "1702cd06-fffb-4d20-8f55-73e2a00ee052", firstWebhook["id"])
+				assert.Equal(t, "2018-07-15T00:00:00Z", firstWebhook["createdAt"])
+				assert.Equal(t, "2018-07-15T00:00:00Z", firstWebhook["updatedAt"])
+
+				for key := range firstWebhook {
+					assert.Contains(t, []string{"id", "url", "createdAt", "updatedAt"}, key)
+				}
+			},
+		},
+		{
+			description: "GET webhooks for non existing publisher",
+			query:       "GET /v1/publishers/NO_SUCH_PUBLISHER/webhooks",
+
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't find resource`, response["title"])
+				assert.Equal(t, "resource was not found", response["detail"])
+			},
+		},
+		{
+			description: "GET webhooks for publisher without webhooks",
+			query:       "GET /v1/publishers/b97446f8-fe06-472c-9b26-c40150cac77f/webhooks",
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 0, len(data))
+			},
+		},
+
+		// POST /publishers/:id/webhooks
+		{
+			description: "POST webhook for non existing publisher",
+			query:       "POST /v1/publishers/NO_SUCH_publishers/webhooks",
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't find resource`, response["title"])
+				assert.Equal(t, "resource was not found", response["detail"])
+			},
+		},
+		{
+			query: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
+			body:  `{"url": "https://new.example.org", "secret": "xyz"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "https://new.example.org", response["url"])
+
+				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
+				assert.Nil(t, err)
+				assert.True(t, match)
+
+				_, err = time.Parse(time.RFC3339, response["createdAt"].(string))
+				assert.Nil(t, err)
+
+				_, err = time.Parse(time.RFC3339, response["updatedAt"].(string))
+				assert.Nil(t, err)
+
+				for key := range response {
+					assert.Contains(t, []string{"id", "url", "createdAt", "updatedAt"}, key)
+				}
+
+				// TODO: check the record was actually created in the database
+			},
+		},
 	}
 
 	runTestCases(t, tests)

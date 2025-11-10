@@ -27,11 +27,12 @@ type PublisherInterface interface {
 const normalizeFlags = purell.FlagsUsuallySafeGreedy | purell.FlagRemoveWWW
 
 type Publisher struct {
-	db *gorm.DB
+	db                     *gorm.DB
+	alternativeIDNamespace string
 }
 
 func NewPublisher(db *gorm.DB) *Publisher {
-	return &Publisher{db: db}
+	return &Publisher{db: db, alternativeIDNamespace: common.EnvironmentConfig.PublishersNamespace}
 }
 
 // GetPublishers gets the list of all publishers and returns any error encountered.
@@ -80,7 +81,7 @@ func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 	publisher := models.Publisher{}
 	id := ctx.Params("id")
 
-	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ? or alternative_id = ?", id, id).Error; err != nil {
+	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ? or alternative_id = ?", id, p.alternativeIDNamespace+id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't get Publisher", "Publisher was not found")
 		}
@@ -170,7 +171,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 	id := ctx.Params("id")
 
 	// Preload will load all the associated CodeHosting. We'll manually handle that later.
-	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ? or alternative_id = ?", id, id).
+	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ? or alternative_id = ?", id, p.alternativeIDNamespace+id).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
@@ -264,7 +265,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 // DeletePublisher deletes the publisher with the given ID.
 func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
-	result := p.db.Select("CodeHosting").Where("id = ? or alternative_id = ?", id, id).Delete(&models.Publisher{})
+	result := p.db.Select("CodeHosting").Where("id = ? or alternative_id = ?", id, p.alternativeIDNamespace+id).Delete(&models.Publisher{})
 
 	if result.Error != nil {
 		return common.Error(fiber.StatusInternalServerError, "can't delete Publisher", "db error")
