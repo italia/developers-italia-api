@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: 1.24.x
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           # All history, required for goreleaser
           fetch-depth: 0
