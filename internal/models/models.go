@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/italia/developers-italia-api/internal/common"
 	"gorm.io/gorm"
 )
 
@@ -48,6 +49,18 @@ func (Publisher) TableName() string {
 
 func (p Publisher) UUID() string {
 	return p.ID
+}
+
+func (p Publisher) MarshalJSON() ([]byte, error) {
+	type Alias Publisher
+	copy := Alias(p)
+
+	if altId := copy.AlternativeID; altId != nil && *altId != "" {
+		prefixed := common.EnvironmentConfig.PublishersNamespace + *altId
+		copy.AlternativeID = &prefixed
+	}
+
+	return json.Marshal(copy)
 }
 
 func (CodeHosting) TableName() string {
