@@ -30,7 +30,7 @@ jobs:
       - # Tag with a temporary valid semantic version. This is required by goreleaser.
         run: git tag v0-main-$(git rev-parse --short HEAD)
 
-      - uses: goreleaser/goreleaser-action@v6
+      - uses: goreleaser/goreleaser-action@v7
         with:
           version: v1.9.2
           args: release --config .goreleaser.staging.yaml
