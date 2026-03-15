@@ -9,7 +9,7 @@ require (
 	github.com/go-testfixtures/testfixtures/v3 v3.19.0
 	github.com/gofiber/contrib/paseto v0.0.0-20220621082844-83549332c36e
 	github.com/gofiber/fiber/v2 v2.52.12
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.11.1
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/driver/sqlite v1.5.2
 	gorm.io/gorm v1.25.2-0.20230530020048-26663ab9bf55
