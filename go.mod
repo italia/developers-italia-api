@@ -7,7 +7,7 @@ require (
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/go-testfixtures/testfixtures/v3 v3.19.0
-	github.com/gofiber/contrib/paseto v0.0.0-20220621082844-83549332c36e
+	github.com/gofiber/contrib/paseto v1.2.4
 	github.com/gofiber/fiber/v2 v2.52.12
 	github.com/stretchr/testify v1.11.1
 	gorm.io/driver/postgres v1.5.2
