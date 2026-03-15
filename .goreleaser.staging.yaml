@@ -2,6 +2,7 @@
 # the Docker image for the main branch.
 #
 # Make sure to check the documentation at https://goreleaser.com
+version: 2
 
 # Don't create a GitHub release
 release:
