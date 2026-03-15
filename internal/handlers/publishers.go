@@ -3,11 +3,9 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"slices"
 	"sort"
 
-	"github.com/PuerkitoBio/purell"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/italia/developers-italia-api/internal/common"
@@ -23,8 +21,6 @@ type PublisherInterface interface {
 	PatchPublisher(ctx *fiber.Ctx) error
 	DeletePublisher(ctx *fiber.Ctx) error
 }
-
-const normalizeFlags = purell.FlagsUsuallySafeGreedy | purell.FlagRemoveWWW
 
 type Publisher struct {
 	db *gorm.DB
@@ -132,13 +128,10 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	for _, codeHost := range request.CodeHosting {
-		urlAddress, _ := url.Parse(codeHost.URL)
-		normalizedURL := purell.NormalizeURL(urlAddress, normalizeFlags)
-
 		publisher.CodeHosting = append(publisher.CodeHosting,
 			models.CodeHosting{
 				ID:    utils.UUIDv4(),
-				URL:   normalizedURL,
+				URL:   common.NormalizeURL(codeHost.URL),
 				Group: codeHost.Group,
 			})
 	}
@@ -211,7 +204,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 	// the request specifies a "CodeHosting" key.
 	if publisherReq.CodeHosting != nil {
 		for _, ch := range *publisherReq.CodeHosting {
-			expectedURLs = append(expectedURLs, purell.MustNormalizeURLString(ch.URL, normalizeFlags))
+			expectedURLs = append(expectedURLs, common.NormalizeURL(ch.URL))
 		}
 	} else {
 		for _, ch := range publisher.CodeHosting {

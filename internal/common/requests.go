@@ -1,6 +1,21 @@
 package common
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/PuerkitoBio/purell"
+)
+
+const normalizeURLFlags = purell.FlagsUsuallySafeGreedy | purell.FlagRemoveWWW
+
+func NormalizeURL(rawURL string) string {
+	normalized, err := purell.NormalizeURLString(rawURL, normalizeURLFlags)
+	if err != nil {
+		return rawURL
+	}
+
+	return normalized
+}
 
 type PublisherPost struct {
 	CodeHosting   []CodeHosting `json:"codeHosting" validate:"required,gt=0,dive"`

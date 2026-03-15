@@ -56,7 +56,7 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mos
 
 	// Return just software with a certain URL if the 'url' query filter
 	// is used.
-	if url := ctx.Query("url", ""); url != "" {
+	if url := common.NormalizeURL(ctx.Query("url", "")); url != "" {
 		var softwareURL models.SoftwareURL
 
 		err = p.db.First(&softwareURL, "url = ?", url).Error
@@ -146,10 +146,10 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 
 	aliases := []models.SoftwareURL{}
 	for _, u := range softwareReq.Aliases {
-		aliases = append(aliases, models.SoftwareURL{ID: utils.UUIDv4(), URL: u})
+		aliases = append(aliases, models.SoftwareURL{ID: utils.UUIDv4(), URL: common.NormalizeURL(u)})
 	}
 
-	url := models.SoftwareURL{ID: utils.UUIDv4(), URL: softwareReq.URL}
+	url := models.SoftwareURL{ID: utils.UUIDv4(), URL: common.NormalizeURL(softwareReq.URL)}
 	software := models.Software{
 		ID: utils.UUIDv4(),
 
@@ -223,10 +223,12 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 	}
 
+	updatedSoftware.URL.URL = common.NormalizeURL(updatedSoftware.URL.URL)
+
 	// Slice of aliases that we expect to be in the database after the PATCH
 	expectedAliases := make([]string, 0, len(updatedSoftware.Aliases))
 	for _, alias := range updatedSoftware.Aliases {
-		expectedAliases = append(expectedAliases, alias.URL)
+		expectedAliases = append(expectedAliases, common.NormalizeURL(alias.URL))
 	}
 
 	if err := p.db.Transaction(func(tran *gorm.DB) error {
