@@ -130,7 +130,7 @@ func (p *Webhook[T]) PostResourceWebhook(ctx *fiber.Ctx) error {
 
 	webhook := models.Webhook{
 		ID:         utils.UUIDv4(),
-		URL:        webhookReq.URL,
+		URL:        common.NormalizeURL(webhookReq.URL),
 		Secret:     webhookReq.Secret,
 		EntityID:   "", // this webhook is triggered for all the resources of this kind
 		EntityType: resource.TableName(),
@@ -170,7 +170,7 @@ func (p *Webhook[T]) PostSingleResourceWebhook(ctx *fiber.Ctx) error {
 
 	webhook := models.Webhook{
 		ID:         utils.UUIDv4(),
-		URL:        webhookReq.URL,
+		URL:        common.NormalizeURL(webhookReq.URL),
 		Secret:     webhookReq.Secret,
 		EntityID:   resource.UUID(),
 		EntityType: resource.TableName(),
@@ -207,7 +207,7 @@ func (p *Webhook[T]) PatchWebhook(ctx *fiber.Ctx) error {
 		)
 	}
 
-	webhook.URL = webhookReq.URL
+	webhook.URL = common.NormalizeURL(webhookReq.URL)
 
 	if err := p.db.Updates(&webhook).Error; err != nil {
 		return common.Error(fiber.StatusInternalServerError, errMsg, "db error")
