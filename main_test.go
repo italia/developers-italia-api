@@ -597,10 +597,12 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.IsType(t, []interface{}{}, response["codeHosting"])
-				assert.Equal(t, 1, len(response["codeHosting"].([]interface{})))
 
-				// TODO: check codeHosting content
-				assert.NotEmpty(t, response["codeHosting"])
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 1, len(codeHosting))
+
+				firstCodeHosting := codeHosting[0].(map[string]interface{})
+				assert.Equal(t, "https://example-testcase-3.com", firstCodeHosting["url"])
 
 				match, err := regexp.MatchString(UUID_REGEXP, response["id"].(string))
 				assert.Nil(t, err)
@@ -1221,6 +1223,20 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description: "POST webhook with non-normalized URL",
+			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
+			body:        `{"url": "https://www.new.example.org/"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "https://new.example.org", response["url"])
+			},
+		},
+		{
 			description: "POST publishers webhook - wrong token",
 			query:       "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
 			body:        `{"url": "https://new.example.org"}`,
@@ -1481,6 +1497,22 @@ func TestSoftwareEndpoints(t *testing.T) {
 				for key := range firstSoftware {
 					assert.Contains(t, []string{"id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality"}, key)
 				}
+			},
+		},
+		{
+			description: "GET software with a non-normalized URL filter",
+			query:       "GET /v1/software?url=https://www.1-a.example.org/code/repo",
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.IsType(t, []interface{}{}, response["data"])
+				data := response["data"].([]interface{})
+
+				assert.Equal(t, 1, len(data))
+
+				firstSoftware := data[0].(map[string]interface{})
+				assert.Equal(t, "https://1-a.example.org/code/repo", firstSoftware["url"])
 			},
 		},
 		{
@@ -1777,6 +1809,24 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				// TODO: check the record was actually created in the database
 				// TODO: check there are no dangling software_urls
+			},
+		},
+		{
+			description: "POST software with non-normalized URL",
+			query:       "POST /v1/software",
+			body:        `{"publiccodeYml": "-", "url": "https://www.software.example.org", "aliases": ["https://www.alias.example.org/"]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "https://software.example.org", response["url"])
+
+				aliases := response["aliases"].([]interface{})
+				assert.Equal(t, 1, len(aliases))
+				assert.Equal(t, "https://alias.example.org", aliases[0])
 			},
 		},
 		{
@@ -3279,6 +3329,20 @@ func TestWebhooksEndpoints(t *testing.T) {
 				for key := range response {
 					assert.Contains(t, []string{"id", "url", "createdAt", "updatedAt"}, key)
 				}
+			},
+		},
+		{
+			description: "PATCH webhook with non-normalized URL",
+			query:       "PATCH /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",
+			body:        `{"url": "https://www.new.example.org/receiver/"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "https://new.example.org/receiver", response["url"])
 			},
 		},
 		{
