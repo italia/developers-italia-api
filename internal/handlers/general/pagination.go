@@ -23,7 +23,7 @@ func NewPaginator(ctx *fiber.Ctx) *paginator.Paginator {
 }
 
 func NewPaginatorWithConfig(ctx *fiber.Ctx, config *paginator.Config) *paginator.Paginator {
-	mergedConf := DefaultConfig
+	mergedConf := *DefaultConfig
 
 	if len(config.Keys) != 0 {
 		mergedConf.Keys = config.Keys
@@ -33,11 +33,11 @@ func NewPaginatorWithConfig(ctx *fiber.Ctx, config *paginator.Config) *paginator
 		mergedConf.Limit = config.Limit
 	}
 
-	if config.Order != DefaultConfig.Order {
+	if config.Order != "" {
 		mergedConf.Order = config.Order
 	}
 
-	paginator := paginator.New(mergedConf)
+	paginator := paginator.New(&mergedConf)
 
 	if after := ctx.Query("page[after]"); after != "" {
 		paginator.SetAfterCursor(after)
