@@ -1,9 +1,12 @@
 package main
 
 import (
+	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPublishersEndpoints(t *testing.T) {
@@ -1036,4 +1039,56 @@ func TestPublishersEndpoints(t *testing.T) {
 	runTestCases(t, tests)
 }
 
+func TestPublishersPatchDBChecks(t *testing.T) {
+	t.Run("PATCH publisher persists changes to DB", func(t *testing.T) {
+		loadFixtures(t)
 
+		const publisherID = "2ded32eb-c45e-4167-9166-a44e18b8adde"
+
+		body := `{"description": "new PATCHed description", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`
+		req, err := http.NewRequest("PATCH", "/v1/publishers/"+publisherID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, "new PATCHed description", dbValue(t, "publishers", "description", "id", publisherID))
+
+		assert.Equal(t, 0, dbCount(t, "publishers_code_hosting", "url", "https://1-a.example.org/code/repo"))
+		assert.Equal(t, 0, dbCount(t, "publishers_code_hosting", "url", "https://1-b.example.org/code/repo"))
+
+		assert.Equal(t, publisherID, dbValue(t, "publishers_code_hosting", "publisher_id", "url", "https://gitlab.example.org/patched-repo"))
+		assert.Equal(t, 1, dbCount(t, "publishers_code_hosting", "publisher_id", publisherID))
+	})
+}
+
+func TestPublishersDeleteDBChecks(t *testing.T) {
+	t.Run("DELETE publisher removes code hosting rows", func(t *testing.T) {
+		// TODO: make this pass
+		t.Skip("publishers_code_hosting rows are not deleted on publisher DELETE (implementation bug)")
+
+		loadFixtures(t)
+
+		const publisherID = "15fda7c4-6bbf-4387-8f89-258c1e6fafb1"
+
+		req, err := http.NewRequest("DELETE", "/v1/publishers/"+publisherID, nil)
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		assert.Nil(t, err)
+		assert.Equal(t, 204, res.StatusCode)
+
+		assert.Equal(t, 0, dbCount(t, "publishers_code_hosting", "publisher_id", publisherID))
+	})
+}

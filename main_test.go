@@ -3,12 +3,14 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -163,8 +165,10 @@ func runTestCases(t *testing.T, tests []TestCase) {
 // assertUUID checks that val is a string matching the UUID format.
 func assertUUID(t *testing.T, val interface{}) {
 	t.Helper()
+
 	s, ok := val.(string)
 	require.True(t, ok, "expected string UUID, got %T: %v", val, val)
+
 	match, err := regexp.MatchString(UUID_REGEXP, s)
 	require.NoError(t, err)
 	assert.True(t, match, "expected UUID format, got %q", s)
@@ -173,16 +177,20 @@ func assertUUID(t *testing.T, val interface{}) {
 // assertRFC3339 checks that val is a string in RFC3339 format and returns the parsed time.
 func assertRFC3339(t *testing.T, val interface{}) time.Time {
 	t.Helper()
+
 	s, ok := val.(string)
 	require.True(t, ok, "expected RFC3339 string, got %T: %v", val, val)
+
 	parsed, err := time.Parse(time.RFC3339, s)
 	assert.NoError(t, err, "expected RFC3339 timestamp, got %q", s)
+
 	return parsed
 }
 
 // assertTimestamps checks that the map has valid RFC3339 createdAt and updatedAt fields.
 func assertTimestamps(t *testing.T, m map[string]interface{}) {
 	t.Helper()
+
 	assertRFC3339(t, m["createdAt"])
 	assertRFC3339(t, m["updatedAt"])
 }
@@ -190,6 +198,7 @@ func assertTimestamps(t *testing.T, m map[string]interface{}) {
 // assertOnlyKeys checks that the map contains no keys outside the allowed set.
 func assertOnlyKeys(t *testing.T, m map[string]interface{}, keys ...string) {
 	t.Helper()
+
 	for key := range m {
 		assert.Contains(t, keys, key, "unexpected key %q in response", key)
 	}
@@ -198,13 +207,16 @@ func assertOnlyKeys(t *testing.T, m map[string]interface{}, keys ...string) {
 // assertListResponse extracts the data array from a paginated response.
 func assertListResponse(t *testing.T, response map[string]interface{}) []map[string]interface{} {
 	t.Helper()
+
 	require.IsType(t, []interface{}{}, response["data"], "response.data should be an array")
 	raw := response["data"].([]interface{})
+
 	items := make([]map[string]interface{}, len(raw))
 	for i, item := range raw {
 		require.IsType(t, map[string]interface{}{}, item, "data[%d] should be an object", i)
 		items[i] = item.(map[string]interface{})
 	}
+
 	return items
 }
 
@@ -212,8 +224,41 @@ func assertListResponse(t *testing.T, response map[string]interface{}) []map[str
 // Pass nil for prev/next to assert they are absent, or a string to assert the exact value.
 func assertPaginationLinks(t *testing.T, response map[string]interface{}, expectedPrev, expectedNext interface{}) {
 	t.Helper()
+
 	require.IsType(t, map[string]interface{}{}, response["links"])
 	links := response["links"].(map[string]interface{})
+
 	assert.Equal(t, expectedPrev, links["prev"])
 	assert.Equal(t, expectedNext, links["next"])
+}
+
+// placeholder returns the SQL placeholder for the current db driver.
+func placeholder(n int) string {
+	if dbDriver == "sqlite3" {
+		return "?"
+	}
+
+	return fmt.Sprintf("$%d", n)
+}
+
+// dbValue reads the value of column from the row matching whereCol=whereVal in the given table.
+func dbValue(t *testing.T, table, column, whereCol, whereVal string) string {
+	t.Helper()
+
+	var val string
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s = %s", column, table, whereCol, placeholder(1))
+	err := db.QueryRow(query, whereVal).Scan(&val)
+	require.NoError(t, err)
+
+	return val
+}
+
+// dbCount queries the count of rows matching column=value in the given table.
+func dbCount(t *testing.T, table, column, value string) int {
+	t.Helper()
+
+	n, err := strconv.Atoi(dbValue(t, table, "COUNT(*)", column, value))
+	require.NoError(t, err)
+
+	return n
 }
