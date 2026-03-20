@@ -1,10 +1,13 @@
 package main
 
 import (
+	"net/http"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSoftwareEndpoints(t *testing.T) {
@@ -1411,3 +1414,53 @@ func TestSoftwareEndpoints(t *testing.T) {
 	runTestCases(t, tests)
 }
 
+func TestSoftwarePatchDBChecks(t *testing.T) {
+	t.Run("PATCH software persists changes to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		const softwareID = "59803fb7-8eec-4fe5-a354-8926009c364a"
+
+		body := `{"publiccodeYml": "publiccodedata", "url": "https://software-new.example.org", "aliases": ["https://software.example.com", "https://software-old.example.org"]}`
+		req, err := http.NewRequest("PATCH", "/v1/software/"+softwareID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, "publiccodedata", dbValue(t, "software", "publiccode_yml", "id", softwareID))
+
+		assert.Equal(t, 0, dbCount(t, "software_urls", "url", "https://18-a.example.org/code/repo"))
+		assert.Equal(t, 0, dbCount(t, "software_urls", "url", "https://18-b.example.org/code/repo"))
+
+		assert.Equal(t, softwareID, dbValue(t, "software_urls", "software_id", "url", "https://software-new.example.org"))
+		assert.Equal(t, 3, dbCount(t, "software_urls", "software_id", softwareID))
+	})
+}
+
+func TestSoftwareDeleteDBChecks(t *testing.T) {
+	t.Run("DELETE software removes software_urls rows", func(t *testing.T) {
+		loadFixtures(t)
+
+		const softwareID = "11e101c4-f989-4cc4-a665-63f9f34e83f6"
+
+		req, err := http.NewRequest("DELETE", "/v1/software/"+softwareID, nil)
+		if err != nil {
+			assert.Fail(t, err.Error())
+		}
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		assert.Nil(t, err)
+		assert.Equal(t, 204, res.StatusCode)
+
+		assert.Equal(t, 0, dbCount(t, "software_urls", "software_id", softwareID))
+	})
+}
