@@ -9,6 +9,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cache"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/italia/developers-italia-api/internal/common"
@@ -60,6 +61,12 @@ func Setup() *fiber.App {
 
 	// Automatically recover panics in handlers
 	app.Use(recover.New())
+
+	app.Use(healthcheck.New(healthcheck.Config{
+		ReadinessProbe: func(c *fiber.Ctx) bool {
+			return gormDB.Exec("SELECT 1").Error == nil
+		},
+	}))
 
 	// Use Fiber Rate API Limiter
 	if !common.EnvironmentConfig.IsTest() && common.EnvironmentConfig.MaxRequests != 0 {
