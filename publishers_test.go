@@ -785,6 +785,60 @@ func TestPublishersEndpoints(t *testing.T) {
 		// 	expectedCode:        404,
 		// }
 
+
+		// JSON Patch
+		{
+			description: "PATCH a publisher with JSON Patch - replace description",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `[{"op": "replace", "path": "/description", "value": "new description via JSON Patch"}]`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json-patch+json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "new description via JSON Patch", response["description"])
+				assert.Equal(t, "foobar@1.example.org", response["email"])
+				assert.Equal(t, "2ded32eb-c45e-4167-9166-a44e18b8adde", response["id"])
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 2, len(codeHosting))
+				created := assertRFC3339(t, response["createdAt"])
+				updated := assertRFC3339(t, response["updatedAt"])
+				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH a publisher with JSON Patch - add codeHosting",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `[{"op": "add", "path": "/codeHosting/-", "value": {"url": "https://new-code-host.example.org", "group": false}}]`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json-patch+json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "Publisher description 1", response["description"])
+				codeHosting := response["codeHosting"].([]interface{})
+				assert.Equal(t, 3, len(codeHosting))
+			},
+		},
+		{
+			description: "PATCH a publisher with JSON Patch - malformed patch",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "this is not a JSON Patch"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json-patch+json"},
+			},
+			expectedCode:        400,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't update Publisher", response["title"])
+				assert.Equal(t, "malformed JSON Patch", response["detail"])
+			},
+		},
 		// DELETE /publishers/:id
 		{
 			description: "Delete non-existent publishers",
