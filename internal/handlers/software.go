@@ -262,13 +262,17 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 
 		return nil
 	}); err != nil {
-		switch {
-		case errors.Is(err, gorm.ErrDuplicatedKey):
-			return common.Error(fiber.StatusConflict, errMsg, "URL already exists")
-		default:
-			//nolint:wrapcheck // default to not wrap other errors, the handler will take care of this
-			return err
+		if field := common.DuplicateField(err); field != nil {
+			detail := "already exists"
+			if *field != "" {
+				detail = *field + " already exists"
+			}
+
+			return common.Error(fiber.StatusConflict, errMsg, detail)
 		}
+
+		//nolint:wrapcheck // default to not wrap other errors, the handler will take care of this
+		return err
 	}
 
 	// Sort the aliases to always have a consistent output

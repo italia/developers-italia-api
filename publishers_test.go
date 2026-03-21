@@ -309,7 +309,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"alternativeId already exists","status":409}`,
 		},
 		{
 			description: "POST publisher with alternativeId matching an existing id",
@@ -367,7 +367,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"codeHosting.url already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with an existing email",
@@ -435,7 +435,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"description already exists","status":409}`,
 		},
 		{
 			description: "POST new publisher with no description",
@@ -471,7 +471,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't create Publisher","detail":"alternativeId already exists","status":409}`,
 		},
 		{
 			description: "POST publishers with invalid payload",
@@ -725,7 +725,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't update Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"description already exists","status":409}`,
 		},
 		{
 			description: "PATCH publishers - wrong token",

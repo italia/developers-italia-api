@@ -139,20 +139,18 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	}
 
 	if err := p.db.Create(&publisher).Error; err != nil {
-		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			return common.Error(fiber.StatusNotFound,
-				"can't create Publisher",
-				"Publisher was not found")
-		case errors.Is(err, gorm.ErrDuplicatedKey):
-			return common.Error(fiber.StatusConflict,
-				"can't create Publisher",
-				"description, alternativeId or codeHosting URL already exists")
-		default:
-			return common.Error(fiber.StatusInternalServerError,
-				"can't create Publisher",
-				fiber.ErrInternalServerError.Message)
+		if field := common.DuplicateField(err); field != nil {
+			detail := "already exists"
+			if *field != "" {
+				detail = *field + " already exists"
+			}
+
+			return common.Error(fiber.StatusConflict, "can't create Publisher", detail)
 		}
+
+		return common.Error(fiber.StatusInternalServerError,
+			"can't create Publisher",
+			fiber.ErrInternalServerError.Message)
 	}
 
 	return ctx.JSON(&publisher)
@@ -266,8 +264,13 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 
 		return nil
 	}); err != nil {
-		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return common.Error(fiber.StatusConflict, errMsg, "description, alternativeId or codeHosting URL already exists")
+		if field := common.DuplicateField(err); field != nil {
+			detail := "already exists"
+			if *field != "" {
+				detail = *field + " already exists"
+			}
+
+			return common.Error(fiber.StatusConflict, errMsg, detail)
 		}
 
 		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
