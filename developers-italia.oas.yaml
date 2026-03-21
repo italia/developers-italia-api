@@ -1486,6 +1486,18 @@ components:
           maxLength: 255
           example: 'ID-1234'
           pattern: '.*'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the publisher was created (RFC 3339 datetime)
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the publisher was updated (RFC 3339 datetime)
+          readOnly: true
       required:
         - id
         - description
