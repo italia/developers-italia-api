@@ -227,6 +227,9 @@ paths:
           application/merge-patch+json:
             schema:
               $ref: '#/components/schemas/Software'
+          application/json-patch+json:
+            schema:
+              $ref: '#/components/schemas/JsonPatchRequest'
     delete:
       summary: Delete a Software
       description: Delete a Software by its id
@@ -1285,6 +1288,50 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
   schemas:
+    JsonPatchRequest:
+      title: JsonPatchRequest
+      type: array
+      description: >
+        A JSON Patch document as defined by RFC 6902.
+        Writable fields are: publiccodeYml, url, aliases, active, vitality.
+      example:
+        - op: replace
+          path: /publiccodeYml
+          value: "name: My Software"
+        - op: replace
+          path: /vitality
+          value: "90,100,94,12"
+        - op: add
+          path: /aliases/-
+          value: "https://github.com/example/old-repo"
+        - op: replace
+          path: /active
+          value: false
+      items:
+        type: object
+        additionalProperties: false
+        required:
+          - op
+          - path
+        properties:
+          op:
+            type: string
+            enum:
+              - add
+              - remove
+              - replace
+              - test
+          path:
+            type: string
+            description: >
+              A JSON Pointer (RFC 6901) to a writable field.
+              Examples: /publiccodeYml, /url, /active, /vitality,
+              /aliases (full replace), /aliases/- (append), /aliases/0 (by index).
+          value:
+            description: The value to set. Required for add, replace, and test operations.
+          from:
+            type: string
+            description: Source JSON Pointer, used by move and copy operations.
     Software:
       title: Software
       type: object
