@@ -716,6 +716,18 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher with id '47807e0c-0613-4aea-9917-5455cc6eddad' already exists","status":409}`,
 		},
 		{
+			description: "PATCH a publisher with duplicate description",
+			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
+			body:        `{"description": "Publisher description 2"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        409,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Publisher","detail":"description, alternativeId or codeHosting URL already exists","status":409}`,
+		},
+		{
 			description: "PATCH publishers - wrong token",
 			query:       "PATCH /v1/publishers/2ded32eb-c45e-4167-9166-a44e18b8adde",
 			body:        ``,
