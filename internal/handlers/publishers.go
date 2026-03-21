@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
 	"sort"
 
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/italia/developers-italia-api/internal/common"
@@ -156,9 +158,11 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	return ctx.JSON(&publisher)
 }
 
-// PatchPublisher updates the publisher with the given ID. CodeHosting URLs will be overwritten from the request.
+// PatchPublisher updates the publisher with the given ID.
+// Supports both JSON Merge Patch (default) and JSON Patch (application/json-patch+json).
 func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funlen // mostly error handling ifs
-	publisherReq := new(common.PublisherPatch)
+	const errMsg = "can't update Publisher"
+
 	publisher := models.Publisher{}
 	id := ctx.Params("id")
 
@@ -166,50 +170,77 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 	if err := p.db.Preload("CodeHosting").First(&publisher, "id = ? or alternative_id = ?", id, id).
 		Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return common.Error(fiber.StatusNotFound, "can't update Publisher", "Publisher was not found")
+			return common.Error(fiber.StatusNotFound, errMsg, "Publisher was not found")
 		}
 
-		return common.Error(
-			fiber.StatusInternalServerError,
-			"can't update Publisher",
-			fiber.ErrInternalServerError.Message,
-		)
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
 	}
 
-	if err := common.ValidateRequestEntity(ctx, publisherReq, "can't update Publisher"); err != nil {
-		return err //nolint:wrapcheck
+	publisherJSON, err := json.Marshal(&publisher)
+	if err != nil {
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 	}
 
-	if publisherReq.AlternativeID != nil {
-		//nolint:godox // postpone the fix
-		// FIXME: Possible TOCTTOU race here
-		result := p.db.Limit(1).Find(&models.Publisher{ID: *publisherReq.AlternativeID})
+	var updatedJSON []byte
 
-		if result.Error != nil {
-			return common.Error(fiber.StatusInternalServerError, "can't update Publisher", "db error")
+	switch ctx.Get(fiber.HeaderContentType) {
+	case "application/json-patch+json":
+		patch, err := jsonpatch.DecodePatch(ctx.Body())
+		if err != nil {
+			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
 		}
 
-		if result.RowsAffected != 0 {
-			return common.Error(fiber.StatusConflict,
-				"can't update Publisher",
-				fmt.Sprintf("Publisher with id '%s' already exists", *publisherReq.AlternativeID),
-			)
+		updatedJSON, err = patch.Apply(publisherJSON)
+		if err != nil {
+			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+		}
+
+	// application/merge-patch+json by default
+	default:
+		publisherReq := new(common.PublisherPatch)
+
+		if err := common.ValidateRequestEntity(ctx, publisherReq, errMsg); err != nil {
+			return err //nolint:wrapcheck
+		}
+
+		if publisherReq.AlternativeID != nil {
+			//nolint:godox // postpone the fix
+			// FIXME: Possible TOCTTOU race here
+			result := p.db.Limit(1).Find(&models.Publisher{ID: *publisherReq.AlternativeID})
+
+			if result.Error != nil {
+				return common.Error(fiber.StatusInternalServerError, errMsg, "db error")
+			}
+
+			if result.RowsAffected != 0 {
+				return common.Error(fiber.StatusConflict,
+					errMsg,
+					fmt.Sprintf("Publisher with id '%s' already exists", *publisherReq.AlternativeID),
+				)
+			}
+		}
+
+		updatedJSON, err = jsonpatch.MergePatch(publisherJSON, ctx.Body())
+		if err != nil {
+			return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 		}
 	}
 
-	// Slice of CodeHosting URLs that we expect in the database after the PATCH
-	var expectedURLs []string
+	var updatedPublisher models.Publisher
 
-	// application/merge-patch+json semantics: change CodeHosting only if
-	// the request specifies a "CodeHosting" key.
-	if publisherReq.CodeHosting != nil {
-		for _, ch := range *publisherReq.CodeHosting {
-			expectedURLs = append(expectedURLs, common.NormalizeURL(ch.URL))
-		}
-	} else {
-		for _, ch := range publisher.CodeHosting {
-			expectedURLs = append(expectedURLs, ch.URL)
-		}
+	if err := json.Unmarshal(updatedJSON, &updatedPublisher); err != nil {
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	}
+
+	// Prevent patches from changing the ID.
+	updatedPublisher.ID = publisher.ID
+
+	updatedPublisher.Email = common.NormalizeEmail(updatedPublisher.Email)
+
+	expectedURLs := make([]string, 0, len(updatedPublisher.CodeHosting))
+
+	for _, ch := range updatedPublisher.CodeHosting {
+		expectedURLs = append(expectedURLs, common.NormalizeURL(ch.URL))
 	}
 
 	if err := p.db.Transaction(func(tran *gorm.DB) error {
@@ -218,21 +249,13 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 			return err
 		}
 
-		if publisherReq.Description != nil {
-			publisher.Description = *publisherReq.Description
-		}
-		if publisherReq.Email != nil {
-			publisher.Email = common.NormalizeEmail(publisherReq.Email)
-		}
-		if publisherReq.Active != nil {
-			publisher.Active = publisherReq.Active
-		}
-		if publisher.AlternativeID != nil {
-			publisher.AlternativeID = publisherReq.AlternativeID
-		}
+		publisher.Description = updatedPublisher.Description
+		publisher.Email = updatedPublisher.Email
+		publisher.Active = updatedPublisher.Active
+		publisher.AlternativeID = updatedPublisher.AlternativeID
 
 		// Set CodeHosting to a zero value, so it's not touched by gorm's Update(),
-		// because we handle the alias manually
+		// because we handle it manually via syncCodeHosting.
 		publisher.CodeHosting = []models.CodeHosting{}
 
 		if err := tran.Updates(&publisher).Error; err != nil {
@@ -243,10 +266,10 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 
 		return nil
 	}); err != nil {
-		return common.Error(fiber.StatusInternalServerError, "can't update Publisher", err.Error())
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 	}
 
-	// Sort the aliases to always have a consistent output
+	// Sort codeHosting to always have a consistent output.
 	sort.Slice(publisher.CodeHosting, func(a int, b int) bool {
 		return publisher.CodeHosting[a].URL < publisher.CodeHosting[b].URL
 	})
