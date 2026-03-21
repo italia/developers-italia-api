@@ -266,6 +266,10 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 
 		return nil
 	}); err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return common.Error(fiber.StatusConflict, errMsg, "description, alternativeId or codeHosting URL already exists")
+		}
+
 		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 	}
 
