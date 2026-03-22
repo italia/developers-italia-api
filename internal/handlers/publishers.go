@@ -97,28 +97,12 @@ func (p *Publisher) GetPublisher(ctx *fiber.Ctx) error {
 
 // PostPublisher creates a new publisher.
 func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
+	const errMsg = "can't create Publisher"
+
 	request := new(common.PublisherPost)
 
-	err := common.ValidateRequestEntity(ctx, request, "can't create Publisher")
-	if err != nil {
+	if err := common.ValidateRequestEntity(ctx, request, errMsg); err != nil {
 		return err //nolint:wrapcheck
-	}
-
-	if request.AlternativeID != nil {
-		//nolint:godox // postpone the fix
-		// FIXME: Possible TOCTTOU race here
-		result := p.db.Limit(1).Find(&models.Publisher{ID: *request.AlternativeID})
-
-		if result.Error != nil {
-			return common.Error(fiber.StatusInternalServerError, "can't create Publisher", "db error")
-		}
-
-		if result.RowsAffected != 0 {
-			return common.Error(fiber.StatusConflict,
-				"can't create Publisher",
-				fmt.Sprintf("Publisher with id '%s' already exists", *request.AlternativeID),
-			)
-		}
 	}
 
 	normalizedEmail := common.NormalizeEmail(request.Email)
@@ -140,19 +124,31 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 			})
 	}
 
-	if err := p.db.Create(&publisher).Error; err != nil {
+	if err := p.db.Transaction(func(tran *gorm.DB) error {
+		if request.AlternativeID != nil {
+			if err := checkAlternativeIDConflict(tran, *request.AlternativeID); err != nil {
+				return err
+			}
+		}
+
+		return tran.Create(&publisher).Error
+	}); err != nil {
+		var idConflict idConflictError
+
+		if errors.As(err, &idConflict) {
+			return common.Error(fiber.StatusConflict, errMsg, idConflict.Error())
+		}
+
 		if field := common.DuplicateField(err); field != nil {
 			detail := alreadyExists
 			if *field != "" {
 				detail = *field + " " + alreadyExists
 			}
 
-			return common.Error(fiber.StatusConflict, "can't create Publisher", detail)
+			return common.Error(fiber.StatusConflict, errMsg, detail)
 		}
 
-		return common.Error(fiber.StatusInternalServerError,
-			"can't create Publisher",
-			fiber.ErrInternalServerError.Message)
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
 	}
 
 	return ctx.JSON(&publisher)
@@ -203,23 +199,6 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 			return err //nolint:wrapcheck
 		}
 
-		if publisherReq.AlternativeID != nil {
-			//nolint:godox // postpone the fix
-			// FIXME: Possible TOCTTOU race here
-			result := p.db.Limit(1).Find(&models.Publisher{ID: *publisherReq.AlternativeID})
-
-			if result.Error != nil {
-				return common.Error(fiber.StatusInternalServerError, errMsg, "db error")
-			}
-
-			if result.RowsAffected != 0 {
-				return common.Error(fiber.StatusConflict,
-					errMsg,
-					fmt.Sprintf("Publisher with id '%s' already exists", *publisherReq.AlternativeID),
-				)
-			}
-		}
-
 		updatedJSON, err = jsonpatch.MergePatch(publisherJSON, ctx.Body())
 		if err != nil {
 			return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
@@ -244,6 +223,13 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 	}
 
 	if err := p.db.Transaction(func(tran *gorm.DB) error {
+		if updatedPublisher.AlternativeID != nil &&
+			(publisher.AlternativeID == nil || *updatedPublisher.AlternativeID != *publisher.AlternativeID) {
+			if err := checkAlternativeIDConflict(tran, *updatedPublisher.AlternativeID); err != nil {
+				return err
+			}
+		}
+
 		codeHosting, err := syncCodeHosting(tran, publisher, expectedURLs)
 		if err != nil {
 			return err
@@ -266,6 +252,12 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 
 		return nil
 	}); err != nil {
+		var idConflict idConflictError
+
+		if errors.As(err, &idConflict) {
+			return common.Error(fiber.StatusConflict, errMsg, idConflict.Error())
+		}
+
 		if field := common.DuplicateField(err); field != nil {
 			detail := alreadyExists
 			if *field != "" {
@@ -300,6 +292,28 @@ func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.SendStatus(fiber.StatusNoContent)
+}
+
+// idConflictError is returned when alternativeId conflicts with an existing publisher's primary key.
+type idConflictError string
+
+func (e idConflictError) Error() string {
+	return fmt.Sprintf("Publisher with id '%s' already exists", string(e))
+}
+
+// checkAlternativeIDConflict returns idConflictError if any publisher exists whose primary key
+// equals the given alternativeID value, which would cause ambiguous lookups.
+func checkAlternativeIDConflict(db *gorm.DB, alternativeID string) error {
+	result := db.Limit(1).Find(&models.Publisher{ID: alternativeID})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected != 0 {
+		return idConflictError(alternativeID)
+	}
+
+	return nil
 }
 
 // syncCodeHosting synchs the CodeHosting for a `publisher` in the database to reflect the
