@@ -2,10 +2,8 @@ package common
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
-	sqlite3 "github.com/mattn/go-sqlite3"
 )
 
 // pgConstraintToAPI maps PostgreSQL unique index names to API field names.
@@ -32,23 +30,8 @@ var sqliteColToAPI = map[string]string{ //nolint:gochecknoglobals
 // it (e.g. "alternativeId", "codeHosting.url") if it is, or a pointer to an
 // empty string if the field cannot be determined.
 func DuplicateField(err error) *string {
-	var sqliteErr sqlite3.Error
-	if errors.As(err, &sqliteErr) {
-		if sqliteErr.ExtendedCode != sqlite3.ErrConstraintUnique &&
-			sqliteErr.ExtendedCode != sqlite3.ErrConstraintPrimaryKey {
-			return nil
-		}
-
-		msg := sqliteErr.Error()
-		if _, tableCol, ok := strings.Cut(msg, "UNIQUE constraint failed: "); ok {
-			field := sqliteColToAPI[tableCol]
-
-			return &field
-		}
-
-		empty := ""
-
-		return &empty
+	if field := duplicateFieldSQLite(err); field != nil {
+		return field
 	}
 
 	var pgErr *pgconn.PgError
