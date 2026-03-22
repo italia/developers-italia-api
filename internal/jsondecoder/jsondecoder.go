@@ -12,10 +12,10 @@ var (
 	ErrUnknownField           = errors.New("unknown field in JSON input")
 )
 
-// UnmarshalDisallowUnknownFieldsUnmarshal parses the JSON-encoded data
+// UnmarshalDisallowUnknownFields parses the JSON-encoded data
 // and stores the result in the value pointed to by v like json.Unmarshal,
 // but with DisallowUnknownFields() set by default for extra security.
-func UnmarshalDisallowUnknownFields(data []byte, v interface{}) error {
+func UnmarshalDisallowUnknownFields(data []byte, v any) error {
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields()
 

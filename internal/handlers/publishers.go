@@ -24,6 +24,8 @@ type PublisherInterface interface {
 	DeletePublisher(ctx *fiber.Ctx) error
 }
 
+const alreadyExists = "already exists"
+
 type Publisher struct {
 	db *gorm.DB
 }
@@ -140,9 +142,9 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 
 	if err := p.db.Create(&publisher).Error; err != nil {
 		if field := common.DuplicateField(err); field != nil {
-			detail := "already exists"
+			detail := alreadyExists
 			if *field != "" {
-				detail = *field + " already exists"
+				detail = *field + " " + alreadyExists
 			}
 
 			return common.Error(fiber.StatusConflict, "can't create Publisher", detail)
@@ -158,7 +160,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 
 // PatchPublisher updates the publisher with the given ID.
 // Supports both JSON Merge Patch (default) and JSON Patch (application/json-patch+json).
-func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funlen // mostly error handling ifs
+func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funlen,gocognit // mostly error handling ifs
 	const errMsg = "can't update Publisher"
 
 	publisher := models.Publisher{}
@@ -265,9 +267,9 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 		return nil
 	}); err != nil {
 		if field := common.DuplicateField(err); field != nil {
-			detail := "already exists"
+			detail := alreadyExists
 			if *field != "" {
-				detail = *field + " already exists"
+				detail = *field + " " + alreadyExists
 			}
 
 			return common.Error(fiber.StatusConflict, errMsg, detail)

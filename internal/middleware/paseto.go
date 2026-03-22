@@ -31,7 +31,7 @@ func NewPasetoMiddleware(envs common.Environment) fiber.Handler {
 			// GETs are public.
 			return ctx.Method() == fiber.MethodGet
 		},
-		Validate: func(data []byte) (interface{}, error) {
+		Validate: func(data []byte) (any, error) {
 			var payload paseto.JSONToken
 			if err := json.Unmarshal(data, &payload); err != nil {
 				return nil, fmt.Errorf("can't unmarshal PASETO token: %w", err)

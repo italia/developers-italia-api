@@ -10,7 +10,7 @@ import (
 
 // pgConstraintToAPI maps PostgreSQL unique index names to API field names.
 // GORM generates these as idx_<table>_<column> for uniqueIndex fields.
-var pgConstraintToAPI = map[string]string{
+var pgConstraintToAPI = map[string]string{ //nolint:gochecknoglobals
 	"idx_publishers_description":      "description",
 	"idx_publishers_alternative_id":   "alternativeId",
 	"idx_publishers_code_hosting_url": "codeHosting.url",
@@ -19,8 +19,8 @@ var pgConstraintToAPI = map[string]string{
 
 // sqliteColToAPI maps SQLite "table.column" identifiers to API field names.
 // SQLite unique constraint errors always have the format:
-// "UNIQUE constraint failed: table.column"
-var sqliteColToAPI = map[string]string{
+// "UNIQUE constraint failed: table.column".
+var sqliteColToAPI = map[string]string{ //nolint:gochecknoglobals
 	"publishers.description":      "description",
 	"publishers.alternative_id":   "alternativeId",
 	"publishers_code_hosting.url": "codeHosting.url",
@@ -40,8 +40,7 @@ func DuplicateField(err error) *string {
 		}
 
 		msg := sqliteErr.Error()
-		if idx := strings.Index(msg, "UNIQUE constraint failed: "); idx >= 0 {
-			tableCol := msg[idx+len("UNIQUE constraint failed: "):]
+		if _, tableCol, ok := strings.Cut(msg, "UNIQUE constraint failed: "); ok {
 			field := sqliteColToAPI[tableCol]
 
 			return &field

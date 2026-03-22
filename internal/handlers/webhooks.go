@@ -45,7 +45,7 @@ func (p *Webhook[T]) GetResourceWebhooks(ctx *fiber.Ctx) error {
 
 	var resource T
 
-	stmt := p.db.Where(map[string]interface{}{"entity_type": resource.TableName()})
+	stmt := p.db.Where(map[string]any{"entity_type": resource.TableName()})
 
 	paginator := general.NewPaginator(ctx)
 
@@ -90,7 +90,7 @@ func (p *Webhook[T]) GetSingleResourceWebhooks(ctx *fiber.Ctx) error {
 	}
 
 	stmt := p.db.
-		Where(map[string]interface{}{"entity_type": resource.TableName()}).
+		Where(map[string]any{"entity_type": resource.TableName()}).
 		Where("entity_id = ?", resource.UUID())
 
 	paginator := general.NewPaginator(ctx)
@@ -115,7 +115,7 @@ func (p *Webhook[T]) GetSingleResourceWebhooks(ctx *fiber.Ctx) error {
 	return ctx.JSON(fiber.Map{"data": &webhooks, "links": general.PaginationLinks(cursor)})
 }
 
-// PostSingleResourceWebhook creates a new webhook associated to resources
+// PostResourceWebhook creates a new webhook associated to resources
 // (fe. Software, Publishers) and returns any error encountered.
 func (p *Webhook[T]) PostResourceWebhook(ctx *fiber.Ctx) error {
 	const errMsg = "can't create Webhook"
@@ -143,7 +143,7 @@ func (p *Webhook[T]) PostResourceWebhook(ctx *fiber.Ctx) error {
 	return ctx.JSON(&webhook)
 }
 
-// PostResourceWebhook creates a new webhook associated to a resource with the given ID
+// PostSingleResourceWebhook creates a new webhook associated to a resource with the given ID
 // (fe. a specific Software or Publisher) and returns any error encountered.
 func (p *Webhook[T]) PostSingleResourceWebhook(ctx *fiber.Ctx) error {
 	const errMsg = "can't create Webhook"

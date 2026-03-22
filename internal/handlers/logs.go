@@ -170,7 +170,7 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 	}
 
 	stmt := p.db.
-		Where(map[string]interface{}{"entity_type": models.Software{}.TableName()}).
+		Where(map[string]any{"entity_type": models.Software{}.TableName()}).
 		Where("entity_id = ?", software.ID)
 
 	// Logs are returned in descending order, last first
