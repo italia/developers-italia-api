@@ -22,13 +22,12 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 	case strings.HasPrefix(connection, "file:"):
 		log.Println("using SQLite database")
 
-		database, err = gorm.Open(sqlite.Open(connection), &gorm.Config{TranslateError: true})
+		database, err = gorm.Open(sqlite.Open(connection), &gorm.Config{})
 	default:
 		log.Println("using Postgres database")
 
 		database, err = gorm.Open(postgres.Open(connection), &gorm.Config{
-			TranslateError: true,
-			PrepareStmt:    true,
+			PrepareStmt: true,
 			// Disable logging in production
 			Logger: logger.Default.LogMode(logger.Silent),
 		})

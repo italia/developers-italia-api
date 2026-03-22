@@ -16,7 +16,7 @@ func Clauses(ctx *fiber.Ctx, stmt *gorm.DB, searchFieldName string) (*gorm.DB, e
 		filter := ctx.Query("filter", "")
 
 		if filter != "" {
-			ret = stmt.Where(map[string]interface{}{searchFieldName: filter})
+			ret = stmt.Where(map[string]any{searchFieldName: filter})
 		}
 	}
 

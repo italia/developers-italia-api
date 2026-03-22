@@ -100,7 +100,7 @@ type SoftwareURL struct {
 }
 
 func (su SoftwareURL) MarshalJSON() ([]byte, error) {
-	return ([]byte)(fmt.Sprintf(`"%s"`, su.URL)), nil
+	return fmt.Appendf(nil, `"%s"`, su.URL), nil
 }
 
 func (su *SoftwareURL) UnmarshalJSON(data []byte) error {

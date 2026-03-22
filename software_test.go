@@ -661,7 +661,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't update Software","detail":"url already exists","status":409}`,
 		},
 		{
 			description: "PATCH software, change active",
@@ -882,7 +882,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't update Software","detail":"url already exists","status":409}`,
 		},
 		{
 			description: "PATCH software using an already taken URL as an alias",
@@ -895,7 +895,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        409,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't update Software","detail":"URL already exists","status":409}`,
+			expectedBody:        `{"title":"can't update Software","detail":"url already exists","status":409}`,
 		},
 		{
 			description: "PATCH software - wrong token",

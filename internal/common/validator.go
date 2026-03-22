@@ -21,7 +21,7 @@ type ValidationError struct {
 	Value string `json:"value"`
 }
 
-func ValidateStruct(validateStruct interface{}) []ValidationError {
+func ValidateStruct(validateStruct any) []ValidationError {
 	validate := validator.New()
 	// https://github.com/go-playground/validator/issues/258#issuecomment-257281334
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
@@ -61,7 +61,7 @@ func ValidateStruct(validateStruct interface{}) []ValidationError {
 	return validationErrors
 }
 
-func ValidateRequestEntity(ctx *fiber.Ctx, request interface{}, errorMessage string) error {
+func ValidateRequestEntity(ctx *fiber.Ctx, request any, errorMessage string) error {
 	if err := ctx.BodyParser(request); err != nil {
 		if errors.Is(err, jsondecoder.ErrUnknownField) {
 			return Error(fiber.StatusUnprocessableEntity, errorMessage, err.Error())
