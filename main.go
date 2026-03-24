@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"time"
 
 	"github.com/ansrivas/fiberprometheus/v2"
@@ -23,10 +26,50 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "migrate" {
+		if err := runMigrate(); err != nil {
+			log.Fatal(err)
+		}
+
+		return
+	}
+
 	app := Setup()
 	if err := app.Listen(":3000"); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func runMigrate() error {
+	atlasURL, err := database.DSNToURL(os.Getenv("DATABASE_DSN"))
+	if err != nil {
+		return fmt.Errorf("parsing DATABASE_DSN: %w", err)
+	}
+
+	args := []string{
+		"migrate", "apply",
+		"--url", atlasURL,
+		"--dir", "file:///migrations",
+		"--tx-mode", "file",
+	}
+
+	// MIGRATION_BASELINE tells Atlas to treat all migrations up to the given
+	// version as already applied without running their SQL. Set this to the
+	// latest migration version when first deploying Atlas against a database
+	// that was previously managed by GORM AutoMigrate.
+	if baseline := os.Getenv("MIGRATION_BASELINE"); baseline != "" {
+		args = append(args, "--baseline", baseline)
+	}
+
+	cmd := exec.CommandContext(context.Background(), "atlas", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("atlas migrate apply: %w", err)
+	}
+
+	return nil
 }
 
 func Setup() *fiber.App {
