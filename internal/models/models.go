@@ -26,8 +26,8 @@ type Log struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// Entity this Log entry is about (fe. Publisher, Software, etc.)
-	EntityID   *string `json:"-"`
-	EntityType *string `json:"-"`
+	EntityID   *string `json:"-" gorm:"index:idx_log_entity"`
+	EntityType *string `json:"-" gorm:"index:idx_log_entity"`
 	Entity     string  `json:"entity,omitempty" gorm:"->;type:text GENERATED ALWAYS AS (CASE WHEN entity_id IS NULL THEN NULL ELSE ('/' || entity_type || '/' || entity_id) END) STORED;default:(-);"` //nolint:lll
 }
 
@@ -58,7 +58,7 @@ type CodeHosting struct {
 	ID          string    `json:"-" gorm:"primaryKey"`
 	URL         string    `json:"url" gorm:"not null;uniqueIndex"`
 	Group       *bool     `json:"group" gorm:"default:true;not null"`
-	PublisherID string    `json:"-"`
+	PublisherID string    `json:"-" gorm:"index"`
 	CreatedAt   time.Time `json:"createdAt" gorm:"index"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
@@ -94,7 +94,7 @@ func (s Software) UUID() string {
 type SoftwareURL struct {
 	ID         string    `gorm:"primarykey"`
 	URL        string    `gorm:"uniqueIndex"`
-	SoftwareID string    `gorm:"not null"`
+	SoftwareID string    `gorm:"not null;index"`
 	CreatedAt  time.Time `gorm:"index"`
 	UpdatedAt  time.Time
 }
