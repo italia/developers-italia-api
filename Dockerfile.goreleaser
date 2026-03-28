@@ -3,8 +3,12 @@
 #
 # Goreleaser takes care of building the binary.
 #
+FROM arigaio/atlas:v1.1.0 AS atlas
+
 FROM alpine:3
 
+COPY --from=atlas /atlas /usr/local/bin/atlas
 COPY developers-italia-api /usr/local/bin/developers-italia-api
+COPY internal/database/migrations /migrations
 
 ENTRYPOINT ["/usr/local/bin/developers-italia-api"]

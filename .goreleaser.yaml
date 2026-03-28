@@ -29,6 +29,8 @@ changelog:
 dockers:
  -
    dockerfile: Dockerfile.goreleaser
+   extra_files:
+     - internal/database/migrations
    image_templates:
      - "ghcr.io/italia/developers-italia-api:{{ .Tag }}"
      - "ghcr.io/italia/developers-italia-api:latest"

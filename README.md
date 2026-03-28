@@ -85,6 +85,30 @@ You can configure the API with environment variables:
   will be ratelimited.
   Default: no limit.
 
+## Database migrations
+
+PostgreSQL schema changes are managed with [Atlas](https://atlasgo.io/)
+versioned migrations so that every change is explicit, reviewable and
+reversible. Migration files live in `internal/database/migrations/`.
+
+Requires: [Docker](https://www.docker.com/) (Atlas uses it as a throwaway
+database to compute diffs).
+
+After changing the GORM models in `internal/models/`, generate the migration:
+
+```shell
+atlas migrate diff --env gorm <description>
+```
+
+Commit the resulting `.sql` file together with the model change. A CI
+check on pull requests verifies they are in sync.
+
+To roll back the last migration on the local database:
+
+```shell
+atlas migrate down --env local --amount 1
+```
+
 ## Contributing
 
 This project exists also thanks to your contributions! Here is a list of people

@@ -1,0 +1,47 @@
+name: Atlas sync
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/models/**'
+      - 'internal/database/migrations/**'
+      - 'loader/**'
+      - 'atlas.hcl'
+
+jobs:
+  atlas-sync:
+    runs-on: ubuntu-latest
+
+    services:
+      dev-db:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dev
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: 1.24.x
+      - uses: ariga/setup-atlas@v0
+        with:
+          version: v1.1.0
+      - name: Validate migrations
+        run: atlas migrate validate --env ci
+        env:
+          ATLAS_DEV_URL: postgres://postgres:postgres@localhost:5433/dev?sslmode=disable
+      - name: Check migrations are in sync with models
+        run: |
+          atlas migrate diff --env ci
+          git diff --exit-code internal/database/migrations/
+        env:
+          ATLAS_DEV_URL: postgres://postgres:postgres@localhost:5433/dev?sslmode=disable
