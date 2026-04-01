@@ -32,5 +32,5 @@ jobs:
 
       - uses: goreleaser/goreleaser-action@v7
         with:
-          version: v2.14.3
+          version: v2.15.2
           args: release --config .goreleaser.staging.yaml
