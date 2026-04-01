@@ -1,6 +1,6 @@
 module github.com/italia/developers-italia-api
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/PuerkitoBio/purell v1.2.1
@@ -18,7 +18,7 @@ require (
 require (
 	github.com/ansrivas/fiberprometheus/v2 v2.17.0
 	github.com/evanphx/json-patch/v5 v5.9.11
-	github.com/jackc/pgx/v5 v5.6.0
+	github.com/jackc/pgx/v5 v5.9.1
 	github.com/valyala/fasthttp v1.69.0
 )
 
