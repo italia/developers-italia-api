@@ -5,6 +5,7 @@
 #
 FROM alpine:3
 
-COPY developers-italia-api /usr/local/bin/developers-italia-api
+COPY software-catalog-api /usr/local/bin/software-catalog-api
+RUN ln -s /usr/local/bin/software-catalog-api /usr/local/bin/developers-italia-api
 
-ENTRYPOINT ["/usr/local/bin/developers-italia-api"]
+ENTRYPOINT ["/usr/local/bin/software-catalog-api"]
