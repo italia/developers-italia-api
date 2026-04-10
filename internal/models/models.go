@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/italia/developers-italia-api/internal/common"
 	"gorm.io/gorm"
 )
 
@@ -71,14 +72,15 @@ type Software struct {
 	// with SoftwareURLs (belongs to and has many).
 	SoftwareURLID string `json:"-" gorm:"uniqueIndex;not null"`
 
-	URL           SoftwareURL      `json:"url"`
-	Aliases       SoftwareURLSlice `json:"aliases"`
-	PubliccodeYml string           `json:"publiccodeYml"`
-	Logs          []Log            `json:"-" gorm:"polymorphic:Entity;"`
-	Active        *bool            `json:"active" gorm:"default:true;not null"`
-	Vitality      *string          `json:"vitality"`
-	CreatedAt     time.Time        `json:"createdAt" gorm:"index"`
-	UpdatedAt     time.Time        `json:"updatedAt"`
+	URL           SoftwareURL         `json:"url"`
+	Aliases       SoftwareURLSlice    `json:"aliases"`
+	PubliccodeYml string              `json:"publiccodeYml"`
+	Logs          []Log               `json:"-" gorm:"polymorphic:Entity;"`
+	Active        *bool               `json:"active" gorm:"default:true;not null"`
+	Vitality      *string             `json:"vitality"`
+	Analysis      common.AnalysisData `json:"analysis" gorm:"type:jsonb"`
+	CreatedAt     time.Time           `json:"createdAt" gorm:"index"`
+	UpdatedAt     time.Time           `json:"updatedAt"`
 }
 
 func (Software) TableName() string {

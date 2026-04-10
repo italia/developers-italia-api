@@ -41,7 +41,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assert.Equal(t, true, firstSoftware["active"])
 
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
 			},
 		},
 		{
@@ -70,7 +70,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, true, firstSoftware["active"])
 
 				assertTimestamps(t, firstSoftware)
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
 			},
 		},
 		{
@@ -96,7 +96,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, firstSoftware["id"])
 				assertTimestamps(t, firstSoftware)
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
 			},
 		},
 		{
@@ -125,7 +125,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, "2014-05-01T00:00:00Z", firstSoftware["createdAt"])
 				assert.Equal(t, "2014-05-01T00:00:00Z", firstSoftware["updatedAt"])
 
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
 			},
 		},
 		{
@@ -306,7 +306,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
 			},
 		},
 		{
@@ -324,7 +324,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
 			},
 		},
 
@@ -350,7 +350,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assert.Equal(t, true, response["active"])
 
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
 
 			},
 		},
@@ -378,7 +378,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
 
 			},
 		},
@@ -422,8 +422,41 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
 
+			},
+		},
+		{
+			description: "POST software with analysis field",
+			query:       "POST /v1/software",
+			body:        `{"publiccodeYml": "-", "url": "https://analysis.example.org", "analysis": {"badges": {"v": 1, "score": 90}}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				analysis := response["analysis"].(map[string]interface{})
+				badges := analysis["badges"].(map[string]interface{})
+
+				assert.Equal(t, float64(1), badges["v"])
+				assert.Equal(t, float64(90), badges["score"])
+				assertRFC3339(t, badges["t"])
+			},
+		},
+		{
+			description: "POST software with analysis missing v field",
+			query:       "POST /v1/software",
+			body:        `{"publiccodeYml": "-", "url": "https://analysis-nov.example.org", "analysis": {"badges": {"score": 90}}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't create Software", response["title"])
 			},
 		},
 		{
@@ -757,6 +790,39 @@ func TestSoftwareEndpoints(t *testing.T) {
 				updated := assertRFC3339(t, response["updatedAt"])
 
 				assert.Greater(t, updated, created)
+			},
+		},
+		{
+			description: "PATCH software, analysis namespace",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"analysis": {"badges": {"v": 1, "score": 75}}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				analysis := response["analysis"].(map[string]interface{})
+				badges := analysis["badges"].(map[string]interface{})
+
+				assert.Equal(t, float64(1), badges["v"])
+				assert.Equal(t, float64(75), badges["score"])
+				assertRFC3339(t, badges["t"])
+			},
+		},
+		{
+			description: "PATCH software, analysis namespace missing v",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `{"analysis": {"badges": {"score": 75}}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't update Software", response["title"])
 			},
 		},
 		{
