@@ -111,8 +111,8 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	normalizedEmail := common.NormalizeEmail(request.Email)
 
 	publisher := &models.Publisher{
-		ID:          utils.UUIDv4(),
-		Description: request.Description,
+		ID:            utils.UUIDv4(),
+		Description:   request.Description,
 		Email:         normalizedEmail,
 		Active:        request.Active,
 		AlternativeID: request.AlternativeID,
@@ -225,7 +225,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 		expectedURLs = append(expectedURLs, common.NormalizeURL(ch.URL))
 	}
 
-	if err := p.db.Transaction(func(tran *gorm.DB) error {
+	if err := p.db.Transaction(func(tran *gorm.DB) error { //nolint:dupl
 		if updatedPublisher.AlternativeID != nil &&
 			(publisher.AlternativeID == nil || *updatedPublisher.AlternativeID != *publisher.AlternativeID) {
 			if err := checkAlternativeIDConflict(tran, *updatedPublisher.AlternativeID); err != nil {

@@ -19,7 +19,7 @@ import (
 // catalog (resources with catalog_id IS NULL).
 const rootCatalogID = "∅"
 
-type CatalogInterface interface {
+type CatalogInterface interface { //nolint:interfacebloat
 	GetCatalogs(ctx *fiber.Ctx) error
 	GetCatalog(ctx *fiber.Ctx) error
 	PostCatalog(ctx *fiber.Ctx) error
@@ -322,7 +322,7 @@ func (c *Catalog) GetCatalogPublishers(ctx *fiber.Ctx) error {
 
 // PostCatalogPublisher creates a publisher belonging to the given catalog.
 // The catalog is resolved from the URL; any catalogId in the body is ignored.
-func (c *Catalog) PostCatalogPublisher(ctx *fiber.Ctx) error {
+func (c *Catalog) PostCatalogPublisher(ctx *fiber.Ctx) error { //nolint:cyclop
 	const errMsg = "can't create Publisher"
 
 	catalog, err := c.resolveCatalog(ctx.Params("id"))
@@ -435,7 +435,7 @@ func (c *Catalog) PatchCatalogPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,
 	var updatedJSON []byte
 
 	switch ctx.Get(fiber.HeaderContentType) {
-	case "application/json-patch+json":
+	case contentTypeJSONPatch:
 		patch, err := jsonpatch.DecodePatch(ctx.Body())
 		if err != nil {
 			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
@@ -476,7 +476,7 @@ func (c *Catalog) PatchCatalogPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,
 		expectedURLs = append(expectedURLs, common.NormalizeURL(ch.URL))
 	}
 
-	if err := c.db.Transaction(func(tran *gorm.DB) error {
+	if err := c.db.Transaction(func(tran *gorm.DB) error { //nolint:dupl
 		if updatedPublisher.AlternativeID != nil &&
 			(publisher.AlternativeID == nil || *updatedPublisher.AlternativeID != *publisher.AlternativeID) {
 			if err := checkAlternativeIDConflict(tran, *updatedPublisher.AlternativeID); err != nil {
@@ -578,7 +578,7 @@ func (c *Catalog) PostCatalogSoftware(ctx *fiber.Ctx) error {
 }
 
 // PatchCatalogSoftware updates software that belongs to the given catalog.
-func (c *Catalog) PatchCatalogSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
+func (c *Catalog) PatchCatalogSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop,gocognit
 	const errMsg = "can't update Software"
 
 	catalog, err := c.resolveCatalog(ctx.Params("id"))
@@ -617,7 +617,7 @@ func (c *Catalog) PatchCatalogSoftware(ctx *fiber.Ctx) error { //nolint:funlen,c
 	var updatedJSON []byte
 
 	switch ctx.Get(fiber.HeaderContentType) {
-	case "application/json-patch+json":
+	case contentTypeJSONPatch:
 		patch, err := jsonpatch.DecodePatch(ctx.Body())
 		if err != nil {
 			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
