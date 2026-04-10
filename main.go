@@ -12,6 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/italia/developers-italia-api/cmd"
 	"github.com/italia/developers-italia-api/internal/common"
 	"github.com/italia/developers-italia-api/internal/database"
 	"github.com/italia/developers-italia-api/internal/handlers"
@@ -19,13 +20,25 @@ import (
 	"github.com/italia/developers-italia-api/internal/middleware"
 	"github.com/italia/developers-italia-api/internal/models"
 	"github.com/italia/developers-italia-api/internal/webhooks"
+	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
 
 func main() {
-	app := Setup()
-	if err := app.Listen(":3000"); err != nil {
-		log.Fatal(err)
+	rootCmd := &cobra.Command{
+		Use:          "developers-italia-api",
+		SilenceUsage: true,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			app := Setup()
+
+			return app.Listen(":3000")
+		},
+	}
+
+	rootCmd.AddCommand(cmd.NewTokenCmd())
+
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
 	}
 }
 
