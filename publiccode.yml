@@ -6,7 +6,7 @@ publiccodeYmlVersion: "0.4"
 categories:
   - data-collection
 description:
-  it:
+  en:
     apiDocumentation: "https://developers.italia.it/it/api/developers-italia"
     features:
       - RESTful API Design
@@ -15,16 +15,11 @@ description:
       - Containerization support
       - Helm chart available
     longDescription: |
-      **developers-italia-api** is a RESTful API for the free and open-source
-      software catalog aimed at Italian public administrations. This API serves
-      as a crucial tool in managing and accessing the software catalog,
-      providing a streamlined and efficient way for public administrations and
-      developers to interact with the repository. It's built with a focus on
-      ease of use and reliability, ensuring that users can effectively leverage
-      the catalog for their software needs.
+      **software-catalog-api** is a RESTful API for public software catalogs.
+      It powers developers.italia.it and can be deployed as a standalone
+      instance for any public software catalog.
     shortDescription: |-
-      RESTful API for the free and open-source software catalog aimed at Italian
-      public administrations.
+      RESTful API for public software catalogs.
 developmentStatus: stable
 it:
   conforme:
@@ -51,7 +46,7 @@ maintenance:
   contacts:
     - name: Fabio Bonelli
   type: community
-name: developers-italia-api
+name: software-catalog-api
 platforms:
   - web
 dependsOn:
