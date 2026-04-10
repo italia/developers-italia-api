@@ -31,6 +31,8 @@ servers:
   - url: 'https://api-staging.developers.italia.it/v1'
     description: The staging server
 tags:
+  - name: catalogs
+    description: Operations on catalogs
   - name: software
     description: Operations on software
   - name: logs
@@ -745,6 +747,495 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Log'
+  /catalogs:
+    get:
+      summary: List all Catalogs
+      description: List all active Catalogs
+      tags:
+        - catalogs
+      operationId: list-catalogs
+      parameters:
+        - schema:
+            type: boolean
+            default: false
+          in: query
+          name: all
+          description: 'Show all catalogs, even the ones with "active" set to false'
+        - schema:
+            type: integer
+            format: int32
+            example: 100
+            minimum: 1
+            maximum: 100
+            default: 25
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Catalog'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      summary: Create a new Catalog
+      description: Create a new Catalog
+      tags:
+        - catalogs
+      security:
+        - bearerAuth: []
+      operationId: create-catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Catalog'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  '/catalogs/{catalogId}':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 255
+          pattern: '.*'
+        name: catalogId
+        in: path
+        required: true
+        description: >
+          The catalog UUID or alternativeId.
+          Use `%E2%88%85` (URL-encoded ∅) to address the root (implicit) catalog.
+    get:
+      summary: Get a Catalog
+      description: Get a Catalog by its id or alternativeId
+      tags:
+        - catalogs
+      operationId: show-catalog
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalog'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    patch:
+      summary: Update a Catalog
+      description: Update a Catalog by its id or alternativeId
+      tags:
+        - catalogs
+      security:
+        - bearerAuth: []
+      operationId: update-catalog
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/Catalog'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      summary: Delete a Catalog
+      description: >
+        Delete a Catalog by its id or alternativeId.
+        Returns 409 if the catalog still has associated publishers or software.
+      tags:
+        - catalogs
+      security:
+        - bearerAuth: []
+      operationId: remove-catalog
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  '/catalogs/{catalogId}/publishers':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 255
+          pattern: '.*'
+        name: catalogId
+        in: path
+        required: true
+        description: >
+          The catalog UUID or alternativeId.
+          Use `%E2%88%85` (URL-encoded ∅) for the root catalog.
+    get:
+      summary: List Publishers in a Catalog
+      description: List all active Publishers belonging to the given catalog
+      tags:
+        - catalogs
+      operationId: list-catalog-publishers
+      parameters:
+        - schema:
+            type: boolean
+            default: false
+          in: query
+          name: all
+          description: 'Show all publishers, even the ones with "active" set to false'
+        - schema:
+            type: integer
+            format: int32
+            example: 100
+            minimum: 1
+            maximum: 100
+            default: 25
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Publisher'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      summary: Create a Publisher in a Catalog
+      description: >
+        Create a new Publisher belonging to the given catalog.
+        The catalog is determined by the URL path; any catalogId in the body is ignored.
+      tags:
+        - catalogs
+      security:
+        - bearerAuth: []
+      operationId: create-catalog-publisher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Publisher'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Publisher'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  '/catalogs/{catalogId}/publishers/{publisherId}':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 255
+          pattern: '.*'
+        name: catalogId
+        in: path
+        required: true
+        description: >
+          The catalog UUID or alternativeId.
+          Use `%E2%88%85` (URL-encoded ∅) for the root catalog.
+      - schema:
+          type: string
+          maxLength: 255
+          pattern: '.*'
+        name: publisherId
+        in: path
+        required: true
+        description: The publisher UUID or alternativeId
+    patch:
+      summary: Update a Publisher in a Catalog
+      description: >
+        Update a Publisher that belongs to the given catalog.
+        Returns 404 if the publisher does not belong to this catalog.
+      tags:
+        - catalogs
+      security:
+        - bearerAuth: []
+      operationId: update-catalog-publisher
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/Publisher'
+          application/json-patch+json:
+            schema:
+              $ref: '#/components/schemas/JsonPatchRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Publisher'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  '/catalogs/{catalogId}/software':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 255
+          pattern: '.*'
+        name: catalogId
+        in: path
+        required: true
+        description: >
+          The catalog UUID or alternativeId.
+          Use `%E2%88%85` (URL-encoded ∅) for the root catalog.
+    get:
+      summary: List Software in a Catalog
+      description: List all active Software belonging to the given catalog
+      tags:
+        - catalogs
+      operationId: list-catalog-software
+      parameters:
+        - schema:
+            type: boolean
+            default: false
+          in: query
+          name: all
+          description: 'Show all software, even the ones with "active" set to false'
+        - schema:
+            type: integer
+            format: int32
+            example: 100
+            minimum: 1
+            maximum: 100
+            default: 25
+          in: query
+          name: 'page[size]'
+          description: Limit the amount of results
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[before]'
+          description: Only results before this cursor
+        - schema:
+            type: string
+            maxLength: 255
+            pattern: '.*'
+          in: query
+          name: 'page[after]'
+          description: Only results after this cursor
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Software'
+                  links:
+                    $ref: '#/components/schemas/Links'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      summary: Create Software in a Catalog
+      description: >
+        Create a new Software belonging to the given catalog.
+        The catalog is determined by the URL path; any catalogId in the body is ignored.
+      tags:
+        - catalogs
+      security:
+        - bearerAuth: []
+      operationId: create-catalog-software
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Software'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Software'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  '/catalogs/{catalogId}/software/{softwareId}':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 255
+          pattern: '.*'
+        name: catalogId
+        in: path
+        required: true
+        description: >
+          The catalog UUID or alternativeId.
+          Use `%E2%88%85` (URL-encoded ∅) for the root catalog.
+      - schema:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+        name: softwareId
+        in: path
+        required: true
+        description: The software UUID
+    patch:
+      summary: Update Software in a Catalog
+      description: >
+        Update Software that belongs to the given catalog.
+        Returns 404 if the software does not belong to this catalog.
+      tags:
+        - catalogs
+      security:
+        - bearerAuth: []
+      operationId: update-catalog-software
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/Software'
+          application/json-patch+json:
+            schema:
+              $ref: '#/components/schemas/JsonPatchRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Software'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /publishers:
     get:
       summary: List all Publishers
@@ -1482,35 +1973,14 @@ components:
           pattern: '.*'
           default: null
           example: "90,100,94,12"
-        analysis:
-          type: object
-          nullable: true
+        catalogId:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
           description: >
-            Analysis data produced by external components (scanners, enrichers,
-            security checkers, etc.). Each key is a namespace owned by the
-            component that writes it. Each namespace value is a JSON object
-            with at least a required version field "v".
-          additionalProperties:
-            type: object
-            required:
-              - v
-            properties:
-              v:
-                type: integer
-                description: Schema version of this namespace.
-              t:
-                type: string
-                format: date-time
-                readOnly: true
-                description: >
-                  Timestamp of the last write (RFC 3339 datetime).
-            additionalProperties: true
-          example:
-            acme-security-scanner:
-              v: 1
-              t: "2024-01-15T10:30:00Z"
-              vulnerabilities: 0
-              grade: "A"
+            The ID of the catalog this software belongs to.
+            If absent, the software belongs to the root (implicit) catalog.
+          readOnly: true
         createdAt:
           type: string
           format: date-time
@@ -1527,6 +1997,47 @@ components:
         - id
         - url
         - publiccodeYml
+        - createdAt
+        - updatedAt
+    Catalog:
+      title: Catalog
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          readOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        alternativeId:
+          type: string
+          description: >
+            Optional alternative user-provided identifier for this Catalog.
+            If present, you can use it in place of the Catalog `id` as a path argument.
+          maxLength: 255
+          example: 'italia'
+        active:
+          type: boolean
+          default: true
+        createdAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the catalog was created (RFC 3339 datetime)
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2022-06-07T14:56:23Z'
+          description: The time the catalog was updated (RFC 3339 datetime)
+          readOnly: true
+      required:
+        - id
+        - name
         - createdAt
         - updatedAt
     Publisher:
@@ -1612,6 +2123,14 @@ components:
           format: date-time
           example: '2022-06-07T14:56:23Z'
           description: The time the publisher was created (RFC 3339 datetime)
+          readOnly: true
+        catalogId:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          description: >
+            The ID of the catalog this publisher belongs to.
+            If absent, the publisher belongs to the root (implicit) catalog.
           readOnly: true
         updatedAt:
           type: string
