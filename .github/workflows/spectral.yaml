@@ -1,8 +1,12 @@
 on:
   push:
     branches: [main]
+    paths:
+      - '*.oas.yaml'
   pull_request:
     branches: [main]
+    paths:
+      - '*.oas.yaml'
 
 permissions:
   checks: write
