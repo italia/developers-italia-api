@@ -1,8 +1,18 @@
 on:
   push:
     branches: [main]
+    paths:
+      - '**/*.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.golangci.yaml'
   pull_request:
     branches: [main]
+    paths:
+      - '**/*.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.golangci.yaml'
 
 jobs:
   linters:
