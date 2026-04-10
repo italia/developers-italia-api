@@ -39,19 +39,21 @@ type CodeHosting struct {
 }
 
 type SoftwarePost struct {
-	URL           string   `json:"url" validate:"required,url"`
-	Aliases       []string `json:"aliases" validate:"dive,url"`
-	PubliccodeYml string   `json:"publiccodeYml" validate:"required"`
-	Active        *bool    `json:"active"`
-	Vitality      *string  `json:"vitality"`
+	URL           string       `json:"url" validate:"required,url"`
+	Aliases       []string     `json:"aliases" validate:"dive,url"`
+	PubliccodeYml string       `json:"publiccodeYml" validate:"required"`
+	Active        *bool        `json:"active"`
+	Vitality      *string      `json:"vitality"`
+	Analysis      AnalysisData `json:"analysis"`
 }
 
 type SoftwarePatch struct {
-	URL           *string   `json:"url" validate:"omitempty,url"`
-	Aliases       *[]string `json:"aliases" validate:"omitempty,dive,url"`
-	PubliccodeYml *string   `json:"publiccodeYml"`
-	Active        *bool     `json:"active"`
-	Vitality      *string   `json:"vitality"`
+	URL           *string      `json:"url" validate:"omitempty,url"`
+	Aliases       *[]string    `json:"aliases" validate:"omitempty,dive,url"`
+	PubliccodeYml *string      `json:"publiccodeYml"`
+	Active        *bool        `json:"active"`
+	Vitality      *string      `json:"vitality"`
+	Analysis      AnalysisData `json:"analysis"`
 }
 
 type Log struct {

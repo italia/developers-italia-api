@@ -3,8 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"maps"
 	"slices"
 	"sort"
+	"time"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/gofiber/fiber/v2"
@@ -144,6 +146,11 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 		return err //nolint:wrapcheck
 	}
 
+	analysis, err := common.WithTimestamps(softwareReq.Analysis, time.Now())
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+	}
+
 	aliases := []models.SoftwareURL{}
 	for _, u := range softwareReq.Aliases {
 		aliases = append(aliases, models.SoftwareURL{ID: utils.UUIDv4(), URL: common.NormalizeURL(u)})
@@ -161,6 +168,7 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 		PubliccodeYml: softwareReq.PubliccodeYml,
 		Active:        softwareReq.Active,
 		Vitality:      softwareReq.Vitality,
+		Analysis:      analysis,
 	}
 
 	if err := p.db.Create(&software).Error; err != nil {
@@ -221,6 +229,15 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 	err = json.Unmarshal(updatedJSON, &updatedSoftware)
 	if err != nil {
 		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	}
+
+	updatedSoftware.Analysis, err = injectTouchedAnalysis(
+		software.Analysis,
+		updatedSoftware.Analysis,
+		time.Now(),
+	)
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
 	}
 
 	updatedSoftware.URL.URL = common.NormalizeURL(updatedSoftware.URL.URL)
@@ -387,4 +404,32 @@ func syncAliases( //nolint:cyclop // mostly error handling ifs
 	}
 
 	return &updatedURL, aliases, nil
+}
+
+// injectTouchedAnalysis validates and injects "t" only into namespaces that
+// were added or changed by the patch. Unchanged namespaces keep their original
+// "t" value.
+func injectTouchedAnalysis(
+	original, updated common.AnalysisData,
+	now time.Time,
+) (common.AnalysisData, error) {
+	touched := make(common.AnalysisData)
+
+	for ns, val := range updated {
+		origVal, exists := original[ns]
+		if !exists || string(origVal) != string(val) {
+			touched[ns] = val
+		}
+	}
+
+	injected, err := common.WithTimestamps(touched, now)
+	if err != nil {
+		return nil, err //nolint:wrapcheck
+	}
+
+	result := make(common.AnalysisData, len(updated))
+	maps.Copy(result, updated)
+	maps.Copy(result, injected)
+
+	return result, nil
 }

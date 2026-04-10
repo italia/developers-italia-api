@@ -48,6 +48,15 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("can't migrate database: %w", err)
 	}
 
+	// Workaround until #72 (proper migrations): GIN index on analysis for
+	// per-namespace queries. SQLite doesn't support GIN, PostgreSQL only.
+	if !strings.HasPrefix(connection, "file:") {
+		sql := "CREATE INDEX IF NOT EXISTS idx_software_analysis_gin ON software USING GIN (analysis)"
+		if err := database.Exec(sql).Error; err != nil {
+			return nil, fmt.Errorf("can't create analysis GIN index: %w", err)
+		}
+	}
+
 	// Migrate logs only if there is no "entity" column yet, which should mean when the database
 	// is empty.
 	// This is a workaround for https://github.com/go-gorm/gorm/issues/5534 where GORM
