@@ -40,8 +40,8 @@
 
 ## Requirements
 
-* Golang 1.24+
-* [PostgreSQL](https://https://www.postgresql.org/)
+* Golang 1.25+
+* [PostgreSQL](https://www.postgresql.org/)
 
 ## Development
 
