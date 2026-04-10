@@ -38,6 +38,7 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 	}
 
 	if err = database.AutoMigrate(
+		&models.Catalog{},
 		&models.Publisher{},
 		&models.Event{},
 		&models.CodeHosting{},

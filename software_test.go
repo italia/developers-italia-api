@@ -42,7 +42,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assert.Equal(t, true, firstSoftware["active"])
 
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "catalogId")
 			},
 		},
 		{
@@ -71,7 +71,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, true, firstSoftware["active"])
 
 				assertTimestamps(t, firstSoftware)
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "catalogId")
 			},
 		},
 		{
@@ -97,7 +97,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, firstSoftware["id"])
 				assertTimestamps(t, firstSoftware)
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "catalogId")
 			},
 		},
 		{
@@ -126,7 +126,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, "2014-05-01T00:00:00Z", firstSoftware["createdAt"])
 				assert.Equal(t, "2014-05-01T00:00:00Z", firstSoftware["updatedAt"])
 
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "catalogId")
 			},
 		},
 		{
@@ -307,7 +307,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "catalogId")
 			},
 		},
 		{
@@ -325,7 +325,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "catalogId")
 			},
 		},
 
@@ -351,7 +351,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assert.Equal(t, true, response["active"])
 
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "catalogId")
 
 			},
 		},
@@ -379,7 +379,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "catalogId")
 
 			},
 		},
@@ -423,7 +423,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "catalogId")
 
 			},
 		},

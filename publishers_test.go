@@ -34,7 +34,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				assertUUID(t, firstPub["id"])
 				assertTimestamps(t, firstPub)
-				assertOnlyKeys(t, firstPub, "id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active")
+				assertOnlyKeys(t, firstPub, "id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active", "catalogId")
 			},
 		},
 		{
@@ -57,7 +57,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				assertUUID(t, firstPub["id"])
 				assertTimestamps(t, firstPub)
-				assertOnlyKeys(t, firstPub, "id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active")
+				assertOnlyKeys(t, firstPub, "id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active", "catalogId")
 			},
 		},
 		{
@@ -81,7 +81,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				assertUUID(t, firstPub["id"])
 				assertTimestamps(t, firstPub)
-				assertOnlyKeys(t, firstPub, "id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active")
+				assertOnlyKeys(t, firstPub, "id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active", "catalogId")
 			},
 		},
 		{
@@ -231,7 +231,7 @@ func TestPublishersEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active", "catalogId")
 			},
 		},
 		{
@@ -244,7 +244,7 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.Equal(t, "alternative-id-12345", response["alternativeId"])
 
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active", "alternativeId")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "codeHosting", "email", "description", "active", "catalogId", "alternativeId")
 			},
 		},
 
