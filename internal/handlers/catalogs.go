@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
+	"sort"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/gofiber/fiber/v2"
@@ -26,7 +27,11 @@ type CatalogInterface interface {
 	DeleteCatalog(ctx *fiber.Ctx) error
 
 	GetCatalogPublishers(ctx *fiber.Ctx) error
+	PostCatalogPublisher(ctx *fiber.Ctx) error
+	PatchCatalogPublisher(ctx *fiber.Ctx) error
 	GetCatalogSoftware(ctx *fiber.Ctx) error
+	PostCatalogSoftware(ctx *fiber.Ctx) error
+	PatchCatalogSoftware(ctx *fiber.Ctx) error
 }
 
 type Catalog struct {
@@ -313,6 +318,392 @@ func (c *Catalog) GetCatalogPublishers(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(fiber.Map{"data": &publishers, "links": general.PaginationLinks(cursor)})
+}
+
+// PostCatalogPublisher creates a publisher belonging to the given catalog.
+// The catalog is resolved from the URL; any catalogId in the body is ignored.
+func (c *Catalog) PostCatalogPublisher(ctx *fiber.Ctx) error {
+	const errMsg = "can't create Publisher"
+
+	catalog, err := c.resolveCatalog(ctx.Params("id"))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Catalog was not found")
+		}
+
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
+	}
+
+	request := new(common.PublisherPost)
+
+	if err := common.ValidateRequestEntity(ctx, request, errMsg); err != nil {
+		return err //nolint:wrapcheck
+	}
+
+	var catalogID *string
+	if catalog != nil {
+		catalogID = &catalog.ID
+	}
+
+	publisher := &models.Publisher{
+		ID:            utils.UUIDv4(),
+		CatalogID:     catalogID,
+		Description:   request.Description,
+		Email:         common.NormalizeEmail(request.Email),
+		Active:        request.Active,
+		AlternativeID: request.AlternativeID,
+	}
+
+	for _, codeHost := range request.CodeHosting {
+		publisher.CodeHosting = append(publisher.CodeHosting,
+			models.CodeHosting{
+				ID:    utils.UUIDv4(),
+				URL:   common.NormalizeURL(codeHost.URL),
+				Group: codeHost.Group,
+			})
+	}
+
+	if err := c.db.Transaction(func(tran *gorm.DB) error {
+		if request.AlternativeID != nil {
+			if err := checkAlternativeIDConflict(tran, *request.AlternativeID); err != nil {
+				return err
+			}
+		}
+
+		return tran.Create(&publisher).Error
+	}); err != nil {
+		var idConflict idConflictError
+
+		if errors.As(err, &idConflict) {
+			return common.Error(fiber.StatusConflict, errMsg, idConflict.Error())
+		}
+
+		if field := common.DuplicateField(err); field != nil {
+			detail := alreadyExists
+			if *field != "" {
+				detail = *field + " " + alreadyExists
+			}
+
+			return common.Error(fiber.StatusConflict, errMsg, detail)
+		}
+
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
+	}
+
+	return ctx.JSON(publisher)
+}
+
+// PatchCatalogPublisher updates a publisher that belongs to the given catalog.
+func (c *Catalog) PatchCatalogPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funlen,gocognit
+	const errMsg = "can't update Publisher"
+
+	catalog, err := c.resolveCatalog(ctx.Params("id"))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Catalog was not found")
+		}
+
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
+	}
+
+	publisher := models.Publisher{}
+	publisherID := ctx.Params("publisherId")
+
+	if err := c.db.Preload("CodeHosting").
+		First(&publisher, "id = ? or alternative_id = ?", publisherID, publisherID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Publisher was not found")
+		}
+
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
+	}
+
+	// Verify the publisher belongs to the resolved catalog.
+	if catalog == nil {
+		if publisher.CatalogID != nil {
+			return common.Error(fiber.StatusNotFound, errMsg, "Publisher was not found")
+		}
+	} else if publisher.CatalogID == nil || *publisher.CatalogID != catalog.ID {
+		return common.Error(fiber.StatusNotFound, errMsg, "Publisher was not found")
+	}
+
+	publisherJSON, err := json.Marshal(&publisher)
+	if err != nil {
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	}
+
+	var updatedJSON []byte
+
+	switch ctx.Get(fiber.HeaderContentType) {
+	case "application/json-patch+json":
+		patch, err := jsonpatch.DecodePatch(ctx.Body())
+		if err != nil {
+			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
+		}
+
+		updatedJSON, err = patch.Apply(publisherJSON)
+		if err != nil {
+			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+		}
+
+	default:
+		publisherReq := new(common.PublisherPatch)
+
+		if err := common.ValidateRequestEntity(ctx, publisherReq, errMsg); err != nil {
+			return err //nolint:wrapcheck
+		}
+
+		updatedJSON, err = jsonpatch.MergePatch(publisherJSON, ctx.Body())
+		if err != nil {
+			return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+		}
+	}
+
+	var updatedPublisher models.Publisher
+
+	if err := json.Unmarshal(updatedJSON, &updatedPublisher); err != nil {
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	}
+
+	// Prevent patches from changing the ID or catalog assignment.
+	updatedPublisher.ID = publisher.ID
+	updatedPublisher.CatalogID = publisher.CatalogID
+
+	updatedPublisher.Email = common.NormalizeEmail(updatedPublisher.Email)
+
+	expectedURLs := make([]string, 0, len(updatedPublisher.CodeHosting))
+	for _, ch := range updatedPublisher.CodeHosting {
+		expectedURLs = append(expectedURLs, common.NormalizeURL(ch.URL))
+	}
+
+	if err := c.db.Transaction(func(tran *gorm.DB) error {
+		if updatedPublisher.AlternativeID != nil &&
+			(publisher.AlternativeID == nil || *updatedPublisher.AlternativeID != *publisher.AlternativeID) {
+			if err := checkAlternativeIDConflict(tran, *updatedPublisher.AlternativeID); err != nil {
+				return err
+			}
+		}
+
+		codeHosting, err := syncCodeHosting(tran, publisher, expectedURLs)
+		if err != nil {
+			return err
+		}
+
+		publisher.Description = updatedPublisher.Description
+		publisher.Email = updatedPublisher.Email
+		publisher.Active = updatedPublisher.Active
+		publisher.AlternativeID = updatedPublisher.AlternativeID
+		publisher.CodeHosting = []models.CodeHosting{}
+
+		if err := tran.Updates(&publisher).Error; err != nil {
+			return err
+		}
+
+		publisher.CodeHosting = codeHosting
+
+		return nil
+	}); err != nil {
+		var idConflict idConflictError
+
+		if errors.As(err, &idConflict) {
+			return common.Error(fiber.StatusConflict, errMsg, idConflict.Error())
+		}
+
+		if field := common.DuplicateField(err); field != nil {
+			detail := alreadyExists
+			if *field != "" {
+				detail = *field + " " + alreadyExists
+			}
+
+			return common.Error(fiber.StatusConflict, errMsg, detail)
+		}
+
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	}
+
+	sort.Slice(publisher.CodeHosting, func(a int, b int) bool {
+		return publisher.CodeHosting[a].URL < publisher.CodeHosting[b].URL
+	})
+
+	return ctx.JSON(&publisher)
+}
+
+// PostCatalogSoftware creates software belonging to the given catalog.
+// The catalog is resolved from the URL; any catalogId in the body is ignored.
+func (c *Catalog) PostCatalogSoftware(ctx *fiber.Ctx) error {
+	const errMsg = "can't create Software"
+
+	catalog, err := c.resolveCatalog(ctx.Params("id"))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Catalog was not found")
+		}
+
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
+	}
+
+	softwareReq := new(common.SoftwarePost)
+
+	if err := common.ValidateRequestEntity(ctx, softwareReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
+	}
+
+	var catalogID *string
+	if catalog != nil {
+		catalogID = &catalog.ID
+	}
+
+	aliases := []models.SoftwareURL{}
+	for _, u := range softwareReq.Aliases {
+		aliases = append(aliases, models.SoftwareURL{ID: utils.UUIDv4(), URL: common.NormalizeURL(u)})
+	}
+
+	url := models.SoftwareURL{ID: utils.UUIDv4(), URL: common.NormalizeURL(softwareReq.URL)}
+	software := &models.Software{
+		ID:            utils.UUIDv4(),
+		URL:           url,
+		SoftwareURLID: url.ID,
+		CatalogID:     catalogID,
+		Aliases:       aliases,
+		PubliccodeYml: softwareReq.PubliccodeYml,
+		Active:        softwareReq.Active,
+		Vitality:      softwareReq.Vitality,
+	}
+
+	if err := c.db.Create(software).Error; err != nil {
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	}
+
+	return ctx.JSON(software)
+}
+
+// PatchCatalogSoftware updates software that belongs to the given catalog.
+func (c *Catalog) PatchCatalogSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
+	const errMsg = "can't update Software"
+
+	catalog, err := c.resolveCatalog(ctx.Params("id"))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Catalog was not found")
+		}
+
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
+	}
+
+	software := models.Software{}
+
+	if err := loadSoftware(c.db, &software, ctx.Params("softwareId")); err != nil {
+		if errors.Is(err, errLoadNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Software was not found")
+		}
+
+		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
+	}
+
+	// Verify the software belongs to the resolved catalog.
+	if catalog == nil {
+		if software.CatalogID != nil {
+			return common.Error(fiber.StatusNotFound, errMsg, "Software was not found")
+		}
+	} else if software.CatalogID == nil || *software.CatalogID != catalog.ID {
+		return common.Error(fiber.StatusNotFound, errMsg, "Software was not found")
+	}
+
+	softwareJSON, err := json.Marshal(&software)
+	if err != nil {
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	}
+
+	var updatedJSON []byte
+
+	switch ctx.Get(fiber.HeaderContentType) {
+	case "application/json-patch+json":
+		patch, err := jsonpatch.DecodePatch(ctx.Body())
+		if err != nil {
+			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
+		}
+
+		updatedJSON, err = patch.Apply(softwareJSON)
+		if err != nil {
+			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+		}
+
+	default:
+		softwareReq := common.SoftwarePatch{}
+		if err := common.ValidateRequestEntity(ctx, &softwareReq, errMsg); err != nil {
+			return err //nolint:wrapcheck
+		}
+
+		updatedJSON, err = jsonpatch.MergePatch(softwareJSON, ctx.Body())
+		if err != nil {
+			return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+		}
+	}
+
+	var updatedSoftware models.Software
+
+	if err := json.Unmarshal(updatedJSON, &updatedSoftware); err != nil {
+		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	}
+
+	// Catalog assignment is immutable via patch; keep the value from the URL.
+	updatedSoftware.CatalogID = software.CatalogID
+
+	updatedSoftware.URL.URL = common.NormalizeURL(updatedSoftware.URL.URL)
+
+	expectedAliases := make([]string, 0, len(updatedSoftware.Aliases))
+	for _, alias := range updatedSoftware.Aliases {
+		expectedAliases = append(expectedAliases, common.NormalizeURL(alias.URL))
+	}
+
+	if err := c.db.Transaction(func(tran *gorm.DB) error {
+		//nolint:gocritic // it's fine, we want to append to another slice
+		currentURLs := append(software.Aliases, software.URL)
+
+		updatedURL, aliases, err := syncAliases(
+			tran,
+			software.ID,
+			currentURLs,
+			updatedSoftware.URL.URL,
+			expectedAliases,
+		)
+		if err != nil {
+			return err
+		}
+
+		updatedSoftware.SoftwareURLID = updatedURL.ID
+		updatedSoftware.URL = *updatedURL
+
+		// Set Aliases to a zero value, so it's not touched by gorm's Update(),
+		// because we handle the alias manually.
+		updatedSoftware.Aliases = []models.SoftwareURL{}
+
+		if err := tran.Updates(&updatedSoftware).Error; err != nil {
+			return err
+		}
+
+		updatedSoftware.Aliases = aliases
+
+		return nil
+	}); err != nil {
+		if field := common.DuplicateField(err); field != nil {
+			detail := alreadyExists
+			if *field != "" {
+				detail = *field + " " + alreadyExists
+			}
+
+			return common.Error(fiber.StatusConflict, errMsg, detail)
+		}
+
+		//nolint:wrapcheck
+		return err
+	}
+
+	sort.Slice(updatedSoftware.Aliases, func(a int, b int) bool {
+		return updatedSoftware.Aliases[a].URL < updatedSoftware.Aliases[b].URL
+	})
+
+	return ctx.JSON(&updatedSoftware)
 }
 
 // GetCatalogSoftware lists software belonging to the given catalog.

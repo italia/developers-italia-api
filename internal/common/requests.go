@@ -30,7 +30,6 @@ type CatalogPatch struct {
 }
 
 type PublisherPost struct {
-	CatalogID     *string       `json:"catalogId" validate:"omitempty,min=1,max=36"`
 	CodeHosting   []CodeHosting `json:"codeHosting" validate:"required,gt=0,dive"`
 	Description   string        `json:"description" validate:"required"`
 	Email         *string       `json:"email" validate:"omitempty,email"`
@@ -39,7 +38,6 @@ type PublisherPost struct {
 }
 
 type PublisherPatch struct {
-	CatalogID     *string        `json:"catalogId" validate:"omitempty,max=36"`
 	CodeHosting   *[]CodeHosting `json:"codeHosting" validate:"omitempty,gt=0,dive"`
 	Description   *string        `json:"description"`
 	Email         *string        `json:"email" validate:"omitempty,email"`
@@ -53,7 +51,6 @@ type CodeHosting struct {
 }
 
 type SoftwarePost struct {
-	CatalogID     *string  `json:"catalogId" validate:"omitempty,min=1,max=36"`
 	URL           string   `json:"url" validate:"required,url"`
 	Aliases       []string `json:"aliases" validate:"dive,url"`
 	PubliccodeYml string   `json:"publiccodeYml" validate:"required"`
@@ -62,7 +59,6 @@ type SoftwarePost struct {
 }
 
 type SoftwarePatch struct {
-	CatalogID     *string   `json:"catalogId" validate:"omitempty,max=36"`
 	URL           *string   `json:"url" validate:"omitempty,url"`
 	Aliases       *[]string `json:"aliases" validate:"omitempty,dive,url"`
 	PubliccodeYml *string   `json:"publiccodeYml"`

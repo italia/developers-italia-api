@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -13,6 +14,16 @@ import (
 const (
 	italiaID = "a8e5e6d7-0b1c-4f2a-8e3d-9c4b5a6f7e8d"
 	swissID  = "b9f6f7e8-1c2d-4f3b-9f4e-0d5c6b7a8f9e"
+
+	// Software fixtures with known catalog assignments.
+	italiaSoftwareID = "c353756e-8597-4e46-a99b-7da2e141603b" // catalog_id = italiaID
+	swissSoftwareID  = "9f135268-a37e-4ead-96ec-e4a24bb9344a" // catalog_id = swissID
+	rootSoftwareID   = "18348f13-1076-4a1e-b204-ed541b824d64" // catalog_id IS NULL (root)
+
+	// Publisher fixtures with known catalog assignments.
+	italiaPublisherID = "2ded32eb-c45e-4167-9166-a44e18b8adde" // catalog_id = italiaID
+	swissPublisherID  = "47807e0c-0613-4aea-9917-5455cc6eddad" // catalog_id = swissID
+	rootPublisherID   = "d6ddc11a-ff85-4f0f-bb87-df38b2a9b394" // catalog_id IS NULL (root)
 )
 
 func TestCatalogEndpoints(t *testing.T) {
@@ -203,6 +214,120 @@ func TestCatalogEndpoints(t *testing.T) {
 			expectedBody:        `{"title":"token authentication failed","status":401}`,
 		},
 
+		// POST /catalogs/:id/publishers
+		{
+			description: "POST catalog publisher",
+			query:       "POST /v1/catalogs/" + italiaID + "/publishers",
+			body:        `{"description":"New Publisher","codeHosting":[{"url":"https://example.org/code"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assertUUID(t, response["id"])
+				assert.Equal(t, italiaID, response["catalogId"])
+			},
+		},
+		{
+			description: "POST catalog publisher - root catalog (∅)",
+			query:       "POST /v1/catalogs/%E2%88%85/publishers",
+			body:        `{"description":"Root Publisher","codeHosting":[{"url":"https://example.org/root-pub"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Nil(t, response["catalogId"])
+			},
+		},
+		{
+			description: "POST catalog publisher - catalog not found",
+			query:       "POST /v1/catalogs/nonexistent/publishers",
+			body:        `{"description":"x","codeHosting":[{"url":"https://example.org/x"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Publisher","detail":"Catalog was not found","status":404}`,
+		},
+		{
+			description:         "POST catalog publisher - no token",
+			query:               "POST /v1/catalogs/" + italiaID + "/publishers",
+			body:                `{"description":"x","codeHosting":[{"url":"https://example.org/x"}]}`,
+			expectedCode:        401,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+		},
+
+		// PATCH /catalogs/:id/publishers/:publisherId
+		{
+			description: "PATCH catalog publisher",
+			query:       "PATCH /v1/catalogs/" + italiaID + "/publishers/" + italiaPublisherID,
+			body:        `{"description":"Updated Publisher"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, italiaPublisherID, response["id"])
+				assert.Equal(t, "Updated Publisher", response["description"])
+			},
+		},
+		{
+			description: "PATCH catalog publisher - wrong catalog returns 404",
+			query:       "PATCH /v1/catalogs/" + swissID + "/publishers/" + italiaPublisherID,
+			body:        `{"description":"x"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher was not found","status":404}`,
+		},
+		{
+			description: "PATCH catalog publisher - root catalog (∅)",
+			query:       "PATCH /v1/catalogs/%E2%88%85/publishers/" + rootPublisherID,
+			body:        `{"description":"Updated Root Publisher"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, rootPublisherID, response["id"])
+			},
+		},
+		{
+			description: "PATCH catalog publisher - catalog-scoped publisher rejected for root catalog",
+			query:       "PATCH /v1/catalogs/%E2%88%85/publishers/" + italiaPublisherID,
+			body:        `{"description":"x"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Publisher","detail":"Publisher was not found","status":404}`,
+		},
+		{
+			description:         "PATCH catalog publisher - no token",
+			query:               "PATCH /v1/catalogs/" + italiaID + "/publishers/" + italiaPublisherID,
+			body:                `{"description":"x"}`,
+			expectedCode:        401,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+		},
+
 		// GET /catalogs/:id/publishers
 		{
 			description:         "GET catalog publishers",
@@ -248,6 +373,160 @@ func TestCatalogEndpoints(t *testing.T) {
 			expectedBody:        `{"title":"can't get Publishers","detail":"Catalog was not found","status":404}`,
 		},
 
+		// POST /catalogs/:id/software
+		{
+			description: "POST catalog software",
+			query:       "POST /v1/catalogs/" + italiaID + "/software",
+			body:        `{"url": "https://example.org/new-sw", "publiccodeYml": "-"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assertUUID(t, response["id"])
+				assert.Equal(t, italiaID, response["catalogId"])
+			},
+		},
+		{
+			description: "POST catalog software by alternativeId",
+			query:       "POST /v1/catalogs/italia/software",
+			body:        `{"url": "https://example.org/new-sw-2", "publiccodeYml": "-"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, italiaID, response["catalogId"])
+			},
+		},
+		{
+			description: "POST catalog software - root catalog (∅)",
+			query:       "POST /v1/catalogs/%E2%88%85/software",
+			body:        `{"url": "https://example.org/root-sw", "publiccodeYml": "-"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Nil(t, response["catalogId"])
+			},
+		},
+		{
+			description: "POST catalog software - catalog not found",
+			query:       "POST /v1/catalogs/nonexistent/software",
+			body:        `{"url": "https://example.org/x", "publiccodeYml": "-"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Software","detail":"Catalog was not found","status":404}`,
+		},
+		{
+			description:         "POST catalog software - no token",
+			query:               "POST /v1/catalogs/" + italiaID + "/software",
+			body:                `{"url": "https://example.org/x", "publiccodeYml": "-"}`,
+			expectedCode:        401,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+		},
+
+		// PATCH /catalogs/:id/software/:softwareId
+		{
+			description: "PATCH catalog software",
+			query:       "PATCH /v1/catalogs/" + italiaID + "/software/" + italiaSoftwareID,
+			body:        `{"publiccodeYml": "updated"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, italiaSoftwareID, response["id"])
+				assert.Equal(t, "updated", response["publiccodeYml"])
+			},
+		},
+		{
+			description: "PATCH catalog software by alternativeId",
+			query:       "PATCH /v1/catalogs/italia/software/" + italiaSoftwareID,
+			body:        `{"publiccodeYml": "updated-via-alt"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, italiaSoftwareID, response["id"])
+			},
+		},
+		{
+			description: "PATCH catalog software - wrong catalog returns 404",
+			query:       "PATCH /v1/catalogs/" + swissID + "/software/" + italiaSoftwareID,
+			body:        `{"publiccodeYml": "x"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"Software was not found","status":404}`,
+		},
+		{
+			description: "PATCH catalog software - root catalog (∅)",
+			query:       "PATCH /v1/catalogs/%E2%88%85/software/" + rootSoftwareID,
+			body:        `{"publiccodeYml": "updated-root"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, rootSoftwareID, response["id"])
+			},
+		},
+		{
+			description: "PATCH catalog software - catalog-scoped software rejected for root catalog",
+			query:       "PATCH /v1/catalogs/%E2%88%85/software/" + italiaSoftwareID,
+			body:        `{"publiccodeYml": "x"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"Software was not found","status":404}`,
+		},
+		{
+			description: "PATCH catalog software - catalog not found",
+			query:       "PATCH /v1/catalogs/nonexistent/software/" + italiaSoftwareID,
+			body:        `{"publiccodeYml": "x"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't update Software","detail":"Catalog was not found","status":404}`,
+		},
+		{
+			description:         "PATCH catalog software - no token",
+			query:               "PATCH /v1/catalogs/" + italiaID + "/software/" + italiaSoftwareID,
+			body:                `{"publiccodeYml": "x"}`,
+			expectedCode:        401,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+		},
+
 		// GET /catalogs/:id/software
 		{
 			description:         "GET catalog software",
@@ -283,6 +562,54 @@ func TestCatalogEndpoints(t *testing.T) {
 	}
 
 	runTestCases(t, tests)
+}
+
+func TestCatalogSoftwareDBChecks(t *testing.T) {
+	t.Run("POST catalog software persists catalogId", func(t *testing.T) {
+		loadFixtures(t)
+
+		req, err := http.NewRequest(
+			"POST",
+			"/v1/catalogs/"+italiaID+"/software",
+			strings.NewReader(`{"url":"https://example.org/cat-sw","publiccodeYml":"-"}`),
+		)
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		var created map[string]interface{}
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&created))
+		softwareID := created["id"].(string)
+
+		assert.Equal(t, italiaID, dbValue(t, "software", "catalog_id", "id", softwareID))
+	})
+
+	t.Run("PATCH catalog software persists publiccodeYml", func(t *testing.T) {
+		loadFixtures(t)
+
+		req, err := http.NewRequest(
+			"PATCH",
+			fmt.Sprintf("/v1/catalogs/%s/software/%s", italiaID, italiaSoftwareID),
+			strings.NewReader(`{"publiccodeYml":"patched-yml"}`),
+		)
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, "patched-yml", dbValue(t, "software", "publiccode_yml", "id", italiaSoftwareID))
+	})
 }
 
 func TestCatalogDeleteDBChecks(t *testing.T) {
