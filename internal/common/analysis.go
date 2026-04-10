@@ -20,7 +20,7 @@ var (
 // AnalysisData is a map of { namespace: arbitrary JSON object }
 // External software components (scanners, enrichers, security checkers, etc.) write under
 // their own key.
-// Every namespace must have "v" (schema version, int)
+// Every namespace must have "v" (schema version, int).
 type AnalysisData map[string]json.RawMessage //nolint:recvcheck
 
 func (a AnalysisData) Value() (driver.Value, error) {
@@ -64,13 +64,13 @@ type namespaceMeta struct {
 }
 
 // WithTimestamps checks that each namespace is a JSON object with an integer "v",
-// then injects "t" (current time, RFC 3339)
+// then injects "t" (current time, RFC 3339).
 func WithTimestamps(analysis AnalysisData, now time.Time) (AnalysisData, error) {
 	if analysis == nil {
 		return nil, nil //nolint:nilnil
 	}
 
-	tPatch, _ := json.Marshal(struct {
+	tPatch, _ := json.Marshal(struct { //nolint:errchkjson
 		T string `json:"t"`
 	}{T: now.UTC().Format(time.RFC3339)})
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"testing"
@@ -1480,6 +1481,38 @@ func TestSoftwareEndpoints(t *testing.T) {
 	runTestCases(t, tests)
 }
 
+func TestSoftwarePostDBChecks(t *testing.T) {
+	t.Run("POST software with analysis persists to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `{"publiccodeYml": "-", "url": "https://analysis-db.example.org", "analysis": {"badges": {"v": 1, "score": 90}}}`
+		req, err := http.NewRequest("POST", "/v1/software", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		var response map[string]interface{}
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&response))
+		softwareID := response["id"].(string)
+
+		raw := dbValue(t, "software", "analysis", "id", softwareID)
+
+		var analysis map[string]interface{}
+		require.NoError(t, json.Unmarshal([]byte(raw), &analysis))
+
+		badges := analysis["badges"].(map[string]interface{})
+		assert.Equal(t, float64(1), badges["v"])
+		assert.Equal(t, float64(90), badges["score"])
+		assertRFC3339(t, badges["t"])
+	})
+}
+
 func TestSoftwarePatchDBChecks(t *testing.T) {
 	t.Run("PATCH software persists changes to DB", func(t *testing.T) {
 		loadFixtures(t)
@@ -1505,6 +1538,34 @@ func TestSoftwarePatchDBChecks(t *testing.T) {
 
 		assert.Equal(t, softwareID, dbValue(t, "software_urls", "software_id", "url", "https://software-new.example.org"))
 		assert.Equal(t, 3, dbCount(t, "software_urls", "software_id", softwareID))
+	})
+
+	t.Run("PATCH software with analysis persists to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		const softwareID = "59803fb7-8eec-4fe5-a354-8926009c364a"
+
+		body := `{"analysis": {"badges": {"v": 1, "score": 75}}}`
+		req, err := http.NewRequest("PATCH", "/v1/software/"+softwareID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		raw := dbValue(t, "software", "analysis", "id", softwareID)
+
+		var analysis map[string]interface{}
+		require.NoError(t, json.Unmarshal([]byte(raw), &analysis))
+
+		badges := analysis["badges"].(map[string]interface{})
+		assert.Equal(t, float64(1), badges["v"])
+		assert.Equal(t, float64(75), badges["score"])
+		assertRFC3339(t, badges["t"])
 	})
 }
 
