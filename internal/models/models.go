@@ -32,8 +32,26 @@ type Log struct {
 	Entity     string  `json:"entity,omitempty" gorm:"->;type:text GENERATED ALWAYS AS (CASE WHEN entity_id IS NULL THEN NULL ELSE ('/' || entity_type || '/' || entity_id) END) STORED;default:(-);"` //nolint:lll
 }
 
+type Catalog struct {
+	ID            string    `json:"id" gorm:"primaryKey"`
+	Name          string    `json:"name" gorm:"not null"`
+	AlternativeID *string   `json:"alternativeId,omitempty" gorm:"uniqueIndex"`
+	Active        *bool     `json:"active" gorm:"default:true;not null"`
+	CreatedAt     time.Time `json:"createdAt" gorm:"index"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+}
+
+func (Catalog) TableName() string {
+	return "catalogs"
+}
+
+func (c Catalog) UUID() string {
+	return c.ID
+}
+
 type Publisher struct {
 	ID            string        `json:"id" gorm:"primaryKey"`
+	CatalogID     *string       `json:"catalogId,omitempty" gorm:"index"`
 	Email         *string       `json:"email,omitempty"`
 	Description   string        `json:"description" gorm:"uniqueIndex;not null"`
 	CodeHosting   []CodeHosting `json:"codeHosting" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
@@ -65,7 +83,8 @@ type CodeHosting struct {
 }
 
 type Software struct {
-	ID string `json:"id" gorm:"primarykey"`
+	ID        string  `json:"id" gorm:"primarykey"`
+	CatalogID *string `json:"catalogId,omitempty" gorm:"index"`
 
 	// This needs to be explicitly declared, otherwise GORM won't create
 	// the foreign key and will be confused about the double relationship

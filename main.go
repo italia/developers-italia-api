@@ -122,7 +122,8 @@ func Setup() *fiber.App {
 	return app
 }
 
-func setupHandlers(app *fiber.App, gormDB *gorm.DB) {
+func setupHandlers(app *fiber.App, gormDB *gorm.DB) { //nolint:funlen
+	catalogHandler := handlers.NewCatalog(gormDB)
 	publisherHandler := handlers.NewPublisher(gormDB)
 	softwareHandler := handlers.NewSoftware(gormDB)
 	statusHandler := handlers.NewStatus(gormDB)
@@ -132,6 +133,14 @@ func setupHandlers(app *fiber.App, gormDB *gorm.DB) {
 
 	//nolint:varnamelen
 	v1 := app.Group("/v1")
+
+	v1.Get("/catalogs", catalogHandler.GetCatalogs)
+	v1.Post("/catalogs", catalogHandler.PostCatalog)
+	v1.Get("/catalogs/:id", catalogHandler.GetCatalog)
+	v1.Patch("/catalogs/:id", catalogHandler.PatchCatalog)
+	v1.Delete("/catalogs/:id", catalogHandler.DeleteCatalog)
+	v1.Get("/catalogs/:id/publishers", catalogHandler.GetCatalogPublishers)
+	v1.Get("/catalogs/:id/software", catalogHandler.GetCatalogSoftware)
 
 	v1.Get("/publishers/webhooks", publisherWebhookHandler.GetResourceWebhooks)
 	v1.Post("/publishers/webhooks", publisherWebhookHandler.PostResourceWebhook)

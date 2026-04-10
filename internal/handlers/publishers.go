@@ -24,7 +24,10 @@ type PublisherInterface interface {
 	DeletePublisher(ctx *fiber.Ctx) error
 }
 
-const alreadyExists = "already exists"
+const (
+	alreadyExists        = "already exists"
+	contentTypeJSONPatch = "application/json-patch+json"
+)
 
 type Publisher struct {
 	db *gorm.DB
@@ -109,6 +112,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 
 	publisher := &models.Publisher{
 		ID:            utils.UUIDv4(),
+		CatalogID:     request.CatalogID,
 		Description:   request.Description,
 		Email:         normalizedEmail,
 		Active:        request.Active,
@@ -180,7 +184,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 	var updatedJSON []byte
 
 	switch ctx.Get(fiber.HeaderContentType) {
-	case "application/json-patch+json":
+	case contentTypeJSONPatch:
 		patch, err := jsonpatch.DecodePatch(ctx.Body())
 		if err != nil {
 			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
@@ -235,6 +239,7 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 			return err
 		}
 
+		publisher.CatalogID = updatedPublisher.CatalogID
 		publisher.Description = updatedPublisher.Description
 		publisher.Email = updatedPublisher.Email
 		publisher.Active = updatedPublisher.Active

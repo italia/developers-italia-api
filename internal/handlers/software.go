@@ -161,6 +161,7 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 		URL:           url,
 		SoftwareURLID: url.ID,
 
+		CatalogID:     softwareReq.CatalogID,
 		Aliases:       aliases,
 		PubliccodeYml: softwareReq.PubliccodeYml,
 		Active:        softwareReq.Active,
@@ -196,7 +197,7 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 	var updatedJSON []byte
 
 	switch ctx.Get(fiber.HeaderContentType) {
-	case "application/json-patch+json":
+	case contentTypeJSONPatch:
 		patch, err := jsonpatch.DecodePatch(ctx.Body())
 		if err != nil {
 			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
