@@ -9,7 +9,8 @@ release:
   disable: true
 
 builds:
-  - env:
+  - binary: software-catalog-api
+    env:
       - CGO_ENABLED=0
     ldflags:
      - -s -w
