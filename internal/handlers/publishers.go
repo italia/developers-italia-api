@@ -111,9 +111,8 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 	normalizedEmail := common.NormalizeEmail(request.Email)
 
 	publisher := &models.Publisher{
-		ID:            utils.UUIDv4(),
-		CatalogID:     request.CatalogID,
-		Description:   request.Description,
+		ID:          utils.UUIDv4(),
+		Description: request.Description,
 		Email:         normalizedEmail,
 		Active:        request.Active,
 		AlternativeID: request.AlternativeID,
@@ -239,7 +238,6 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 			return err
 		}
 
-		publisher.CatalogID = updatedPublisher.CatalogID
 		publisher.Description = updatedPublisher.Description
 		publisher.Email = updatedPublisher.Email
 		publisher.Active = updatedPublisher.Active

@@ -140,7 +140,11 @@ func setupHandlers(app *fiber.App, gormDB *gorm.DB) { //nolint:funlen
 	v1.Patch("/catalogs/:id", catalogHandler.PatchCatalog)
 	v1.Delete("/catalogs/:id", catalogHandler.DeleteCatalog)
 	v1.Get("/catalogs/:id/publishers", catalogHandler.GetCatalogPublishers)
+	v1.Post("/catalogs/:id/publishers", catalogHandler.PostCatalogPublisher)
+	v1.Patch("/catalogs/:id/publishers/:publisherId", catalogHandler.PatchCatalogPublisher)
 	v1.Get("/catalogs/:id/software", catalogHandler.GetCatalogSoftware)
+	v1.Post("/catalogs/:id/software", catalogHandler.PostCatalogSoftware)
+	v1.Patch("/catalogs/:id/software/:softwareId", catalogHandler.PatchCatalogSoftware)
 
 	v1.Get("/publishers/webhooks", publisherWebhookHandler.GetResourceWebhooks)
 	v1.Post("/publishers/webhooks", publisherWebhookHandler.PostResourceWebhook)

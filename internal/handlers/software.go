@@ -161,7 +161,6 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 		URL:           url,
 		SoftwareURLID: url.ID,
 
-		CatalogID:     softwareReq.CatalogID,
 		Aliases:       aliases,
 		PubliccodeYml: softwareReq.PubliccodeYml,
 		Active:        softwareReq.Active,
@@ -227,6 +226,9 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 	if err != nil {
 		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
 	}
+
+	// Catalog assignment is immutable via this endpoint.
+	updatedSoftware.CatalogID = software.CatalogID
 
 	updatedSoftware.URL.URL = common.NormalizeURL(updatedSoftware.URL.URL)
 
