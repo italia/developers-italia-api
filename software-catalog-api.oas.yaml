@@ -1293,7 +1293,7 @@ components:
       type: array
       description: >
         A JSON Patch document as defined by RFC 6902.
-        Writable fields are: publiccodeYml, url, aliases, active, vitality.
+        Writable fields are: publiccodeYml, url, aliases, active, vitality, analysis.
       example:
         - op: replace
           path: /publiccodeYml
@@ -1325,7 +1325,7 @@ components:
             type: string
             description: >
               A JSON Pointer (RFC 6901) to a writable field.
-              Examples: /publiccodeYml, /url, /active, /vitality,
+              Examples: /publiccodeYml, /url, /active, /vitality, /analysis,
               /aliases (full replace), /aliases/- (append), /aliases/0 (by index).
           value:
             description: The value to set. Required for add, replace, and test operations.
@@ -1390,6 +1390,35 @@ components:
           pattern: '.*'
           default: null
           example: "90,100,94,12"
+        analysis:
+          type: object
+          nullable: true
+          description: >
+            Analysis data produced by external components (scanners, enrichers,
+            security checkers, etc.). Each key is a namespace owned by the
+            component that writes it. Each namespace value is a JSON object
+            with at least a required version field "v".
+          additionalProperties:
+            type: object
+            required:
+              - v
+            properties:
+              v:
+                type: integer
+                description: Schema version of this namespace.
+              t:
+                type: string
+                format: date-time
+                readOnly: true
+                description: >
+                  Timestamp of the last write (RFC 3339 datetime).
+            additionalProperties: true
+          example:
+            acme-security-scanner:
+              v: 1
+              t: "2024-01-15T10:30:00Z"
+              vulnerabilities: 0
+              grade: "A"
         createdAt:
           type: string
           format: date-time
