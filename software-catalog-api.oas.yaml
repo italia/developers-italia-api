@@ -1,10 +1,10 @@
 openapi: 3.0.0
 info:
-  title: Developers Italia API
+  title: Software Catalog API
   version: 1.0.0
-  x-summary: Developers Italia API
+  x-summary: Software Catalog API
   description: |
-    The API of Developers Italia
+    REST API for public software catalogs.
 
     ## Caching
 
