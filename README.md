@@ -1,9 +1,9 @@
 <!-- markdownlint-disable no-inline-html -->
 
-<h1 align="center">Developers Italia API</h1>
+<h1 align="center">Software Catalog API</h1>
 
 <p align="center">
-  <img width="200" src=".github/logo.png" alt="developers-italia-api logo">
+  <img width="200" src=".github/logo.png" alt="software-catalog-api logo">
 </p>
 
 <p align="center">
@@ -31,9 +31,12 @@
 </div>
 
 <p align="center">
-  <strong>Developers Italia API</strong> is the RESTful API of the Free and Open Source software catalog
-  aimed at Italian Public Administrations.
+  <strong>Software Catalog API</strong> is a RESTful API for public software catalogs.
+  It powers national open source catalogs for public administrations:
 </p>
+
+- 🇮🇹 [developers.italia.it](https://developers.italia.it)
+- 🇨🇭 [swiss/oss-catalog](https://github.com/swiss/oss-catalog)
 
 ## Requirements
 
