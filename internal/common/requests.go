@@ -17,16 +17,24 @@ func NormalizeURL(rawURL string) string {
 	return normalized
 }
 
+type SourceInput struct {
+	Driver *string  `json:"driver" validate:"omitempty,min=1,max=64"`
+	URL    string   `json:"url" validate:"required,url"`
+	Args   []string `json:"args" validate:"omitempty,dive,min=1"`
+}
+
 type CatalogPost struct {
-	Name          string  `json:"name" validate:"required,min=1,max=255"`
-	AlternativeID *string `json:"alternativeId" validate:"omitempty,min=1,max=255"`
-	Active        *bool   `json:"active"`
+	Name          string        `json:"name" validate:"required,min=1,max=255"`
+	AlternativeID *string       `json:"alternativeId" validate:"omitempty,min=1,max=255"`
+	Active        *bool         `json:"active"`
+	Sources       []SourceInput `json:"sources" validate:"required,gt=0,dive"`
 }
 
 type CatalogPatch struct {
-	Name          *string `json:"name" validate:"omitempty,min=1,max=255"`
-	AlternativeID *string `json:"alternativeId" validate:"omitempty,max=255"`
-	Active        *bool   `json:"active"`
+	Name          *string        `json:"name" validate:"omitempty,min=1,max=255"`
+	AlternativeID *string        `json:"alternativeId" validate:"omitempty,max=255"`
+	Active        *bool          `json:"active"`
+	Sources       *[]SourceInput `json:"sources" validate:"omitempty,gt=0,dive"`
 }
 
 type PublisherPost struct {

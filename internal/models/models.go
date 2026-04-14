@@ -33,12 +33,27 @@ type Log struct {
 }
 
 type Catalog struct {
-	ID            string    `json:"id" gorm:"primaryKey"`
-	Name          string    `json:"name" gorm:"not null"`
-	AlternativeID *string   `json:"alternativeId,omitempty" gorm:"uniqueIndex"`
-	Active        *bool     `json:"active" gorm:"default:true;not null"`
-	CreatedAt     time.Time `json:"createdAt" gorm:"index"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	ID            string          `json:"id" gorm:"primaryKey"`
+	Name          string          `json:"name" gorm:"not null"`
+	AlternativeID *string         `json:"alternativeId,omitempty" gorm:"uniqueIndex"`
+	Active        *bool           `json:"active" gorm:"default:true;not null"`
+	Sources       []CatalogSource `json:"sources" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	CreatedAt     time.Time       `json:"createdAt" gorm:"index"`
+	UpdatedAt     time.Time       `json:"updatedAt"`
+}
+
+type CatalogSource struct {
+	ID        string    `json:"-" gorm:"primaryKey"`
+	Driver    *string   `json:"driver,omitempty" gorm:"index"`
+	URL       string    `json:"url" gorm:"not null"`
+	Args      []string  `json:"args,omitempty" gorm:"serializer:json"`
+	CatalogID string    `json:"-" gorm:"not null;index"`
+	CreatedAt time.Time `json:"-" gorm:"index"`
+	UpdatedAt time.Time `json:"-"`
+}
+
+func (CatalogSource) TableName() string {
+	return "catalog_sources"
 }
 
 func (Catalog) TableName() string {

@@ -42,7 +42,7 @@ func TestCatalogEndpoints(t *testing.T) {
 				first := data[0]
 				assertUUID(t, first["id"])
 				assertTimestamps(t, first)
-				assertOnlyKeys(t, first, "id", "name", "alternativeId", "active", "createdAt", "updatedAt")
+				assertOnlyKeys(t, first, "id", "name", "alternativeId", "active", "sources", "createdAt", "updatedAt")
 			},
 		},
 
@@ -56,7 +56,7 @@ func TestCatalogEndpoints(t *testing.T) {
 				assert.Equal(t, italiaID, response["id"])
 				assert.Equal(t, "Italian Catalog", response["name"])
 				assert.Equal(t, "italia", response["alternativeId"])
-				assertOnlyKeys(t, response, "id", "name", "alternativeId", "active", "createdAt", "updatedAt")
+				assertOnlyKeys(t, response, "id", "name", "alternativeId", "active", "sources", "createdAt", "updatedAt")
 			},
 		},
 		{
@@ -88,7 +88,7 @@ func TestCatalogEndpoints(t *testing.T) {
 		{
 			description: "POST catalog",
 			query:       "POST /v1/catalogs",
-			body:        `{"name": "New Catalog"}`,
+			body:        `{"name": "New Catalog", "sources": [{"url": "https://github.com/example/new-catalog"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -98,13 +98,13 @@ func TestCatalogEndpoints(t *testing.T) {
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assertUUID(t, response["id"])
 				assert.Equal(t, "New Catalog", response["name"])
-				assertOnlyKeys(t, response, "id", "name", "active", "createdAt", "updatedAt")
+				assertOnlyKeys(t, response, "id", "name", "active", "sources", "createdAt", "updatedAt")
 			},
 		},
 		{
 			description: "POST catalog with alternativeId",
 			query:       "POST /v1/catalogs",
-			body:        `{"name": "Another Catalog", "alternativeId": "another"}`,
+			body:        `{"name": "Another Catalog", "alternativeId": "another", "sources": [{"url": "https://github.com/example/another"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -118,7 +118,7 @@ func TestCatalogEndpoints(t *testing.T) {
 		{
 			description: "POST catalog duplicate alternativeId",
 			query:       "POST /v1/catalogs",
-			body:        `{"name": "Dup", "alternativeId": "italia"}`,
+			body:        `{"name": "Dup", "alternativeId": "italia", "sources": [{"url": "https://github.com/example/dup"}]}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -137,7 +137,7 @@ func TestCatalogEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Catalog","detail":"invalid format: name is required","status":422,"validationErrors":[{"field":"name","rule":"required","value":""}]}`,
+			expectedBody:        `{"title":"can't create Catalog","detail":"invalid format: name is required, sources is required","status":422,"validationErrors":[{"field":"name","rule":"required","value":""},{"field":"sources","rule":"required","value":""}]}`,
 		},
 		{
 			description:         "POST catalog - no token",
@@ -613,11 +613,10 @@ func TestCatalogSoftwareDBChecks(t *testing.T) {
 }
 
 func TestCatalogDeleteDBChecks(t *testing.T) {
-	t.Run("DELETE catalog removes it from DB when empty", func(t *testing.T) {
+	t.Run("DELETE catalog removes it and its sources from DB", func(t *testing.T) {
 		loadFixtures(t)
 
-		// Create an empty catalog to delete
-		body := `{"name": "To Delete"}`
+		body := `{"name": "To Delete", "sources": [{"url": "https://github.com/example/to-delete"}]}`
 		req, err := http.NewRequest("POST", "/v1/catalogs", strings.NewReader(body))
 		require.NoError(t, err)
 		req.Header = map[string][]string{
@@ -642,5 +641,68 @@ func TestCatalogDeleteDBChecks(t *testing.T) {
 		assert.Equal(t, 204, res.StatusCode)
 
 		assert.Equal(t, 0, dbCount(t, "catalogs", "id", catalogID))
+		assert.Equal(t, 0, dbCount(t, "catalog_sources", "catalog_id", catalogID))
+	})
+}
+
+func TestCatalogSourcesDBChecks(t *testing.T) {
+	t.Run("POST stores driver when provided", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `{"name":"With Driver","sources":[{"url":"https://code.example.org/repo","driver":"custom"}]}`
+		req, err := http.NewRequest("POST", "/v1/catalogs", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		var created map[string]interface{}
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&created))
+		catalogID := created["id"].(string)
+
+		assert.Equal(t, "custom", dbValue(t, "catalog_sources", "driver", "catalog_id", catalogID))
+	})
+
+	t.Run("POST accepts source without driver", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `{"name":"No Driver","sources":[{"url":"https://code.example.org/repo"}]}`
+		req, err := http.NewRequest("POST", "/v1/catalogs", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+	})
+
+	t.Run("PATCH with sources replaces them", func(t *testing.T) {
+		loadFixtures(t)
+
+		const sourceURL = "https://gitlab.com/example/replaced"
+
+		body := fmt.Sprintf(`{"sources":[{"url":"%s","driver":"gitlab"}]}`, sourceURL)
+		req, err := http.NewRequest("PATCH", "/v1/catalogs/"+italiaID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, 1, dbCount(t, "catalog_sources", "catalog_id", italiaID))
+		assert.Equal(t, sourceURL, dbValue(t, "catalog_sources", "url", "catalog_id", italiaID))
+		assert.Equal(t, "gitlab", dbValue(t, "catalog_sources", "driver", "catalog_id", italiaID))
 	})
 }

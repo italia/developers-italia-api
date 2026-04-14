@@ -2023,6 +2023,14 @@ components:
         active:
           type: boolean
           default: true
+        sources:
+          type: array
+          minItems: 1
+          description: >
+            Data sources for this catalog. At least one is
+            required on creation.
+          items:
+            $ref: '#/components/schemas/CatalogSource'
         createdAt:
           type: string
           format: date-time
@@ -2038,8 +2046,34 @@ components:
       required:
         - id
         - name
+        - sources
         - createdAt
         - updatedAt
+    CatalogSource:
+      title: CatalogSource
+      type: object
+      additionalProperties: false
+      properties:
+        driver:
+          type: string
+          maxLength: 64
+          description: >
+            Driver used to crawl this source.
+          example: 'github'
+        url:
+          type: string
+          format: uri
+          example: 'https://github.com/org'
+        args:
+          type: array
+          description: >
+            Optional arguments for the driver (e.g. a JSON
+            configuration file URL).
+          items:
+            type: string
+            minLength: 1
+      required:
+        - url
     Publisher:
       title: Publisher
       type: object
