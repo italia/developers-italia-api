@@ -24,17 +24,19 @@ type SourceInput struct {
 }
 
 type CatalogPost struct {
-	Name          string        `json:"name" validate:"required,min=1,max=255"`
-	AlternativeID *string       `json:"alternativeId" validate:"omitempty,min=1,max=255"`
-	Active        *bool         `json:"active"`
-	Sources       []SourceInput `json:"sources" validate:"required,gt=0,dive"`
+	Name                string        `json:"name" validate:"required,min=1,max=255"`
+	AlternativeID       *string       `json:"alternativeId" validate:"omitempty,min=1,max=255"`
+	Active              *bool         `json:"active"`
+	PublishersNamespace *string       `json:"publishersNamespace" validate:"omitempty,max=255"`
+	Sources             []SourceInput `json:"sources" validate:"required,gt=0,dive"`
 }
 
 type CatalogPatch struct {
-	Name          *string        `json:"name" validate:"omitempty,min=1,max=255"`
-	AlternativeID *string        `json:"alternativeId" validate:"omitempty,max=255"`
-	Active        *bool          `json:"active"`
-	Sources       *[]SourceInput `json:"sources" validate:"omitempty,gt=0,dive"`
+	Name                *string        `json:"name" validate:"omitempty,min=1,max=255"`
+	AlternativeID       *string        `json:"alternativeId" validate:"omitempty,max=255"`
+	Active              *bool          `json:"active"`
+	PublishersNamespace *string        `json:"publishersNamespace" validate:"omitempty,max=255"`
+	Sources             *[]SourceInput `json:"sources" validate:"omitempty,gt=0,dive"`
 }
 
 type PublisherPost struct {
