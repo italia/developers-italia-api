@@ -1595,6 +1595,7 @@ func TestSoftwareAnalysisDBChecks(t *testing.T) {
 		assert.Equal(t, float64(75), badges["score"])
 		assertRFC3339(t, badges["t"])
 	})
+
 }
 
 func TestSoftwareDeleteDBChecks(t *testing.T) {
