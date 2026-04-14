@@ -247,6 +247,69 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  '/software/{softwareId}/analysis':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 36
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+        name: softwareId
+        in: path
+        required: true
+    get:
+      summary: Get analysis data for a Software
+      description: >
+        Get the analysis data for a Software by its id.
+        Returns an empty object if no analysis has been stored yet.
+      tags:
+        - software
+      operationId: show-software-softwareId-analysis
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisData'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    patch:
+      summary: Update analysis data for a Software
+      description: >
+        Merge incoming namespaces into the stored analysis for a Software.
+        Only namespaces included in the request body are updated; existing
+        namespaces not in the request are left unchanged.
+        Each namespace must be a JSON object with an integer "v" field.
+        A "t" timestamp (RFC 3339) is injected automatically for every
+        namespace that was added or changed.
+      tags:
+        - software
+      security:
+        - bearerAuth: []
+      operationId: update-software-softwareId-analysis
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisData'
   '/software/{softwareId}/logs':
     parameters:
       - schema:
@@ -1288,6 +1351,35 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
   schemas:
+    AnalysisData:
+      title: AnalysisData
+      type: object
+      nullable: true
+      description: >
+        Analysis data produced by external components (scanners, enrichers,
+        security checkers, etc.). Each key is a namespace owned by the
+        component that writes it. Each namespace value is a JSON object
+        with at least a required version field "v".
+      additionalProperties:
+        type: object
+        required:
+          - v
+        properties:
+          v:
+            type: integer
+            description: Schema version of this namespace.
+          t:
+            type: string
+            format: date-time
+            readOnly: true
+            description: Timestamp of the last write (RFC 3339 datetime).
+        additionalProperties: true
+      example:
+        acme-security-scanner:
+          v: 1
+          t: "2024-01-15T10:30:00Z"
+          vulnerabilities: 0
+          grade: "A"
     JsonPatchRequest:
       title: JsonPatchRequest
       type: array
