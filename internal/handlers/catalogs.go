@@ -58,7 +58,7 @@ func catalogScope(catalog *models.Catalog) func(*gorm.DB) *gorm.DB {
 func (c *Catalog) GetCatalogs(ctx *fiber.Ctx) error {
 	var catalogs []models.Catalog
 
-	stmt, err := general.Clauses(ctx, c.db, "")
+	stmt, err := general.Clauses(ctx, c.db.Preload("Sources"), "")
 	if err != nil {
 		return common.Error(fiber.StatusUnprocessableEntity, "can't get Catalogs", err.Error())
 	}
@@ -93,7 +93,7 @@ func (c *Catalog) GetCatalogs(ctx *fiber.Ctx) error {
 func (c *Catalog) GetCatalog(ctx *fiber.Ctx) error {
 	id, _ := url.PathUnescape(ctx.Params("id"))
 
-	catalog, err := c.resolveCatalog(id)
+	catalog, err := c.resolveCatalog(id, "Sources")
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't get Catalog", "Catalog was not found")
@@ -120,11 +120,14 @@ func (c *Catalog) PostCatalog(ctx *fiber.Ctx) error {
 		return err //nolint:wrapcheck
 	}
 
+	sources := buildSources(request.Sources)
+
 	catalog := &models.Catalog{
 		ID:            utils.UUIDv4(),
 		Name:          request.Name,
 		AlternativeID: request.AlternativeID,
 		Active:        request.Active,
+		Sources:       sources,
 	}
 
 	if err := c.db.Create(catalog).Error; err != nil {
@@ -144,7 +147,7 @@ func (c *Catalog) PostCatalog(ctx *fiber.Ctx) error {
 }
 
 // PatchCatalog updates the catalog with the given id.
-func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
+func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop,funlen
 	const errMsg = "can't update Catalog"
 
 	catalogID, _ := url.PathUnescape(ctx.Params("id"))
@@ -155,7 +158,8 @@ func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
 
 	catalog := models.Catalog{}
 
-	if err := c.db.First(&catalog, "id = ? OR alternative_id = ?", catalogID, catalogID).Error; err != nil {
+	err := c.db.Preload("Sources").First(&catalog, "id = ? OR alternative_id = ?", catalogID, catalogID).Error
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, errMsg, "Catalog was not found")
 		}
@@ -203,7 +207,35 @@ func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
 
 	updatedCatalog.ID = catalog.ID
 
-	if err := c.db.Updates(&updatedCatalog).Error; err != nil {
+	sourcesInput := make([]common.SourceInput, 0, len(updatedCatalog.Sources))
+	for _, src := range updatedCatalog.Sources {
+		sourcesInput = append(sourcesInput, common.SourceInput{
+			URL:    src.URL,
+			Driver: src.Driver,
+			Args:   src.Args,
+		})
+	}
+
+	if len(sourcesInput) == 0 {
+		return common.Error(fiber.StatusUnprocessableEntity, errMsg, "sources must not be empty")
+	}
+
+	if err := c.db.Transaction(func(tran *gorm.DB) error {
+		sources, err := syncSources(tran, catalog, sourcesInput)
+		if err != nil {
+			return err
+		}
+
+		updatedCatalog.Sources = nil
+
+		if err := tran.Updates(&updatedCatalog).Error; err != nil {
+			return err
+		}
+
+		updatedCatalog.Sources = sources
+
+		return nil
+	}); err != nil {
 		if field := common.DuplicateField(err); field != nil {
 			detail := alreadyExists
 			if *field != "" {
@@ -221,7 +253,7 @@ func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
 
 // DeleteCatalog deletes the catalog with the given id.
 // Returns 409 if the catalog still has associated publishers or software.
-func (c *Catalog) DeleteCatalog(ctx *fiber.Ctx) error {
+func (c *Catalog) DeleteCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
 	const errMsg = "can't delete Catalog"
 
 	catalogID, _ := url.PathUnescape(ctx.Params("id"))
@@ -258,6 +290,10 @@ func (c *Catalog) DeleteCatalog(ctx *fiber.Ctx) error {
 			conflictErr = common.Error(fiber.StatusConflict, errMsg, "Catalog still has associated publishers or software")
 
 			return nil
+		}
+
+		if err := tran.Where("catalog_id = ?", catalog.ID).Delete(&models.CatalogSource{}).Error; err != nil {
+			return err
 		}
 
 		return tran.Where("id = ?", catalog.ID).Delete(&models.Catalog{}).Error
@@ -754,10 +790,116 @@ func (c *Catalog) GetCatalogSoftware(ctx *fiber.Ctx) error {
 	return ctx.JSON(fiber.Map{"data": &software, "links": general.PaginationLinks(cursor)})
 }
 
+// buildSources converts SourceInput slice to CatalogSource models.
+func buildSources(inputs []common.SourceInput) []models.CatalogSource {
+	sources := make([]models.CatalogSource, 0, len(inputs))
+
+	for _, inp := range inputs {
+		sources = append(sources, models.CatalogSource{
+			ID:     utils.UUIDv4(),
+			Driver: inp.Driver,
+			URL:    common.NormalizeURL(inp.URL),
+			Args:   inp.Args,
+		})
+	}
+
+	return sources
+}
+
+// syncSources brings the catalog_sources table in line with the desired state.
+// Sources are matched by URL; removed if absent, added if new.
+func syncSources( //nolint:cyclop,funlen
+	gormdb *gorm.DB,
+	catalog models.Catalog,
+	desired []common.SourceInput,
+) ([]models.CatalogSource, error) {
+	toRemove := []string{}
+	toAdd := []models.CatalogSource{}
+	toUpdate := []models.CatalogSource{}
+
+	urlMap := map[string]models.CatalogSource{}
+	for _, src := range catalog.Sources {
+		urlMap[src.URL] = src
+	}
+
+	desiredSet := map[string]common.SourceInput{}
+	for _, inp := range desired {
+		desiredSet[common.NormalizeURL(inp.URL)] = inp
+	}
+
+	for srcURL, src := range urlMap {
+		if _, ok := desiredSet[srcURL]; !ok {
+			toRemove = append(toRemove, src.ID)
+
+			delete(urlMap, srcURL)
+		}
+	}
+
+	for srcURL, inp := range desiredSet {
+		if existing, ok := urlMap[srcURL]; ok {
+			changed := false
+
+			if inp.Driver != nil && (existing.Driver == nil || *existing.Driver != *inp.Driver) {
+				existing.Driver = inp.Driver
+				changed = true
+			}
+
+			if inp.Args != nil {
+				existing.Args = inp.Args
+				changed = true
+			}
+
+			if changed {
+				toUpdate = append(toUpdate, existing)
+				urlMap[srcURL] = existing
+			}
+		} else {
+			src := models.CatalogSource{
+				ID:        utils.UUIDv4(),
+				Driver:    inp.Driver,
+				URL:       common.NormalizeURL(srcURL),
+				Args:      inp.Args,
+				CatalogID: catalog.ID,
+			}
+			toAdd = append(toAdd, src)
+			urlMap[srcURL] = src
+		}
+	}
+
+	if len(toRemove) > 0 {
+		if err := gormdb.Delete(&models.CatalogSource{}, toRemove).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	if len(toAdd) > 0 {
+		if err := gormdb.Create(toAdd).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	for _, src := range toUpdate {
+		if err := gormdb.Model(&src).Updates(map[string]any{
+			"driver": src.Driver,
+			"args":   src.Args,
+		}).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	ret := make([]models.CatalogSource, 0, len(urlMap))
+	for _, src := range urlMap {
+		ret = append(ret, src)
+	}
+
+	return ret, nil
+}
+
 // resolveCatalog looks up a catalog by id or alternativeId.
 // If id is rootCatalogID and no catalog with that id exists, it returns nil
 // (meaning: filter by catalog_id IS NULL).
-func (c *Catalog) resolveCatalog(rawID string) (*models.Catalog, error) {
+// Optional preloads (e.g. "Sources") are applied to the query.
+func (c *Catalog) resolveCatalog(rawID string, preloads ...string) (*models.Catalog, error) {
 	catalogID, err := url.PathUnescape(rawID)
 	if err != nil {
 		catalogID = rawID
@@ -765,7 +907,12 @@ func (c *Catalog) resolveCatalog(rawID string) (*models.Catalog, error) {
 
 	var catalog models.Catalog
 
-	dbErr := c.db.First(&catalog, "id = ? OR alternative_id = ?", catalogID, catalogID).Error
+	stmt := c.db
+	for _, p := range preloads {
+		stmt = stmt.Preload(p)
+	}
+
+	dbErr := stmt.First(&catalog, "id = ? OR alternative_id = ?", catalogID, catalogID).Error
 	if dbErr == nil {
 		return &catalog, nil
 	}

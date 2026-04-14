@@ -19,6 +19,7 @@ require (
 	github.com/ansrivas/fiberprometheus/v2 v2.17.0
 	github.com/evanphx/json-patch/v5 v5.9.11
 	github.com/jackc/pgx/v5 v5.9.1
+	github.com/spf13/cobra v1.10.2
 	github.com/valyala/fasthttp v1.69.0
 )
 
@@ -68,7 +69,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	go.opentelemetry.io/otel v1.40.0 // indirect
