@@ -879,10 +879,7 @@ func syncSources( //nolint:cyclop,funlen
 	}
 
 	for _, src := range toUpdate {
-		if err := gormdb.Model(&src).Updates(map[string]any{
-			"driver": src.Driver,
-			"args":   src.Args,
-		}).Error; err != nil {
+		if err := gormdb.Save(&src).Error; err != nil {
 			return nil, err
 		}
 	}
