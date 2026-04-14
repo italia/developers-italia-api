@@ -91,6 +91,19 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// newTestRequest wraps http.NewRequest and sets the Host header
+// required by fasthttp >= 1.70.
+func newTestRequest(method, url string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, url, body) //nolint:noctx
+	if err != nil {
+		return nil, err
+	}
+
+	req.Host = "localhost"
+
+	return req, nil
+}
+
 func loadFixtures(t *testing.T) {
 	t.Helper()
 	fixtures, err := testfixtures.New(
@@ -121,11 +134,7 @@ func runTestCases(t *testing.T, tests []TestCase) {
 				assert.Fail(t, err.Error())
 			}
 
-			req, err := http.NewRequest(
-				query[0],
-				query[1],
-				strings.NewReader(test.body),
-			)
+			req, err := newTestRequest(query[0], query[1], strings.NewReader(test.body))
 			if err != nil {
 				assert.Fail(t, err.Error())
 			}

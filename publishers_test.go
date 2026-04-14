@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 	"strings"
 	"testing"
 
@@ -1112,7 +1111,7 @@ func TestPublishersPatchDBChecks(t *testing.T) {
 		const publisherID = "2ded32eb-c45e-4167-9166-a44e18b8adde"
 
 		body := `{"description": "new PATCHed description", "codeHosting": [{"url": "https://gitlab.example.org/patched-repo"}]}`
-		req, err := http.NewRequest("PATCH", "/v1/publishers/"+publisherID, strings.NewReader(body))
+		req, err := newTestRequest("PATCH", "/v1/publishers/"+publisherID, strings.NewReader(body))
 		require.NoError(t, err)
 		req.Header = map[string][]string{
 			"Authorization": {goodToken},
@@ -1142,7 +1141,7 @@ func TestPublishersDeleteDBChecks(t *testing.T) {
 
 		const publisherID = "15fda7c4-6bbf-4387-8f89-258c1e6fafb1"
 
-		req, err := http.NewRequest("DELETE", "/v1/publishers/"+publisherID, nil)
+		req, err := newTestRequest("DELETE", "/v1/publishers/"+publisherID, nil)
 		if err != nil {
 			assert.Fail(t, err.Error())
 		}
