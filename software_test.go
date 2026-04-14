@@ -42,7 +42,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assert.Equal(t, true, firstSoftware["active"])
 
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
 			},
 		},
 		{
@@ -71,7 +71,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, true, firstSoftware["active"])
 
 				assertTimestamps(t, firstSoftware)
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
 			},
 		},
 		{
@@ -97,7 +97,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, firstSoftware["id"])
 				assertTimestamps(t, firstSoftware)
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
 			},
 		},
 		{
@@ -126,7 +126,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, "2014-05-01T00:00:00Z", firstSoftware["createdAt"])
 				assert.Equal(t, "2014-05-01T00:00:00Z", firstSoftware["updatedAt"])
 
-				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
+				assertOnlyKeys(t, firstSoftware, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
 			},
 		},
 		{
@@ -307,7 +307,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
 			},
 		},
 		{
@@ -325,7 +325,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
 			},
 		},
 
@@ -351,7 +351,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assert.Equal(t, true, response["active"])
 
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
 
 			},
 		},
@@ -379,7 +379,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
 
 			},
 		},
@@ -423,33 +423,14 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assertUUID(t, response["id"])
 				assertTimestamps(t, response)
-				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality", "analysis")
+				assertOnlyKeys(t, response, "id", "createdAt", "updatedAt", "url", "aliases", "publiccodeYml", "active", "vitality")
 
 			},
 		},
 		{
-			description: "POST software with analysis field",
+			description: "POST software with analysis field is rejected",
 			query:       "POST /v1/software",
 			body:        `{"publiccodeYml": "-", "url": "https://analysis.example.org", "analysis": {"badges": {"v": 1, "score": 90}}}`,
-			headers: map[string][]string{
-				"Authorization": {goodToken},
-				"Content-Type":  {"application/json"},
-			},
-			expectedCode:        200,
-			expectedContentType: "application/json",
-			validateFunc: func(t *testing.T, response map[string]interface{}) {
-				analysis := response["analysis"].(map[string]interface{})
-				badges := analysis["badges"].(map[string]interface{})
-
-				assert.Equal(t, float64(1), badges["v"])
-				assert.Equal(t, float64(90), badges["score"])
-				assertRFC3339(t, badges["t"])
-			},
-		},
-		{
-			description: "POST software with analysis missing v field",
-			query:       "POST /v1/software",
-			body:        `{"publiccodeYml": "-", "url": "https://analysis-nov.example.org", "analysis": {"badges": {"score": 90}}}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
@@ -791,39 +772,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 				updated := assertRFC3339(t, response["updatedAt"])
 
 				assert.Greater(t, updated, created)
-			},
-		},
-		{
-			description: "PATCH software, analysis namespace",
-			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:        `{"analysis": {"badges": {"v": 1, "score": 75}}}`,
-			headers: map[string][]string{
-				"Authorization": {goodToken},
-				"Content-Type":  {"application/json"},
-			},
-			expectedCode:        200,
-			expectedContentType: "application/json",
-			validateFunc: func(t *testing.T, response map[string]interface{}) {
-				analysis := response["analysis"].(map[string]interface{})
-				badges := analysis["badges"].(map[string]interface{})
-
-				assert.Equal(t, float64(1), badges["v"])
-				assert.Equal(t, float64(75), badges["score"])
-				assertRFC3339(t, badges["t"])
-			},
-		},
-		{
-			description: "PATCH software, analysis namespace missing v",
-			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
-			body:        `{"analysis": {"badges": {"score": 75}}}`,
-			headers: map[string][]string{
-				"Authorization": {goodToken},
-				"Content-Type":  {"application/json"},
-			},
-			expectedCode:        422,
-			expectedContentType: "application/problem+json",
-			validateFunc: func(t *testing.T, response map[string]interface{}) {
-				assert.Equal(t, "can't update Software", response["title"])
 			},
 		},
 		{
@@ -1482,7 +1430,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 }
 
 func TestSoftwarePostDBChecks(t *testing.T) {
-	t.Run("POST software with analysis persists to DB", func(t *testing.T) {
+	t.Run("POST software does not accept analysis field", func(t *testing.T) {
 		loadFixtures(t)
 
 		body := `{"publiccodeYml": "-", "url": "https://analysis-db.example.org", "analysis": {"badges": {"v": 1, "score": 90}}}`
@@ -1495,21 +1443,7 @@ func TestSoftwarePostDBChecks(t *testing.T) {
 
 		res, err := app.Test(req, -1)
 		require.NoError(t, err)
-		assert.Equal(t, 200, res.StatusCode)
-
-		var response map[string]interface{}
-		require.NoError(t, json.NewDecoder(res.Body).Decode(&response))
-		softwareID := response["id"].(string)
-
-		raw := dbValue(t, "software", "analysis", "id", softwareID)
-
-		var analysis map[string]interface{}
-		require.NoError(t, json.Unmarshal([]byte(raw), &analysis))
-
-		badges := analysis["badges"].(map[string]interface{})
-		assert.Equal(t, float64(1), badges["v"])
-		assert.Equal(t, float64(90), badges["score"])
-		assertRFC3339(t, badges["t"])
+		assert.Equal(t, 422, res.StatusCode)
 	})
 }
 
@@ -1540,7 +1474,7 @@ func TestSoftwarePatchDBChecks(t *testing.T) {
 		assert.Equal(t, 3, dbCount(t, "software_urls", "software_id", softwareID))
 	})
 
-	t.Run("PATCH software with analysis persists to DB", func(t *testing.T) {
+	t.Run("PATCH software does not accept analysis field", func(t *testing.T) {
 		loadFixtures(t)
 
 		const softwareID = "59803fb7-8eec-4fe5-a354-8926009c364a"
@@ -1555,12 +1489,106 @@ func TestSoftwarePatchDBChecks(t *testing.T) {
 
 		res, err := app.Test(req, -1)
 		require.NoError(t, err)
+		assert.Equal(t, 422, res.StatusCode)
+	})
+}
+
+func TestSoftwareAnalysisEndpoints(t *testing.T) {
+	const softwareID = "59803fb7-8eec-4fe5-a354-8926009c364a"
+	const missingID = "00000000-0000-0000-0000-000000000000"
+
+	tests := []TestCase{
+		{
+			description:         "GET analysis on software with no analysis returns empty object",
+			query:               "GET /v1/software/" + softwareID + "/analysis",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Empty(t, response)
+			},
+		},
+		{
+			description: "PATCH analysis adds namespace with timestamp",
+			query:       "PATCH /v1/software/" + softwareID + "/analysis",
+			body:        `{"badges": {"v": 1, "score": 90}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				badges := response["badges"].(map[string]interface{})
+
+				assert.Equal(t, float64(1), badges["v"])
+				assert.Equal(t, float64(90), badges["score"])
+				assertRFC3339(t, badges["t"])
+			},
+		},
+		{
+			description: "PATCH analysis missing v field returns 422",
+			query:       "PATCH /v1/software/" + softwareID + "/analysis",
+			body:        `{"badges": {"score": 90}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't update Software analysis", response["title"])
+			},
+		},
+		{
+			description:         "GET analysis on nonexistent software returns 404",
+			query:               "GET /v1/software/" + missingID + "/analysis",
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't get Software analysis", response["title"])
+			},
+		},
+		{
+			description: "PATCH analysis on nonexistent software returns 404",
+			query:       "PATCH /v1/software/" + missingID + "/analysis",
+			body:        `{"badges": {"v": 1}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't update Software analysis", response["title"])
+			},
+		},
+	}
+
+	runTestCases(t, tests)
+}
+
+func TestSoftwareAnalysisDBChecks(t *testing.T) {
+	t.Run("PATCH analysis persists to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		const softwareID = "59803fb7-8eec-4fe5-a354-8926009c364a"
+
+		body := `{"badges": {"v": 1, "score": 75}}`
+		req, err := http.NewRequest("PATCH", "/v1/software/"+softwareID+"/analysis", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
 		assert.Equal(t, 200, res.StatusCode)
 
 		raw := dbValue(t, "software", "analysis", "id", softwareID)
 
 		var analysis map[string]interface{}
-		require.NoError(t, json.Unmarshal([]byte(raw), &analysis))
+		require.NoError(t, json.NewDecoder(strings.NewReader(raw)).Decode(&analysis))
 
 		badges := analysis["badges"].(map[string]interface{})
 		assert.Equal(t, float64(1), badges["v"])

@@ -78,7 +78,7 @@ type Software struct {
 	Logs          []Log               `json:"-" gorm:"polymorphic:Entity;"`
 	Active        *bool               `json:"active" gorm:"default:true;not null"`
 	Vitality      *string             `json:"vitality"`
-	Analysis      common.AnalysisData `json:"analysis" gorm:"type:jsonb"`
+	Analysis      common.AnalysisData `json:"-" gorm:"type:jsonb"`
 	CreatedAt     time.Time           `json:"createdAt" gorm:"index"`
 	UpdatedAt     time.Time           `json:"updatedAt"`
 }
