@@ -152,6 +152,8 @@ func setupHandlers(app *fiber.App, gormDB *gorm.DB) {
 	v1.Post("/software", softwareHandler.PostSoftware)
 	v1.Patch("/software/:id", softwareHandler.PatchSoftware)
 	v1.Delete("/software/:id", softwareHandler.DeleteSoftware)
+	v1.Get("/software/:id/analysis", softwareHandler.GetSoftwareAnalysis)
+	v1.Patch("/software/:id/analysis", softwareHandler.PatchSoftwareAnalysis)
 
 	v1.Get("/logs", logHandler.GetLogs)
 	v1.Get("/logs/:id<guid>", logHandler.GetLog)

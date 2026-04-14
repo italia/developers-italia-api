@@ -23,6 +23,8 @@ type SoftwareInterface interface {
 	PostSoftware(ctx *fiber.Ctx) error
 	PatchSoftware(ctx *fiber.Ctx) error
 	DeleteSoftware(ctx *fiber.Ctx) error
+	GetSoftwareAnalysis(ctx *fiber.Ctx) error
+	PatchSoftwareAnalysis(ctx *fiber.Ctx) error
 }
 
 type Software struct {
@@ -146,11 +148,6 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 		return err //nolint:wrapcheck
 	}
 
-	analysis, err := common.WithTimestamps(softwareReq.Analysis, time.Now())
-	if err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
-	}
-
 	aliases := []models.SoftwareURL{}
 	for _, u := range softwareReq.Aliases {
 		aliases = append(aliases, models.SoftwareURL{ID: utils.UUIDv4(), URL: common.NormalizeURL(u)})
@@ -168,7 +165,6 @@ func (p *Software) PostSoftware(ctx *fiber.Ctx) error {
 		PubliccodeYml: softwareReq.PubliccodeYml,
 		Active:        softwareReq.Active,
 		Vitality:      softwareReq.Vitality,
-		Analysis:      analysis,
 	}
 
 	if err := p.db.Create(&software).Error; err != nil {
@@ -229,15 +225,6 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 	err = json.Unmarshal(updatedJSON, &updatedSoftware)
 	if err != nil {
 		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
-	}
-
-	updatedSoftware.Analysis, err = injectTouchedAnalysis(
-		software.Analysis,
-		updatedSoftware.Analysis,
-		time.Now(),
-	)
-	if err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
 	}
 
 	updatedSoftware.URL.URL = common.NormalizeURL(updatedSoftware.URL.URL)
@@ -404,6 +391,59 @@ func syncAliases( //nolint:cyclop // mostly error handling ifs
 	}
 
 	return &updatedURL, aliases, nil
+}
+
+// GetSoftwareAnalysis returns the analysis data for the software with the given ID.
+func (p *Software) GetSoftwareAnalysis(ctx *fiber.Ctx) error {
+	const errMsg = "can't get Software analysis"
+
+	software := models.Software{}
+
+	if err := p.db.First(&software, "id = ?", ctx.Params("id")).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Software was not found")
+		}
+
+		return common.InternalServerError(errMsg)
+	}
+
+	if software.Analysis == nil {
+		return ctx.JSON(common.AnalysisData{})
+	}
+
+	return ctx.JSON(software.Analysis)
+}
+
+// PatchSoftwareAnalysis merges the incoming analysis namespaces into the stored analysis.
+// The request body is an AnalysisData object (namespace → arbitrary JSON with "v" field).
+func (p *Software) PatchSoftwareAnalysis(ctx *fiber.Ctx) error {
+	const errMsg = "can't update Software analysis"
+
+	software := models.Software{}
+
+	if err := p.db.First(&software, "id = ?", ctx.Params("id")).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Software was not found")
+		}
+
+		return common.InternalServerError(errMsg)
+	}
+
+	var incoming common.AnalysisData
+	if err := ctx.BodyParser(&incoming); err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+	}
+
+	merged, err := injectTouchedAnalysis(software.Analysis, incoming, time.Now())
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+	}
+
+	if err := p.db.Model(&software).Update("analysis", merged).Error; err != nil {
+		return common.InternalServerError(errMsg)
+	}
+
+	return ctx.JSON(merged)
 }
 
 // injectTouchedAnalysis validates and injects "t" only into namespaces that
