@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 	"testing"
 
@@ -602,7 +601,7 @@ func TestCatalogSoftwareDBChecks(t *testing.T) {
 	t.Run("POST catalog software persists catalogId", func(t *testing.T) {
 		loadFixtures(t)
 
-		req, err := http.NewRequest(
+		req, err := newTestRequest(
 			"POST",
 			"/v1/catalogs/"+italiaID+"/software",
 			strings.NewReader(`{"url":"https://example.org/cat-sw","publiccodeYml":"-"}`),
@@ -627,7 +626,7 @@ func TestCatalogSoftwareDBChecks(t *testing.T) {
 	t.Run("PATCH catalog software persists publiccodeYml", func(t *testing.T) {
 		loadFixtures(t)
 
-		req, err := http.NewRequest(
+		req, err := newTestRequest(
 			"PATCH",
 			fmt.Sprintf("/v1/catalogs/%s/software/%s", italiaID, italiaSoftwareID),
 			strings.NewReader(`{"publiccodeYml":"patched-yml"}`),
@@ -651,7 +650,7 @@ func TestCatalogDeleteDBChecks(t *testing.T) {
 		loadFixtures(t)
 
 		body := `{"name": "To Delete", "sources": [{"url": "https://github.com/example/to-delete"}]}`
-		req, err := http.NewRequest("POST", "/v1/catalogs", strings.NewReader(body))
+		req, err := newTestRequest("POST", "/v1/catalogs", strings.NewReader(body))
 		require.NoError(t, err)
 		req.Header = map[string][]string{
 			"Authorization": {goodToken},
@@ -666,7 +665,7 @@ func TestCatalogDeleteDBChecks(t *testing.T) {
 		require.NoError(t, json.NewDecoder(res.Body).Decode(&created))
 		catalogID := created["id"].(string)
 
-		req, err = http.NewRequest("DELETE", "/v1/catalogs/"+catalogID, nil)
+		req, err = newTestRequest("DELETE", "/v1/catalogs/"+catalogID, nil)
 		require.NoError(t, err)
 		req.Header = map[string][]string{"Authorization": {goodToken}}
 
@@ -684,7 +683,7 @@ func TestCatalogSourcesDBChecks(t *testing.T) {
 		loadFixtures(t)
 
 		body := `{"name":"With Driver","sources":[{"url":"https://code.example.org/repo","driver":"custom"}]}`
-		req, err := http.NewRequest("POST", "/v1/catalogs", strings.NewReader(body))
+		req, err := newTestRequest("POST", "/v1/catalogs", strings.NewReader(body))
 		require.NoError(t, err)
 		req.Header = map[string][]string{
 			"Authorization": {goodToken},
@@ -706,7 +705,7 @@ func TestCatalogSourcesDBChecks(t *testing.T) {
 		loadFixtures(t)
 
 		body := `{"name":"No Driver","sources":[{"url":"https://code.example.org/repo"}]}`
-		req, err := http.NewRequest("POST", "/v1/catalogs", strings.NewReader(body))
+		req, err := newTestRequest("POST", "/v1/catalogs", strings.NewReader(body))
 		require.NoError(t, err)
 		req.Header = map[string][]string{
 			"Authorization": {goodToken},
@@ -724,7 +723,7 @@ func TestCatalogSourcesDBChecks(t *testing.T) {
 		const sourceURL = "https://gitlab.com/example/replaced"
 
 		body := fmt.Sprintf(`{"sources":[{"url":"%s","driver":"gitlab"}]}`, sourceURL)
-		req, err := http.NewRequest("PATCH", "/v1/catalogs/"+italiaID, strings.NewReader(body))
+		req, err := newTestRequest("PATCH", "/v1/catalogs/"+italiaID, strings.NewReader(body))
 		require.NoError(t, err)
 		req.Header = map[string][]string{
 			"Authorization": {goodToken},
