@@ -33,13 +33,14 @@ type Log struct {
 }
 
 type Catalog struct {
-	ID            string          `json:"id" gorm:"primaryKey"`
-	Name          string          `json:"name" gorm:"not null"`
-	AlternativeID *string         `json:"alternativeId,omitempty" gorm:"uniqueIndex"`
-	Active        *bool           `json:"active" gorm:"default:true;not null"`
-	Sources       []CatalogSource `json:"sources" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	CreatedAt     time.Time       `json:"createdAt" gorm:"index"`
-	UpdatedAt     time.Time       `json:"updatedAt"`
+	ID                  string          `json:"id" gorm:"primaryKey"`
+	Name                string          `json:"name" gorm:"not null"`
+	AlternativeID       *string         `json:"alternativeId,omitempty" gorm:"uniqueIndex"`
+	Active              *bool           `json:"active" gorm:"default:true;not null"`
+	PublishersNamespace *string         `json:"publishersNamespace,omitempty"`
+	Sources             []CatalogSource `json:"sources" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	CreatedAt           time.Time       `json:"createdAt" gorm:"index"`
+	UpdatedAt           time.Time       `json:"updatedAt"`
 }
 
 type CatalogSource struct {

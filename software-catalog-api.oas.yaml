@@ -2023,6 +2023,15 @@ components:
         active:
           type: boolean
           default: true
+        publishersNamespace:
+          type: string
+          maxLength: 255
+          description: >
+            Namespace prefix for publisher organisation
+            validation. When set, consumers can check that
+            each publiccode.yml organisation field equals
+            this prefix + the publisher alternativeId.
+          example: 'urn:x-italian-pa:'
         sources:
           type: array
           minItems: 1
