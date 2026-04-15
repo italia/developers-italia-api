@@ -21,6 +21,8 @@ type LogInterface interface {
 
 	GetSoftwareLogs(ctx *fiber.Ctx) error
 	PostSoftwareLog(ctx *fiber.Ctx) error
+
+	PostCatalogLog(ctx *fiber.Ctx) error
 }
 
 type Log struct {
@@ -194,6 +196,45 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(fiber.Map{"data": &logs, "links": general.PaginationLinks(cursor)})
+}
+
+// PostCatalogLog creates a new log associated to a Catalog with the given ID and returns any error encountered.
+func (p *Log) PostCatalogLog(ctx *fiber.Ctx) error {
+	const errMsg = "can't create Log"
+
+	logReq := new(common.Log)
+
+	catalog := models.Catalog{}
+	if err := p.db.First(&catalog, "id = ?", ctx.Params("id")).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, "can't create Log", "Catalog was not found")
+		}
+
+		return common.Error(
+			fiber.StatusInternalServerError,
+			"can't get Catalog",
+			fiber.ErrInternalServerError.Message,
+		)
+	}
+
+	if err := common.ValidateRequestEntity(ctx, logReq, errMsg); err != nil {
+		return err //nolint:wrapcheck
+	}
+
+	table := models.Catalog{}.TableName()
+
+	log := models.Log{
+		ID:         utils.UUIDv4(),
+		Message:    logReq.Message,
+		EntityID:   &catalog.ID,
+		EntityType: &table,
+	}
+
+	if err := p.db.Create(&log).Error; err != nil {
+		return common.Error(fiber.StatusInternalServerError, errMsg, "db error")
+	}
+
+	return ctx.JSON(&log)
 }
 
 // PostSoftwareLog creates a new log associated to a Software with the given ID and returns any error encountered.
