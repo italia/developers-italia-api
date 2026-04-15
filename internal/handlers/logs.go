@@ -199,7 +199,7 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 }
 
 // PostCatalogLog creates a new log associated to a Catalog with the given ID and returns any error encountered.
-func (p *Log) PostCatalogLog(ctx *fiber.Ctx) error {
+func (p *Log) PostCatalogLog(ctx *fiber.Ctx) error { //nolint:dupl
 	const errMsg = "can't create Log"
 
 	logReq := new(common.Log)
@@ -238,7 +238,7 @@ func (p *Log) PostCatalogLog(ctx *fiber.Ctx) error {
 }
 
 // PostSoftwareLog creates a new log associated to a Software with the given ID and returns any error encountered.
-func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error {
+func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error { //nolint:dupl
 	const errMsg = "can't create Log"
 
 	logReq := new(common.Log)
