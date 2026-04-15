@@ -541,6 +541,29 @@ func TestCatalogEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description:         "GET catalog software filtered by url",
+			query:               "GET /v1/catalogs/" + italiaID + "/software?url=https://1-a.example.org/code/repo",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := assertListResponse(t, response)
+
+				assert.Equal(t, 1, len(data))
+				assert.Equal(t, italiaSoftwareID, data[0]["id"])
+			},
+		},
+		{
+			description:         "GET catalog software filtered by url - not found",
+			query:               "GET /v1/catalogs/" + italiaID + "/software?url=https://no.such.url.example.org",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := assertListResponse(t, response)
+
+				assert.Equal(t, 0, len(data))
+			},
+		},
+		{
 			description:         "GET root catalog software (∅)",
 			query:               "GET /v1/catalogs/%E2%88%85/software",
 			expectedCode:        200,

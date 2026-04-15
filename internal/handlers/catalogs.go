@@ -764,6 +764,22 @@ func (c *Catalog) GetCatalogSoftware(ctx *fiber.Ctx) error {
 		return common.Error(fiber.StatusUnprocessableEntity, "can't get Software", err.Error())
 	}
 
+	if urlFilter := common.NormalizeURL(ctx.Query("url", "")); urlFilter != "" {
+		var softwareURL models.SoftwareURL
+
+		if e := c.db.First(&softwareURL, "url = ?", urlFilter).Error; e != nil {
+			if errors.Is(e, gorm.ErrRecordNotFound) {
+				return ctx.JSON(fiber.Map{"data": []any{}, "links": general.PaginationLinks{}})
+			}
+
+			return common.Error(
+				fiber.StatusInternalServerError, "can't get Software", fiber.ErrInternalServerError.Message,
+			)
+		}
+
+		stmt = stmt.Where("id = ?", softwareURL.SoftwareID)
+	}
+
 	if all := ctx.QueryBool("all", false); !all {
 		stmt = stmt.Scopes(models.Active)
 	}
