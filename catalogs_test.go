@@ -743,7 +743,7 @@ func TestCatalogSourcesDBChecks(t *testing.T) {
 		loadFixtures(t)
 
 		body := `{"sources":[{"url":"https://example.org/data.json","driver":"json","args":["$.items[*].url"]}]}`
-		req, err := http.NewRequest("PATCH", "/v1/catalogs/"+italiaID, strings.NewReader(body))
+		req, err := newTestRequest("PATCH", "/v1/catalogs/"+italiaID, strings.NewReader(body))
 		require.NoError(t, err)
 		req.Header = map[string][]string{
 			"Authorization": {goodToken},
