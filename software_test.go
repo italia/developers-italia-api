@@ -159,6 +159,18 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description: "GET with url filter excludes inactive software",
+			query:       "GET /v1/software?url=https://31-a.example.org/code/repo",
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := assertListResponse(t, response)
+
+				assert.Equal(t, 0, len(data))
+			},
+		},
+		{
 			description: "GET with page[size] query param",
 			query:       "GET /v1/software?page[size]=2",
 
