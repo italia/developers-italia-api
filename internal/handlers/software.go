@@ -63,8 +63,11 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mos
 	if url := common.NormalizeURL(ctx.Query("url", "")); url != "" {
 		var softwareURL models.SoftwareURL
 
-		err = p.db.First(&softwareURL, "url = ?", url).Error
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		if err = p.db.First(&softwareURL, "url = ?", url).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return ctx.JSON(fiber.Map{"data": []any{}, "links": general.PaginationLinks{}})
+			}
+
 			return common.Error(
 				fiber.StatusInternalServerError,
 				"can't get Software",
@@ -73,10 +76,10 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mos
 		}
 
 		stmt = stmt.Where("id = ?", softwareURL.SoftwareID)
-	} else {
-		if all := ctx.QueryBool("all", false); !all {
-			stmt = stmt.Scopes(models.Active)
-		}
+	}
+
+	if all := ctx.QueryBool("all", false); !all {
+		stmt = stmt.Scopes(models.Active)
 	}
 
 	paginator := general.NewPaginator(ctx)
