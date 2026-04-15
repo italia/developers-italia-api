@@ -199,13 +199,13 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 }
 
 // PostCatalogLog creates a new log associated to a Catalog with the given ID and returns any error encountered.
-func (p *Log) PostCatalogLog(ctx *fiber.Ctx) error { //nolint:dupl
+func (p *Log) PostCatalogLog(ctx *fiber.Ctx) error {
 	const errMsg = "can't create Log"
 
 	logReq := new(common.Log)
 
 	catalog := models.Catalog{}
-	if err := p.db.First(&catalog, "id = ?", ctx.Params("id")).Error; err != nil {
+	if err := p.db.First(&catalog, "id = ? OR alternative_id = ?", ctx.Params("id"), ctx.Params("id")).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't create Log", "Catalog was not found")
 		}
@@ -238,7 +238,7 @@ func (p *Log) PostCatalogLog(ctx *fiber.Ctx) error { //nolint:dupl
 }
 
 // PostSoftwareLog creates a new log associated to a Software with the given ID and returns any error encountered.
-func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error { //nolint:dupl
+func (p *Log) PostSoftwareLog(ctx *fiber.Ctx) error {
 	const errMsg = "can't create Log"
 
 	logReq := new(common.Log)
