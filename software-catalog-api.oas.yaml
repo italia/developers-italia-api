@@ -1236,6 +1236,50 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  '/catalogs/{catalogId}/logs':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 255
+          pattern: '.*'
+        name: catalogId
+        in: path
+        required: true
+        description: >
+          The catalog UUID or alternativeId.
+          Use `%E2%88%85` (URL-encoded ∅) for the root catalog.
+    post:
+      summary: Create a Log for a Catalog
+      description: Create a Log entry associated with the given catalog
+      tags:
+        - logs
+        - catalogs
+      security:
+        - bearerAuth: []
+      operationId: create-catalog-log
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Log'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Log'
   /publishers:
     get:
       summary: List all Publishers
