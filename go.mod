@@ -18,7 +18,7 @@ require (
 require (
 	github.com/ansrivas/fiberprometheus/v2 v2.17.0
 	github.com/evanphx/json-patch/v5 v5.9.11
-	github.com/jackc/pgx/v5 v5.9.1
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/spf13/cobra v1.10.2
 	github.com/valyala/fasthttp v1.70.0
 )
