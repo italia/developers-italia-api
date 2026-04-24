@@ -749,6 +749,8 @@ func (c *Catalog) PatchCatalogSoftware(ctx *fiber.Ctx) error { //nolint:funlen,c
 }
 
 // GetCatalogSoftware lists software belonging to the given catalog.
+//
+//nolint:cyclop // keeping request handling inline is clearer here
 func (c *Catalog) GetCatalogSoftware(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 

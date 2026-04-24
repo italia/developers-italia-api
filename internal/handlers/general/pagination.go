@@ -21,6 +21,11 @@ var DefaultConfig = &paginator.Config{ //nolint:gochecknoglobals //can't turn it
 	Order: paginator.ASC,
 }
 
+var (
+	errInvalidPageSize    = errors.New("page[size] must be an integer")
+	errPageSizeOutOfRange = fmt.Errorf("page[size] must be between 1 and %d", MaxLimitCount)
+)
+
 type PaginationLinks paginator.Cursor
 
 func NewPaginator(ctx *fiber.Ctx) (*paginator.Paginator, error) {
@@ -70,11 +75,11 @@ func pageSizeFromQuery(ctx *fiber.Ctx) (int, error) {
 
 	size, err := strconv.Atoi(raw)
 	if err != nil {
-		return 0, errors.New("page[size] must be an integer")
+		return 0, errInvalidPageSize
 	}
 
 	if size < 1 || size > MaxLimitCount {
-		return 0, fmt.Errorf("page[size] must be between 1 and %d", MaxLimitCount)
+		return 0, errPageSizeOutOfRange
 	}
 
 	return size, nil
