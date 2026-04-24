@@ -47,7 +47,10 @@ func (p *Webhook[T]) GetResourceWebhooks(ctx *fiber.Ctx) error {
 
 	stmt := p.db.Where(map[string]any{"entity_type": resource.TableName()})
 
-	paginator := general.NewPaginator(ctx)
+	paginator, err := general.NewPaginator(ctx)
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, "can't get Webhooks", err.Error())
+	}
 
 	result, cursor, err := paginator.Paginate(stmt, &webhooks)
 	if err != nil {
@@ -93,7 +96,10 @@ func (p *Webhook[T]) GetSingleResourceWebhooks(ctx *fiber.Ctx) error {
 		Where(map[string]any{"entity_type": resource.TableName()}).
 		Where("entity_id = ?", resource.UUID())
 
-	paginator := general.NewPaginator(ctx)
+	paginator, err := general.NewPaginator(ctx)
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, "can't get Webhooks", err.Error())
+	}
 
 	result, cursor, err := paginator.Paginate(stmt, &webhooks)
 	if err != nil {
