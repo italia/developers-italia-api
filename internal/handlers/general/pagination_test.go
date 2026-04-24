@@ -22,7 +22,8 @@ func TestNewPaginatorWithConfig_DoesNotMutateDefaultConfig(t *testing.T) {
 	app, ctx := newTestCtx()
 	defer app.ReleaseCtx(ctx)
 
-	NewPaginatorWithConfig(ctx, &paginator.Config{Order: paginator.DESC})
+	_, err := NewPaginatorWithConfig(ctx, &paginator.Config{Order: paginator.DESC})
+	assert.NoError(t, err)
 
 	assert.Equal(t, paginator.ASC, DefaultConfig.Order,
 		"DefaultConfig.Order must not be mutated by NewPaginatorWithConfig")

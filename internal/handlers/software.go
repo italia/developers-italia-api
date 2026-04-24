@@ -82,7 +82,10 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mos
 		stmt = stmt.Scopes(models.Active)
 	}
 
-	paginator := general.NewPaginator(ctx)
+	paginator, err := general.NewPaginator(ctx)
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, "can't get Software", err.Error())
+	}
 
 	result, cursor, err := paginator.Paginate(stmt, &software)
 	if err != nil {

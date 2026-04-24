@@ -67,7 +67,10 @@ func (c *Catalog) GetCatalogs(ctx *fiber.Ctx) error {
 		stmt = stmt.Scopes(models.Active)
 	}
 
-	paginator := general.NewPaginator(ctx)
+	paginator, err := general.NewPaginator(ctx)
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, "can't get Catalogs", err.Error())
+	}
 
 	result, cursor, err := paginator.Paginate(stmt, &catalogs)
 	if err != nil {
@@ -334,7 +337,10 @@ func (c *Catalog) GetCatalogPublishers(ctx *fiber.Ctx) error {
 		stmt = stmt.Scopes(models.Active)
 	}
 
-	paginator := general.NewPaginator(ctx)
+	paginator, err := general.NewPaginator(ctx)
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, "can't get Publishers", err.Error())
+	}
 
 	result, cursor, err := paginator.Paginate(stmt, &publishers)
 	if err != nil {
@@ -784,7 +790,10 @@ func (c *Catalog) GetCatalogSoftware(ctx *fiber.Ctx) error {
 		stmt = stmt.Scopes(models.Active)
 	}
 
-	paginator := general.NewPaginator(ctx)
+	paginator, err := general.NewPaginator(ctx)
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, "can't get Software", err.Error())
+	}
 
 	result, cursor, err := paginator.Paginate(stmt, &software)
 	if err != nil {

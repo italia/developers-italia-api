@@ -47,7 +47,10 @@ func (p *Log) GetLogs(ctx *fiber.Ctx) error {
 	}
 
 	// Logs are returned in descending order, last first
-	paginator := general.NewPaginatorWithConfig(ctx, &paginator.Config{Order: paginator.DESC})
+	paginator, err := general.NewPaginatorWithConfig(ctx, &paginator.Config{Order: paginator.DESC})
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, "can't get Logs", err.Error())
+	}
 
 	result, cursor, err := paginator.Paginate(stmt, &logs)
 	if err != nil {
@@ -176,7 +179,10 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 		Where("entity_id = ?", software.ID)
 
 	// Logs are returned in descending order, last first
-	paginator := general.NewPaginatorWithConfig(ctx, &paginator.Config{Order: paginator.DESC})
+	paginator, err := general.NewPaginatorWithConfig(ctx, &paginator.Config{Order: paginator.DESC})
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, "can't get Software", err.Error())
+	}
 
 	result, cursor, err := paginator.Paginate(stmt, &logs)
 	if err != nil {

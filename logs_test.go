@@ -1,10 +1,12 @@
 package main
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLogsEndpoints(t *testing.T) {
@@ -73,13 +75,26 @@ func TestLogsEndpoints(t *testing.T) {
 				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDEwLTA4LTAxVDIzOjU5OjU5WiIsIjRiNGExYjljLTA0MmUtMTFlZC04MmE4LWQ4YmJjMTQ2ZDE2NSJd")
 			},
 		},
-		// TODO
-		// {
-		// 	description: "GET with invalid format for page[size] query param",
-		// 	query:    "GET /v1/logs?page[size]=NOT_AN_INT",
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/json",
-		// },
+		{
+			description:         "GET with invalid format for page[size] query param",
+			query:               "GET /v1/logs?page[size]=NOT_AN_INT",
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Logs`, response["title"])
+				assert.Equal(t, "page[size] must be an integer", response["detail"])
+			},
+		},
+		{
+			description:         "GET with page[size] bigger than the max of 100",
+			query:               "GET /v1/logs?page[size]=200",
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Logs`, response["title"])
+				assert.Equal(t, "page[size] must be between 1 and 100", response["detail"])
+			},
+		},
 		{
 			description: `GET with "page[after]" query param`,
 			query:       "GET /v1/logs?page[after]=WyIyMDEwLTA3LTAxVDIzOjU5OjU5WiIsIjg1MWZlMGY0LTA0MmUtMTFlZC05MzNlLWQ4YmJjMTQ2ZDE2NSJd",
@@ -320,4 +335,47 @@ func TestLogsEndpoints(t *testing.T) {
 	}
 
 	runTestCases(t, tests)
+}
+
+func TestLogsDBChecks(t *testing.T) {
+	t.Run("POST log persists changes to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		const message = "New log persisted by DB check"
+
+		req, err := newTestRequest("POST", "/v1/logs", strings.NewReader(`{"message":"`+message+`"}`))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, 1, dbCount(t, "logs", "message", message))
+	})
+
+	t.Run("PATCH log persists changes to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		const (
+			logID   = "4f95b0d0-042e-11ed-8253-d8bbc146d165"
+			message = "Updated log message from DB check"
+		)
+
+		req, err := newTestRequest("PATCH", "/v1/logs/"+logID, strings.NewReader(`{"message":"`+message+`"}`))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, message, dbValue(t, "logs", "message", "id", logID))
+	})
 }
