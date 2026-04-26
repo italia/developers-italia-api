@@ -795,16 +795,6 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			expectedBody:        `{"title":"can't update Publisher","detail":"invalid or malformed JSON","status":400}`,
 		},
-		// TODO: enforce this?
-		// {
-		// 	query: "PATCH /v1/publishers with no Content-Type",
-		// 	body:  "",
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 	},
-		// 	expectedCode:        404,
-		// }
-
 		// JSON Patch
 		{
 			description: "PATCH a publisher with JSON Patch - replace description",
@@ -1095,15 +1085,6 @@ func TestPublishersEndpoints(t *testing.T) {
 				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: enforce this?
-		// {
-		// 	query: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks with no Content-Type",
-		// 	body:  "",
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 	},
-		// 	expectedCode:        404,
-		// },
 	}
 
 	runTestCases(t, tests)

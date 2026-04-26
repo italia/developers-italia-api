@@ -563,16 +563,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: enforce this?
-		// {
-		// 	query: "POST /v1/software with no Content-Type",
-		// 	body:  "",
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 	},
-		// 	expectedCode:        404,
-		// }
-
 		// PATCH /software/:id
 		{
 			description: "PATCH non-existing software",
@@ -1022,16 +1012,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: enforce this?
-		// {
-		// 	query: "POST /v1/software with no Content-Type",
-		// 	body:  "",
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 	},
-		// 	expectedCode:        404,
-		// }
-
 		// DELETE /software/:id
 		{
 			description: "Delete non-existent software",
@@ -1246,16 +1226,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: enforce this?
-		// {
-		// 	query: "POST /v1/logs with no Content-Type",
-		// 	body:  "",
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 	},
-		// 	expectedCode:        404,
-		// },
-
 		// GET /software/:id/webhooks
 		{
 			query: "GET /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
@@ -1432,15 +1402,6 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: enforce this?
-		// {
-		// 	query: "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks with no Content-Type",
-		// 	body:  "",
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 	},
-		// 	expectedCode:        404,
-		// },
 	}
 
 	runTestCases(t, tests)
