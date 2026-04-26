@@ -181,7 +181,7 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 	// Logs are returned in descending order, last first
 	paginator, err := general.NewPaginatorWithConfig(ctx, &paginator.Config{Order: paginator.DESC})
 	if err != nil {
-		return common.Error(fiber.StatusUnprocessableEntity, "can't get Software", err.Error())
+		return common.Error(fiber.StatusUnprocessableEntity, "can't get Logs", err.Error())
 	}
 
 	result, cursor, err := paginator.Paginate(stmt, &logs)
