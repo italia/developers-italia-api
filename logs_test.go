@@ -308,15 +308,6 @@ func TestLogsEndpoints(t *testing.T) {
 				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: enforce this?
-		// {
-		// 	query: "POST /v1/logs with no Content-Type",
-		// 	body:  "",
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 	},
-		// 	expectedCode:        404,
-		// },
 	}
 
 	runTestCases(t, tests)
