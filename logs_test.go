@@ -92,7 +92,7 @@ func TestLogsEndpoints(t *testing.T) {
 			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				items := assertListResponse(t, response)
-				assert.LessOrEqual(t, len(items), 100)
+				assert.Equal(t, 100, len(items))
 			},
 		},
 		{
