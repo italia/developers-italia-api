@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -108,6 +109,7 @@ func TestLogsEndpoints(t *testing.T) {
 			query:               "GET /v1/logs?page[size]=200",
 			expectedCode:        200,
 			expectedContentType: "application/json",
+			setupFunc:           addLogsForPaginationCapTest,
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				items := assertListResponse(t, response)
 				assert.Equal(t, 100, len(items))
@@ -390,6 +392,30 @@ func TestLogsEndpoints(t *testing.T) {
 	}
 
 	runTestCases(t, tests)
+}
+
+func addLogsForPaginationCapTest(t *testing.T) {
+	t.Helper()
+
+	query := fmt.Sprintf(
+		"INSERT INTO logs (id, message, created_at, updated_at) VALUES (%s, %s, %s, %s)",
+		placeholder(1),
+		placeholder(2),
+		placeholder(3),
+		placeholder(4),
+	)
+
+	for i := range 100 {
+		createdAt := time.Date(2011, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(i) * time.Second)
+		_, err := db.Exec(
+			query,
+			fmt.Sprintf("00000000-0000-0000-0000-%012d", i),
+			"Pagination cap test log",
+			createdAt,
+			createdAt,
+		)
+		require.NoError(t, err)
+	}
 }
 
 func TestLogsDBChecks(t *testing.T) {
