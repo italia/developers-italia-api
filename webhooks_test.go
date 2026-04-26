@@ -137,16 +137,6 @@ func TestWebhooksEndpoints(t *testing.T) {
 				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
-		// TODO: enforce this?
-		// {
-		// 	query:    "PATCH /v1/webhooks with no Content-Type",
-		// 	body:     "",
-		// 	headers: map[string][]string{
-		// 		"Authorization": {goodToken},
-		// 	},
-		// 	expectedCode:        404,
-		// },
-
 		// DELETE /webhooks/:id
 		{
 			description: "Delete non-existent webhook",
