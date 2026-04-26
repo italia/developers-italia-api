@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Software Catalog API
+  title: Software Catalog API SPECTRAL_TEST_VIOLATION_AAAAA_intentionally_very_long_title_exceeding_any_reasonable_limit_to_trigger_a_linting_rule_for_testing_purposes
   version: 1.0.0
   x-summary: Software Catalog API
   description: |
