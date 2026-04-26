@@ -78,6 +78,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    description: List of results for the current page
                     minItems: 0
                     maxItems: 100
                     items:
@@ -94,6 +95,7 @@ paths:
           in: query
           name: all
           description: 'Show all software, even the one with "active" set to false'
+          example: false
         - schema:
             type: string
             minLength: 1
@@ -102,6 +104,7 @@ paths:
           in: query
           name: url
           description: Only software with this URL
+          example: 'https://github.com/example/my-software'
         - schema:
             type: integer
             format: int32
@@ -120,6 +123,7 @@ paths:
           in: query
           name: 'page[before]'
           description: Only results before this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
         - schema:
             type: string
             minLength: 1
@@ -128,6 +132,7 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
         - schema:
             type: string
             format: date-time
@@ -178,8 +183,10 @@ paths:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          example: 'c353756e-8597-4e46-a99b-7da2e141603b'
         name: softwareId
         in: path
+        description: The ID of the Software
         required: true
     get:
       summary: Get a Software
@@ -255,8 +262,10 @@ paths:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          example: 'c353756e-8597-4e46-a99b-7da2e141603b'
         name: softwareId
         in: path
+        description: The ID of the Software
         required: true
     get:
       summary: Get analysis data for a Software
@@ -318,8 +327,10 @@ paths:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          example: 'c353756e-8597-4e46-a99b-7da2e141603b'
         name: softwareId
         in: path
+        description: The ID of the Software
         required: true
     get:
       summary: List all Logs for a Software
@@ -341,6 +352,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    description: List of results for the current page
                     minItems: 0
                     maxItems: 100
                     items:
@@ -369,6 +381,7 @@ paths:
           in: query
           name: 'page[before]'
           description: Only results before this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
         - schema:
             type: string
             maxLength: 255
@@ -376,6 +389,7 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
         - schema:
             type: string
             format: date-time
@@ -439,6 +453,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    description: List of results for the current page
                     minItems: 0
                     maxItems: 100
                     items:
@@ -467,6 +482,7 @@ paths:
           in: query
           name: 'page[before]'
           description: Only results before this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
         - schema:
             type: string
             maxLength: 255
@@ -474,6 +490,7 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
         - schema:
             type: string
             format: date-time
@@ -533,8 +550,10 @@ paths:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          example: 'c353756e-8597-4e46-a99b-7da2e141603b'
         name: softwareId
         in: path
+        description: The ID of the Software
         required: true
     get:
       summary: List all Webhooks for a Software
@@ -556,6 +575,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    description: List of results for the current page
                     minItems: 0
                     maxItems: 100
                     items:
@@ -584,6 +604,7 @@ paths:
           in: query
           name: 'page[before]'
           description: Only results before this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
         - schema:
             type: string
             maxLength: 255
@@ -591,6 +612,7 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
         - schema:
             type: string
             format: date-time
@@ -663,6 +685,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    description: List of results for the current page
                     minItems: 0
                     maxItems: 100
                     items:
@@ -690,6 +713,7 @@ paths:
           in: query
           name: 'page[before]'
           description: Only results before this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
         - schema:
             type: string
             maxLength: 255
@@ -697,6 +721,7 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
         - schema:
             type: string
             format: date-time
@@ -761,6 +786,7 @@ paths:
           in: query
           name: all
           description: 'Show all catalogs, even the ones with "active" set to false'
+          example: false
         - schema:
             type: integer
             format: int32
@@ -778,6 +804,7 @@ paths:
           in: query
           name: 'page[before]'
           description: Only results before this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
         - schema:
             type: string
             maxLength: 255
@@ -785,6 +812,7 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
       responses:
         '200':
           description: OK
@@ -796,6 +824,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    description: List of results for the current page
                     minItems: 0
                     maxItems: 100
                     items:
@@ -841,8 +870,10 @@ paths:
           type: string
           maxLength: 255
           pattern: '.*'
+          example: 'example-catalog'
         name: catalogId
         in: path
+        description: The ID or alternativeId of the Catalog
         required: true
         description: >
           The catalog UUID or alternativeId.
@@ -922,8 +953,10 @@ paths:
           type: string
           maxLength: 255
           pattern: '.*'
+          example: 'example-catalog'
         name: catalogId
         in: path
+        description: The ID or alternativeId of the Catalog
         required: true
         description: >
           The catalog UUID or alternativeId.
@@ -941,6 +974,7 @@ paths:
           in: query
           name: all
           description: 'Show all publishers, even the ones with "active" set to false'
+          example: false
         - schema:
             type: integer
             format: int32
@@ -958,6 +992,7 @@ paths:
           in: query
           name: 'page[before]'
           description: Only results before this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
         - schema:
             type: string
             maxLength: 255
@@ -965,6 +1000,7 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
       responses:
         '200':
           description: OK
@@ -976,6 +1012,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    description: List of results for the current page
                     minItems: 0
                     maxItems: 100
                     items:
@@ -1027,8 +1064,10 @@ paths:
           type: string
           maxLength: 255
           pattern: '.*'
+          example: 'example-catalog'
         name: catalogId
         in: path
+        description: The ID or alternativeId of the Catalog
         required: true
         description: >
           The catalog UUID or alternativeId.
@@ -1083,8 +1122,10 @@ paths:
           type: string
           maxLength: 255
           pattern: '.*'
+          example: 'example-catalog'
         name: catalogId
         in: path
+        description: The ID or alternativeId of the Catalog
         required: true
         description: >
           The catalog UUID or alternativeId.
@@ -1119,6 +1160,7 @@ paths:
           in: query
           name: 'page[before]'
           description: Only results before this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
         - schema:
             type: string
             maxLength: 255
@@ -1126,6 +1168,7 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
       responses:
         '200':
           description: OK
@@ -1137,6 +1180,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    description: List of results for the current page
                     minItems: 0
                     maxItems: 100
                     items:
@@ -1186,8 +1230,10 @@ paths:
           type: string
           maxLength: 255
           pattern: '.*'
+          example: 'example-catalog'
         name: catalogId
         in: path
+        description: The ID or alternativeId of the Catalog
         required: true
         description: >
           The catalog UUID or alternativeId.
@@ -1196,8 +1242,10 @@ paths:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          example: 'c353756e-8597-4e46-a99b-7da2e141603b'
         name: softwareId
         in: path
+        description: The ID of the Software
         required: true
         description: The software UUID
     patch:
@@ -1242,8 +1290,10 @@ paths:
           type: string
           maxLength: 255
           pattern: '.*'
+          example: 'example-catalog'
         name: catalogId
         in: path
+        description: The ID or alternativeId of the Catalog
         required: true
         description: >
           The catalog UUID or alternativeId.
@@ -1297,6 +1347,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    description: List of results for the current page
                     minItems: 0
                     maxItems: 100
                     items:
@@ -1313,6 +1364,7 @@ paths:
           in: query
           name: all
           description: 'Show all publishers, even the one with "active" set to false'
+          example: false
         - schema:
             type: integer
             format: int32
@@ -1330,6 +1382,7 @@ paths:
           in: query
           name: 'page[before]'
           description: Only results before this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
         - schema:
             type: string
             maxLength: 255
@@ -1337,6 +1390,7 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
         - schema:
             type: string
             format: date-time
@@ -1389,8 +1443,10 @@ paths:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          example: '2ded32eb-c45e-4167-9166-a44e18b8adde'
         name: publisherId
         in: path
+        description: The ID of the Publisher
         required: true
     get:
       summary: Get a Publisher
@@ -1478,6 +1534,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    description: List of results for the current page
                     minItems: 0
                     maxItems: 100
                     items:
@@ -1506,6 +1563,7 @@ paths:
           in: query
           name: 'page[before]'
           description: Only results before this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
         - schema:
             type: string
             maxLength: 255
@@ -1513,6 +1571,7 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
         - schema:
             type: string
             format: date-time
@@ -1572,8 +1631,10 @@ paths:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          example: '2ded32eb-c45e-4167-9166-a44e18b8adde'
         name: publisherId
         in: path
+        description: The ID of the Publisher
         required: true
     get:
       summary: List all Webhooks for a Publisher
@@ -1595,6 +1656,7 @@ paths:
                 properties:
                   data:
                     type: array
+                    description: List of results for the current page
                     minItems: 0
                     maxItems: 100
                     items:
@@ -1623,6 +1685,7 @@ paths:
           in: query
           name: 'page[before]'
           description: Only results before this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
         - schema:
             type: string
             maxLength: 255
@@ -1630,6 +1693,7 @@ paths:
           in: query
           name: 'page[after]'
           description: Only results after this cursor
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
         - schema:
             type: string
             format: date-time
@@ -1689,8 +1753,10 @@ paths:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          example: '007bc84a-7e2d-43a0-b7e1-a256d4114aa7'
         name: webhookId
         in: path
+        description: The ID of the Webhook
         required: true
     get:
       summary: Get a Webhook
@@ -1903,11 +1969,13 @@ components:
           v:
             type: integer
             description: Schema version of this namespace.
+            example: 1
           t:
             type: string
             format: date-time
             readOnly: true
             description: Timestamp of the last write (RFC 3339 datetime).
+            example: '2024-01-15T10:30:00Z'
         additionalProperties: true
       example:
         acme-security-scanner:
@@ -1943,6 +2011,8 @@ components:
         properties:
           op:
             type: string
+            description: The operation to perform
+            example: replace
             enum:
               - add
               - remove
@@ -1954,11 +2024,14 @@ components:
               A JSON Pointer (RFC 6901) to a writable field.
               Examples: /publiccodeYml, /url, /active, /vitality, /analysis,
               /aliases (full replace), /aliases/- (append), /aliases/0 (by index).
+            example: '/publiccodeYml'
           value:
             description: The value to set. Required for add, replace, and test operations.
+            example: 'name: My Software'
           from:
             type: string
             description: Source JSON Pointer, used by move and copy operations.
+            example: '/aliases/0'
     Software:
       title: Software
       type: object
@@ -1968,12 +2041,16 @@ components:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          description: Unique identifier of the Software
+          example: 'c353756e-8597-4e46-a99b-7da2e141603b'
           readOnly: true
         publiccodeYml:
           type: string
           minLength: 1
           maxLength: 99999
           pattern: '.*'
+          description: Raw publiccode.yml content for this software
+          example: "publiccodeYmlVersion: '0.2'\nname: My Software\n"
         url:
           type: string
           format: uri
@@ -1982,12 +2059,14 @@ components:
           description: >
             Repository URL this software is available at.
             This is the current and canonical one.
+          example: 'https://github.com/example/my-software'
         aliases:
           type: array
           description: >
             List of aliases for the current repository URL.
             This is useful to keep track, for example, of previous addresses that redirect
             to the current one.
+          example: ['https://github.com/example/old-repo']
           minItems: 1
           maxItems: 255
           items:
@@ -2002,6 +2081,7 @@ components:
             software (fe. when the repository is empty or there's something malicious going on,
             but the problem is expected to be fixed in the near future) without removing it.
           default: true
+          example: true
         vitality:
           type: string
           description: >
@@ -2024,6 +2104,7 @@ components:
           description: >
             The ID of the catalog this software belongs to.
             If absent, the software belongs to the root (implicit) catalog.
+          example: 'a1b2c3d4-e5f6-4789-abcd-ef0123456789'
           readOnly: true
         createdAt:
           type: string
@@ -2052,21 +2133,27 @@ components:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          description: Unique identifier of the Catalog
+          example: 'a1b2c3d4-e5f6-4789-abcd-ef0123456789'
           readOnly: true
         name:
           type: string
           minLength: 1
           maxLength: 255
+          description: Human-readable name of the catalog
+          example: 'Public Software Catalog'
         alternativeId:
           type: string
           description: >
             Optional alternative user-provided identifier for this Catalog.
             If present, you can use it in place of the Catalog `id` as a path argument.
           maxLength: 255
-          example: 'italia'
+          example: 'example-catalog'
         active:
           type: boolean
+          description: Whether this Catalog is active or not
           default: true
+          example: true
         publishersNamespace:
           type: string
           maxLength: 255
@@ -2082,6 +2169,9 @@ components:
           description: >
             Data sources for this catalog. At least one is
             required on creation.
+          example:
+            - url: 'https://github.com/example-org'
+              driver: 'github'
           items:
             $ref: '#/components/schemas/CatalogSource'
         createdAt:
@@ -2116,12 +2206,14 @@ components:
         url:
           type: string
           format: uri
+          description: URL of this catalog source
           example: 'https://github.com/org'
         args:
           type: array
           description: >
             Optional arguments for the driver (e.g. a JSON
             configuration file URL).
+          example: ['https://example.org/config.json']
           items:
             type: string
             minLength: 1
@@ -2136,9 +2228,15 @@ components:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          description: Unique identifier of the Publisher
+          example: '2ded32eb-c45e-4167-9166-a44e18b8adde'
           readOnly: true
         codeHosting:
           type: array
+          description: List of code hosting sources for this publisher
+          example:
+            - url: 'https://github.com/my-org/'
+              group: true
           minItems: 1
           maxItems: 255
           items:
@@ -2178,6 +2276,8 @@ components:
           type: string
           maxLength: 255
           pattern: '.*'
+          description: Human-readable name or description of the Publisher
+          example: 'Ministero dello Sviluppo Economico'
         email:
           type: string
           format: email
@@ -2192,6 +2292,7 @@ components:
             publishers (fe. when they are not complying with some rule, but the problem is
             expected to be fixed in the near future) without removing them.
           default: true
+          example: true
         alternativeId:
           type: string
           description: |
@@ -2218,6 +2319,7 @@ components:
           description: >
             The ID of the catalog this publisher belongs to.
             If absent, the publisher belongs to the root (implicit) catalog.
+          example: 'a1b2c3d4-e5f6-4789-abcd-ef0123456789'
           readOnly: true
         updatedAt:
           type: string
@@ -2240,6 +2342,8 @@ components:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          description: Unique identifier of the Log
+          example: '12f30d9e-042e-11ed-8ddc-d8bbc146d165'
           readOnly: true
         createdAt:
           type: string
@@ -2257,6 +2361,8 @@ components:
           type: string
           maxLength: 2048
           pattern: '.*'
+          description: Human-readable description of the log event
+          example: 'Bad publiccode.yml: missing required field "name"'
         entity:
           type: string
           maxLength: 255
@@ -2283,6 +2389,8 @@ components:
           format: base64
           minLength: 1
           maxLength: 255
+          description: Cursor pointing to the previous page of results, null if on the first page
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImJmZjEyMzQ1Il0='
           readOnly: true
           nullable: true
         next:
@@ -2290,6 +2398,8 @@ components:
           format: base64
           minLength: 1
           maxLength: 255
+          description: Cursor pointing to the next page of results, null if on the last page
+          example: 'WyIyMDIyLTA2LTA3VDE0OjU2OjIzWiIsImFhYTEyMzQ1Il0='
           readOnly: true
           nullable: true
       required:
@@ -2310,17 +2420,20 @@ components:
           pattern: '.*'
           maxLength: 255
           description: 'Short, human-readable summary of the problem'
+          example: "can't create Software"
         detail:
           type: string
           pattern: '.*'
           maxLength: 2048
           description: Human-readable explanation of the problem
+          example: 'invalid or malformed JSON'
         status:
           type: integer
           format: int32
           minimum: 400
           maximum: 499
           description: The HTTP status code for this problem
+          example: 400
       required:
         - title
         - detail
@@ -2342,11 +2455,13 @@ components:
           pattern: '.*'
           maxLength: 255
           description: 'Short, human-readable summary of the problem'
+          example: "can't create Log"
         detail:
           type: string
           pattern: '.*'
           maxLength: 2048
           description: Human-readable explanation of the problem
+          example: 'invalid format: message is required'
         status:
           type: integer
           format: int32
@@ -2354,9 +2469,14 @@ components:
           minimum: 422
           maximum: 422
           description: The HTTP status code for this problem
+          example: 422
         validationErrors:
           type: array
           description: 'List of validation errors, returned by endpoints that validate input data (eg. POST, PATCH, etc.)'
+          example:
+            - field: message
+              rule: required
+              value: ''
           minItems: 1
           maxItems: 10
           items:
@@ -2399,6 +2519,8 @@ components:
           type: string
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          description: Unique identifier of the Webhook
+          example: '007bc84a-7e2d-43a0-b7e1-a256d4114aa7'
           readOnly: true
         url:
           type: string
@@ -2412,6 +2534,7 @@ components:
           pattern: '.*'
           description: |
             Secret used to authenticate to the webhook endpoint
+          example: 'my-secret-token'
         createdAt:
           type: string
           description: The time the webhook was created (RFC 3339 datetime)
