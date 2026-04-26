@@ -195,14 +195,14 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
-			description: "GET with page[size] bigger than the max of 100",
+			description: "GET with page[size] bigger than the max of 100 caps the size",
 			query:       "GET /v1/software?page[size]=200",
 
-			expectedCode:        422,
-			expectedContentType: "application/problem+json",
+			expectedCode:        200,
+			expectedContentType: "application/json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
-				assert.Equal(t, `can't get Software`, response["title"])
-				assert.Equal(t, "page[size] must be between 1 and 100", response["detail"])
+				items := assertListResponse(t, response)
+				assert.LessOrEqual(t, len(items), 100)
 			},
 		},
 		{

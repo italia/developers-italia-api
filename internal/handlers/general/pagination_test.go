@@ -28,3 +28,14 @@ func TestNewPaginatorWithConfig_DoesNotMutateDefaultConfig(t *testing.T) {
 	assert.Equal(t, paginator.ASC, DefaultConfig.Order,
 		"DefaultConfig.Order must not be mutated by NewPaginatorWithConfig")
 }
+
+func TestPageSizeFromQueryCapsValuesAboveMax(t *testing.T) {
+	app, ctx := newTestCtx()
+	defer app.ReleaseCtx(ctx)
+
+	ctx.Request().URI().SetQueryString("page[size]=200")
+
+	size, err := pageSizeFromQuery(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, MaxLimitCount, size)
+}

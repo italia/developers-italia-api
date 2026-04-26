@@ -78,8 +78,12 @@ func pageSizeFromQuery(ctx *fiber.Ctx) (int, error) {
 		return 0, errInvalidPageSize
 	}
 
-	if size < 1 || size > MaxLimitCount {
+	if size < 1 {
 		return 0, errPageSizeOutOfRange
+	}
+
+	if size > MaxLimitCount {
+		return MaxLimitCount, nil
 	}
 
 	return size, nil
