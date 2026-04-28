@@ -318,7 +318,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          application/merge-patch+json:
             schema:
               $ref: '#/components/schemas/AnalysisData'
   '/software/{softwareId}/logs':
@@ -1961,6 +1961,7 @@ components:
         properties:
           v:
             type: integer
+            format: int32
             description: Schema version of this namespace.
             example: 1
           t:

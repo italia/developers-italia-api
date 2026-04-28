@@ -1485,7 +1485,7 @@ func TestSoftwareAnalysisEndpoints(t *testing.T) {
 			body:        `{"badges": {"v": 1, "score": 90}}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
-				"Content-Type":  {"application/json"},
+				"Content-Type":  {"application/merge-patch+json"},
 			},
 			expectedCode:        200,
 			expectedContentType: "application/json",
@@ -1503,7 +1503,7 @@ func TestSoftwareAnalysisEndpoints(t *testing.T) {
 			body:        `{"badges": {"score": 90}}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
-				"Content-Type":  {"application/json"},
+				"Content-Type":  {"application/merge-patch+json"},
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
@@ -1526,7 +1526,7 @@ func TestSoftwareAnalysisEndpoints(t *testing.T) {
 			body:        `{"badges": {"v": 1}}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
-				"Content-Type":  {"application/json"},
+				"Content-Type":  {"application/merge-patch+json"},
 			},
 			expectedCode:        404,
 			expectedContentType: "application/problem+json",
@@ -1550,7 +1550,7 @@ func TestSoftwareAnalysisDBChecks(t *testing.T) {
 		require.NoError(t, err)
 		req.Header = map[string][]string{
 			"Authorization": {goodToken},
-			"Content-Type":  {"application/json"},
+			"Content-Type":  {"application/merge-patch+json"},
 		}
 
 		res, err := app.Test(req, -1)
