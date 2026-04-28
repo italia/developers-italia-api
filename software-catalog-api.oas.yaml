@@ -2088,7 +2088,6 @@ components:
           minLength: 1
           maxLength: 99999
           pattern: '.*'
-          default: null
           example: "90,100,94,12"
         catalogId:
           type: string
@@ -2230,6 +2229,8 @@ components:
           example:
             - url: 'https://github.com/my-org/'
               group: true
+              createdAt: '2022-06-07T14:56:23Z'
+              updatedAt: '2022-06-07T14:56:23Z'
           minItems: 1
           maxItems: 255
           items:
@@ -2336,7 +2337,7 @@ components:
           maxLength: 36
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
           description: Unique identifier of the Log
-          example: '12f30d9e-042e-11ed-8ddc-d8bbc146d165'
+          example: '12f30d9e-042e-41ed-8ddc-d8bbc146d165'
           readOnly: true
         createdAt:
           type: string
