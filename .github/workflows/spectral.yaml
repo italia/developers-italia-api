@@ -11,23 +11,21 @@ on:
 permissions: {}
 
 jobs:
-  vacuum:
+  spectral:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
+      checks: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - run: curl --fail -L https://github.com/italia/api-oas-checker-rules/releases/download/1.1/spectral-full.yml > .spectral.yml
 
-      # Get additional module required by spectral-full
+      # Get the custom function required by spectral-full
       - run: mkdir functions
       - run: curl --fail -L https://raw.githubusercontent.com/italia/api-oas-checker/f6f4e6e360b2ce9816dcca29396571dda1c6027d/security/functions/checkSecurity.js > functions/checkSecurity.js
 
-      - uses: pb33f/vacuum-action@e0a6b0297ff1abcac6c415f2eba24fd9018cad58 # v2
+      - uses: bfabio/spectral-action@5af95a6a2985901bd5e689c663b4f93c660f0d2c
         with:
-          openapi_path: software-catalog-api.oas.yaml
-          ruleset: .spectral.yml
-          fail_on_error: true
-          minimum_score: 0
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: software-catalog-api.oas.yaml
+          spectral_ruleset: .spectral.yml
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
