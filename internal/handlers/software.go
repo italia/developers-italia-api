@@ -436,7 +436,7 @@ func (p *Software) PatchSoftwareAnalysis(ctx *fiber.Ctx) error {
 	}
 
 	var incoming common.AnalysisData
-	if err := ctx.BodyParser(&incoming); err != nil {
+	if err := json.Unmarshal(ctx.Body(), &incoming); err != nil {
 		return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
 	}
 
