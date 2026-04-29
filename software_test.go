@@ -888,6 +888,57 @@ func TestSoftwareEndpoints(t *testing.T) {
 			},
 		},
 		{
+			description: "PATCH a software resource with JSON Patch - empty patch rejected",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `[]`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json-patch+json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't update Software", response["title"])
+				assert.Equal(t, "patch must contain at least one operation", response["detail"])
+			},
+		},
+		{
+			description: "PATCH a software resource with JSON Patch - too many ops rejected",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body: func() string {
+				ops := make([]string, 101)
+				for i := range ops {
+					ops[i] = `{"op":"replace","path":"/active","value":true}`
+				}
+				return "[" + strings.Join(ops, ",") + "]"
+			}(),
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json-patch+json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't update Software", response["title"])
+				assert.Equal(t, "patch must not exceed 100 operations", response["detail"])
+			},
+		},
+		{
+			description: "PATCH a software resource with JSON Patch - path too long rejected",
+			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
+			body:        `[{"op":"replace","path":"/` + strings.Repeat("x", 255) + `","value":true}]`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json-patch+json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't update Software", response["title"])
+				assert.Equal(t, "path and from must not exceed 255 characters", response["detail"])
+			},
+		},
+		{
 			description: "PATCH software using an already taken URL as url",
 			query:       "PATCH /v1/software/59803fb7-8eec-4fe5-a354-8926009c364a",
 			body:        `{"url": "https://15-b.example.org/code/repo"}`,

@@ -181,6 +181,10 @@ func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop,funlen
 			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
 		}
 
+		if err := common.ValidateJSONPatch(patch); err != nil {
+			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+		}
+
 		updatedJSON, err = patch.Apply(catalogJSON)
 		if err != nil {
 			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
@@ -477,6 +481,10 @@ func (c *Catalog) PatchCatalogPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,
 			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
 		}
 
+		if err := common.ValidateJSONPatch(patch); err != nil {
+			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+		}
+
 		updatedJSON, err = patch.Apply(publisherJSON)
 		if err != nil {
 			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
@@ -657,6 +665,10 @@ func (c *Catalog) PatchCatalogSoftware(ctx *fiber.Ctx) error { //nolint:funlen,c
 		patch, err := jsonpatch.DecodePatch(ctx.Body())
 		if err != nil {
 			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
+		}
+
+		if err := common.ValidateJSONPatch(patch); err != nil {
+			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
 		}
 
 		updatedJSON, err = patch.Apply(softwareJSON)

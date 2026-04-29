@@ -1982,6 +1982,8 @@ components:
     JsonPatchRequest:
       title: JsonPatchRequest
       type: array
+      minItems: 1
+      maxItems: 100
       description: >
         A JSON Patch document as defined by RFC 6902.
         Writable fields are: publiccodeYml, url, aliases, active, vitality, analysis.
@@ -2016,6 +2018,7 @@ components:
               - test
           path:
             type: string
+            maxLength: 255
             description: >
               A JSON Pointer (RFC 6901) to a writable field.
               Examples: /publiccodeYml, /url, /active, /vitality, /analysis,
@@ -2026,6 +2029,7 @@ components:
             example: 'name: My Software'
           from:
             type: string
+            maxLength: 255
             description: Source JSON Pointer, used by move and copy operations.
             example: '/aliases/0'
     Software:
