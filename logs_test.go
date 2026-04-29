@@ -70,7 +70,25 @@ func TestLogsEndpoints(t *testing.T) {
 
 				assert.Equal(t, 3, len(data))
 
-				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDEwLTA4LTAxVDIzOjU5OjU5WiIsIjRiNGExYjljLTA0MmUtMTFlZC04MmE4LWQ4YmJjMTQ2ZDE2NSJd")
+				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDEwLTA4LTAxVDIzOjU5OjU5WiIsIjRiNGExYjljLTA0MmUtMTFlZC04MmE4LWQ4YmJjMTQ2ZDE2NSJd&page[size]=3")
+			},
+		},
+		{
+			description: "GET with from and page[size] preserves both in links",
+			query:       "GET /v1/logs?from=2010-03-01T09:56:23Z&page[size]=3",
+
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				data := assertListResponse(t, response)
+
+				assert.Equal(t, 3, len(data))
+
+				links := response["links"].(map[string]interface{})
+				next := links["next"].(string)
+				assert.Contains(t, next, "from=2010-03-01T09%3A56%3A23Z")
+				assert.Contains(t, next, "page[after]=")
+				assert.Contains(t, next, "page[size]=3")
 			},
 		},
 		// TODO
