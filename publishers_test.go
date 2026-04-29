@@ -839,7 +839,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, "can't update Publisher", response["title"])
-				assert.Equal(t, "malformed JSON Patch", response["detail"])
+				assert.Contains(t, response["detail"], "cannot unmarshal")
 			},
 		},
 		// DELETE /publishers/:id

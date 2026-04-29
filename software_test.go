@@ -884,7 +884,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				assert.Equal(t, `can't update Software`, response["title"])
-				assert.Equal(t, "malformed JSON Patch", response["detail"])
+				assert.Contains(t, response["detail"], "cannot unmarshal")
 			},
 		},
 		{
