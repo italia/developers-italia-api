@@ -180,7 +180,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assert.Equal(t, 2, len(data))
 
-				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDE0LTA1LTE2VDAwOjAwOjAwWiIsIjlmMTM1MjY4LWEzN2UtNGVhZC05NmVjLWU0YTI0YmI5MzQ0YSJd")
+				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDE0LTA1LTE2VDAwOjAwOjAwWiIsIjlmMTM1MjY4LWEzN2UtNGVhZC05NmVjLWU0YTI0YmI5MzQ0YSJd&page[size]=2")
 			},
 		},
 		// TODO
@@ -1101,7 +1101,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assert.Equal(t, 2, len(data))
 
-				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDEwLTAxLTE1VDIzOjU5OjU5WiIsIjEyZjMwZDllLTA0MmUtMTFlZC04ZGRjLWQ4YmJjMTQ2ZDE2NSJd")
+				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDEwLTAxLTE1VDIzOjU5OjU5WiIsIjEyZjMwZDllLTA0MmUtMTFlZC04ZGRjLWQ4YmJjMTQ2ZDE2NSJd&page[size]=2")
 			},
 		},
 
@@ -1278,7 +1278,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 				assert.Equal(t, 1, len(data))
 
-				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDE3LTA1LTAxVDAwOjAwOjAwWiIsImQ2MzM0MDAwLTY5YTgtNDNhMS1hYjQzLTUwYmIwNGUxNGVlZCJd")
+				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDE3LTA1LTAxVDAwOjAwOjAwWiIsImQ2MzM0MDAwLTY5YTgtNDNhMS1hYjQzLTUwYmIwNGUxNGVlZCJd&page[size]=1")
 			},
 		},
 

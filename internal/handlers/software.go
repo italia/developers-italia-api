@@ -121,7 +121,7 @@ func (p *Software) GetAllSoftware(ctx *fiber.Ctx) error { //nolint:cyclop // mos
 		}
 	}
 
-	return ctx.JSON(fiber.Map{"data": &software, "links": general.PaginationLinks(cursor)})
+	return ctx.JSON(fiber.Map{"data": &software, "links": general.NewPaginationLinks(ctx.Queries(), cursor)})
 }
 
 // GetSoftware gets the software with the given ID and returns any error encountered.

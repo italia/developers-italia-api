@@ -75,7 +75,7 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 		)
 	}
 
-	return ctx.JSON(fiber.Map{"data": &publishers, "links": general.PaginationLinks(cursor)})
+	return ctx.JSON(fiber.Map{"data": &publishers, "links": general.NewPaginationLinks(ctx.Queries(), cursor)})
 }
 
 // GetPublisher gets the publisher with the given ID and returns any error encountered.
