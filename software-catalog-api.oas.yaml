@@ -2200,6 +2200,7 @@ components:
         url:
           type: string
           format: uri
+          maxLength: 2048
           description: URL of this catalog source
           example: 'https://github.com/org'
         args:
