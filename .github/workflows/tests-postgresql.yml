@@ -35,6 +35,11 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: 1.25.x
+      - uses: ariga/setup-atlas@v0
+        with:
+          version: v1.1.0
+      - name: Apply migrations
+        run: atlas migrate apply --url "postgres://postgres:postgres@localhost:5432/test?sslmode=disable" --dir "file://internal/database/migrations" --tx-mode file
       - run: go test -race ./...
         env:
           DATABASE_DSN: "postgres://postgres:postgres@localhost:5432/test?sslmode=disable"

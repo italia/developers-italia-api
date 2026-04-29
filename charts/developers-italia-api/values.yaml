@@ -95,11 +95,22 @@ maxRequests:
 # from 'databaseDSN' and 'pasetoKey'.
 useExistingSecret:
 
-# -- Database connection string, e.g. "host= port=5432 dbname= user= password= sslmode=require".
+# -- Database connection string. Accepts both key=value format
+# (e.g. "host=myhost port=5432 dbname=mydb user=myuser password=mypassword sslmode=require")
+# and URL format (e.g. "postgres://user:password@host:5432/dbname?sslmode=require").
+# Note: in key=value format, values containing spaces are not supported.
+# Use URL format if the password contains spaces or special characters.
 databaseDSN: ""
 
 # -- Base64 encoded Paseto Key.
 pasetoKey: ""
+
+# -- (string) Atlas migration baseline version. Set to the latest migration
+# version (e.g. "20231001000000") when first deploying this chart against an
+# existing database that was previously managed by GORM AutoMigrate. Atlas will
+# record all migrations up to this version as applied without running their SQL.
+# Leave empty for new databases or after Atlas has already been initialized.
+migrationBaseline: ""
 
 serviceMonitor:
   # -- Create ServiceMonitor resource (requires corresponding Prometheus Operator CRD installed).
