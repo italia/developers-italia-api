@@ -769,4 +769,54 @@ func TestCatalogSourcesDBChecks(t *testing.T) {
 		require.Equal(t, 1, len(args))
 		assert.Equal(t, "$.items[*].url", args[0])
 	})
+
+	t.Run("POST rejects more than 100 sources", func(t *testing.T) {
+		loadFixtures(t)
+
+		var b strings.Builder
+		b.WriteString(`{"name":"Too Many Sources","sources":[`)
+		for i := range 101 {
+			if i > 0 {
+				b.WriteString(",")
+			}
+			fmt.Fprintf(&b, `{"url":"https://example.org/source%d"}`, i)
+		}
+		b.WriteString("]}")
+
+		req, err := newTestRequest("POST", "/v1/catalogs", strings.NewReader(b.String()))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 422, res.StatusCode)
+	})
+
+	t.Run("PATCH rejects more than 100 sources", func(t *testing.T) {
+		loadFixtures(t)
+
+		var b strings.Builder
+		b.WriteString(`{"sources":[`)
+		for i := range 101 {
+			if i > 0 {
+				b.WriteString(",")
+			}
+			fmt.Fprintf(&b, `{"url":"https://example.org/source%d"}`, i)
+		}
+		b.WriteString("]}")
+
+		req, err := newTestRequest("PATCH", "/v1/catalogs/"+italiaID, strings.NewReader(b.String()))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 422, res.StatusCode)
+	})
 }
