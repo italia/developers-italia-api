@@ -66,7 +66,7 @@ func (p *Webhook[T]) GetResourceWebhooks(ctx *fiber.Ctx) error {
 		)
 	}
 
-	return ctx.JSON(fiber.Map{"data": &webhooks, "links": general.PaginationLinks(cursor)})
+	return ctx.JSON(fiber.Map{"data": &webhooks, "links": general.NewPaginationLinks(ctx.Queries(), cursor)})
 }
 
 // GetSingleResourceWebhooks gets the webhooks associated to a resource
@@ -112,7 +112,7 @@ func (p *Webhook[T]) GetSingleResourceWebhooks(ctx *fiber.Ctx) error {
 		)
 	}
 
-	return ctx.JSON(fiber.Map{"data": &webhooks, "links": general.PaginationLinks(cursor)})
+	return ctx.JSON(fiber.Map{"data": &webhooks, "links": general.NewPaginationLinks(ctx.Queries(), cursor)})
 }
 
 // PostResourceWebhook creates a new webhook associated to resources

@@ -86,7 +86,7 @@ func (c *Catalog) GetCatalogs(ctx *fiber.Ctx) error {
 		)
 	}
 
-	return ctx.JSON(fiber.Map{"data": &catalogs, "links": general.PaginationLinks(cursor)})
+	return ctx.JSON(fiber.Map{"data": &catalogs, "links": general.NewPaginationLinks(ctx.Queries(), cursor)})
 }
 
 // GetCatalog gets the catalog with the given id.
@@ -357,7 +357,7 @@ func (c *Catalog) GetCatalogPublishers(ctx *fiber.Ctx) error {
 		)
 	}
 
-	return ctx.JSON(fiber.Map{"data": &publishers, "links": general.PaginationLinks(cursor)})
+	return ctx.JSON(fiber.Map{"data": &publishers, "links": general.NewPaginationLinks(ctx.Queries(), cursor)})
 }
 
 // PostCatalogPublisher creates a publisher belonging to the given catalog.
@@ -815,7 +815,7 @@ func (c *Catalog) GetCatalogSoftware(ctx *fiber.Ctx) error {
 		)
 	}
 
-	return ctx.JSON(fiber.Map{"data": &software, "links": general.PaginationLinks(cursor)})
+	return ctx.JSON(fiber.Map{"data": &software, "links": general.NewPaginationLinks(ctx.Queries(), cursor)})
 }
 
 // buildSources converts SourceInput slice to CatalogSource models.

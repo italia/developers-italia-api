@@ -66,7 +66,7 @@ func (p *Log) GetLogs(ctx *fiber.Ctx) error {
 		)
 	}
 
-	return ctx.JSON(fiber.Map{"data": &logs, "links": general.PaginationLinks(cursor)})
+	return ctx.JSON(fiber.Map{"data": &logs, "links": general.NewPaginationLinks(ctx.Queries(), cursor)})
 }
 
 // GetLog gets the log with the given ID and returns any error encountered.
@@ -195,7 +195,7 @@ func (p *Log) GetSoftwareLogs(ctx *fiber.Ctx) error {
 		)
 	}
 
-	return ctx.JSON(fiber.Map{"data": &logs, "links": general.PaginationLinks(cursor)})
+	return ctx.JSON(fiber.Map{"data": &logs, "links": general.NewPaginationLinks(ctx.Queries(), cursor)})
 }
 
 // PostCatalogLog creates a new log associated to a Catalog with the given ID and returns any error encountered.

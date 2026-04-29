@@ -2,7 +2,10 @@ package general
 
 import (
 	"encoding/json"
-	"fmt"
+	"maps"
+	"net/url"
+	"slices"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/pilagod/gorm-cursor-paginator/v2/paginator"
@@ -16,7 +19,39 @@ var DefaultConfig = &paginator.Config{ //nolint:gochecknoglobals //can't turn it
 	Order: paginator.ASC,
 }
 
-type PaginationLinks paginator.Cursor
+type PaginationLinks struct {
+	prev *string
+	next *string
+}
+
+func NewPaginationLinks(queries map[string]string, cursor paginator.Cursor) PaginationLinks {
+	base := maps.Clone(queries)
+	delete(base, "page[after]")
+	delete(base, "page[before]")
+
+	return PaginationLinks{
+		prev: buildLink(base, "page[before]", cursor.Before),
+		next: buildLink(base, "page[after]", cursor.After),
+	}
+}
+
+func buildLink(base map[string]string, key string, cursor *string) *string {
+	if cursor == nil {
+		return nil
+	}
+
+	params := maps.Clone(base)
+	params[key] = *cursor
+
+	parts := make([]string, 0, len(params))
+	for _, k := range slices.Sorted(maps.Keys(params)) {
+		parts = append(parts, k+"="+url.QueryEscape(params[k]))
+	}
+
+	s := "?" + strings.Join(parts, "&")
+
+	return &s
+}
 
 func NewPaginator(ctx *fiber.Ctx) *paginator.Paginator {
 	return NewPaginatorWithConfig(ctx, DefaultConfig)
@@ -55,22 +90,12 @@ func NewPaginatorWithConfig(ctx *fiber.Ctx, config *paginator.Config) *paginator
 	return paginator
 }
 
-func createLink(cursor *string, field string) *string {
-	if cursor != nil {
-		res := fmt.Sprintf("?page[%s]=%s", field, *cursor)
-
-		return &res
-	}
-
-	return nil
-}
-
 func (links PaginationLinks) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Prev *string `json:"prev"`
 		Next *string `json:"next"`
 	}{
-		Prev: createLink(links.Before, "before"),
-		Next: createLink(links.After, "after"),
+		Prev: links.prev,
+		Next: links.next,
 	})
 }
