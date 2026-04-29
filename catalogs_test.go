@@ -819,4 +819,40 @@ func TestCatalogSourcesDBChecks(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 422, res.StatusCode)
 	})
+
+	t.Run("POST rejects source URL longer than 2048 chars", func(t *testing.T) {
+		loadFixtures(t)
+
+		longURL := "https://example.org/" + strings.Repeat("x", 2029)
+		body := fmt.Sprintf(`{"name":"Long URL","sources":[{"url":%q}]}`, longURL)
+
+		req, err := newTestRequest("POST", "/v1/catalogs", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 422, res.StatusCode)
+	})
+
+	t.Run("PATCH rejects source URL longer than 2048 chars", func(t *testing.T) {
+		loadFixtures(t)
+
+		longURL := "https://example.org/" + strings.Repeat("x", 2029)
+		body := fmt.Sprintf(`{"sources":[{"url":%q}]}`, longURL)
+
+		req, err := newTestRequest("PATCH", "/v1/catalogs/"+italiaID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 422, res.StatusCode)
+	})
 }
