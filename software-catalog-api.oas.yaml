@@ -2159,6 +2159,7 @@ components:
         sources:
           type: array
           minItems: 1
+          maxItems: 100
           description: >
             Data sources for this catalog. At least one is
             required on creation.
