@@ -2205,6 +2205,8 @@ components:
           example: 'https://github.com/org'
         args:
           type: array
+          minItems: 1
+          maxItems: 20
           description: >
             Optional arguments for the driver (e.g. a JSON
             configuration file URL).
@@ -2212,6 +2214,7 @@ components:
           items:
             type: string
             minLength: 1
+            maxLength: 2048
       required:
         - url
     Publisher:
