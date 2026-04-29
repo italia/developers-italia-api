@@ -14,6 +14,7 @@ var (
 	errAnalysisNotObject    = errors.New("must be a JSON object")
 	errAnalysisMissingV     = errors.New("missing required field 'v'")
 	errAnalysisInvalidV     = errors.New("'v' must be an integer")
+	errAnalysisVOutOfRange  = errors.New("'v' must be between 1 and 999")
 	errAnalysisUnexpectedDB = errors.New("unexpected database value type for analysis")
 )
 
@@ -90,6 +91,10 @@ func WithTimestamps(analysis AnalysisData, now time.Time) (AnalysisData, error) 
 		var version int
 		if err := json.Unmarshal(*meta.V, &version); err != nil {
 			return nil, fmt.Errorf("analysis.%s: %w", namespace, errAnalysisInvalidV)
+		}
+
+		if version < 1 || version > 999 {
+			return nil, fmt.Errorf("analysis.%s: %w", namespace, errAnalysisVOutOfRange)
 		}
 
 		result[namespace], _ = jsonpatch.MergePatch(raw, tPatch)
