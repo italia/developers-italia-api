@@ -205,6 +205,10 @@ func (p *Software) PatchSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
 		}
 
+		if err := common.ValidateJSONPatch(patch); err != nil {
+			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+		}
+
 		updatedJSON, err = patch.Apply(softwareJSON)
 		if err != nil {
 			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
