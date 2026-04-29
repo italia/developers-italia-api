@@ -91,7 +91,7 @@ paths:
       parameters:
         - schema:
             type: boolean
-            default: false
+            default: fals
           in: query
           name: all
           description: 'Show all software, even the one with "active" set to false'
