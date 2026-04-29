@@ -1962,6 +1962,8 @@ components:
           v:
             type: integer
             format: int32
+            minimum: 1
+            maximum: 999
             description: Schema version of this namespace.
             example: 1
           t:

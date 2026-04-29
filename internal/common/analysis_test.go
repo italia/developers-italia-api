@@ -94,4 +94,44 @@ func TestWithTimestamps(t *testing.T) {
 
 		assert.ErrorIs(t, err, errAnalysisNotObject)
 	})
+
+	t.Run("v below 1 returns error", func(t *testing.T) {
+		input := AnalysisData{
+			"scanner": json.RawMessage(`{"v": 0}`),
+		}
+
+		_, err := WithTimestamps(input, now)
+
+		assert.ErrorIs(t, err, errAnalysisVOutOfRange)
+	})
+
+	t.Run("v above 999 returns error", func(t *testing.T) {
+		input := AnalysisData{
+			"scanner": json.RawMessage(`{"v": 1000}`),
+		}
+
+		_, err := WithTimestamps(input, now)
+
+		assert.ErrorIs(t, err, errAnalysisVOutOfRange)
+	})
+
+	t.Run("v at boundary 1 is valid", func(t *testing.T) {
+		input := AnalysisData{
+			"scanner": json.RawMessage(`{"v": 1}`),
+		}
+
+		_, err := WithTimestamps(input, now)
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("v at boundary 999 is valid", func(t *testing.T) {
+		input := AnalysisData{
+			"scanner": json.RawMessage(`{"v": 999}`),
+		}
+
+		_, err := WithTimestamps(input, now)
+
+		assert.NoError(t, err)
+	})
 }
