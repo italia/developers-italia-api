@@ -1,13 +1,11 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
 	"sort"
 
-	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/italia/developers-italia-api/internal/common"
@@ -24,10 +22,7 @@ type PublisherInterface interface {
 	DeletePublisher(ctx *fiber.Ctx) error
 }
 
-const (
-	alreadyExists        = "already exists"
-	contentTypeJSONPatch = "application/json-patch+json"
-)
+const alreadyExists = "already exists"
 
 type Publisher struct {
 	db *gorm.DB
@@ -159,7 +154,7 @@ func (p *Publisher) PostPublisher(ctx *fiber.Ctx) error {
 
 // PatchPublisher updates the publisher with the given ID.
 // Supports both JSON Merge Patch (default) and JSON Patch (application/json-patch+json).
-func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funlen,gocognit // mostly error handling ifs
+func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funlen
 	const errMsg = "can't update Publisher"
 
 	publisher := models.Publisher{}
@@ -175,47 +170,16 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
 	}
 
-	publisherJSON, err := json.Marshal(&publisher)
-	if err != nil {
-		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
-	}
-
-	var updatedJSON []byte
-
-	switch ctx.Get(fiber.HeaderContentType) {
-	case contentTypeJSONPatch:
-		patch, err := jsonpatch.DecodePatch(ctx.Body())
-		if err != nil {
-			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
-		}
-
-		if err := common.ValidateJSONPatch(patch); err != nil {
-			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
-		}
-
-		updatedJSON, err = patch.Apply(publisherJSON)
-		if err != nil {
-			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
-		}
-
-	// application/merge-patch+json by default
-	default:
-		publisherReq := new(common.PublisherPatch)
-
-		if err := common.ValidateRequestEntity(ctx, publisherReq, errMsg); err != nil {
+	contentType := ctx.Get(fiber.HeaderContentType)
+	if contentType != common.ContentTypeJSONPatch {
+		if err := common.ValidateRequestEntity(ctx, new(common.PublisherPatch), errMsg); err != nil {
 			return err //nolint:wrapcheck
 		}
-
-		updatedJSON, err = jsonpatch.MergePatch(publisherJSON, ctx.Body())
-		if err != nil {
-			return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
-		}
 	}
 
-	var updatedPublisher models.Publisher
-
-	if err := json.Unmarshal(updatedJSON, &updatedPublisher); err != nil {
-		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	updatedPublisher, patchErr := common.ApplyPatch(&publisher, contentType, ctx.Body())
+	if patchErr != nil {
+		return common.Error(patchErr.Code, errMsg, patchErr.Error())
 	}
 
 	// Prevent patches from changing the ID.

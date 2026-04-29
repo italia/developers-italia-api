@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"net/url"
 	"sort"
 
-	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/italia/developers-italia-api/internal/common"
@@ -147,7 +145,7 @@ func (c *Catalog) PostCatalog(ctx *fiber.Ctx) error {
 }
 
 // PatchCatalog updates the catalog with the given id.
-func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop,funlen
+func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
 	const errMsg = "can't update Catalog"
 
 	catalogID, _ := url.PathUnescape(ctx.Params("id"))
@@ -167,46 +165,16 @@ func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop,funlen
 		return common.Error(fiber.StatusInternalServerError, errMsg, fiber.ErrInternalServerError.Message)
 	}
 
-	catalogJSON, err := json.Marshal(&catalog)
-	if err != nil {
-		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
-	}
-
-	var updatedJSON []byte
-
-	switch ctx.Get(fiber.HeaderContentType) {
-	case contentTypeJSONPatch:
-		patch, err := jsonpatch.DecodePatch(ctx.Body())
-		if err != nil {
-			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
-		}
-
-		if err := common.ValidateJSONPatch(patch); err != nil {
-			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
-		}
-
-		updatedJSON, err = patch.Apply(catalogJSON)
-		if err != nil {
-			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
-		}
-
-	default:
-		catalogReq := new(common.CatalogPatch)
-
-		if err := common.ValidateRequestEntity(ctx, catalogReq, errMsg); err != nil {
+	contentType := ctx.Get(fiber.HeaderContentType)
+	if contentType != common.ContentTypeJSONPatch {
+		if err := common.ValidateRequestEntity(ctx, new(common.CatalogPatch), errMsg); err != nil {
 			return err //nolint:wrapcheck
 		}
-
-		updatedJSON, err = jsonpatch.MergePatch(catalogJSON, ctx.Body())
-		if err != nil {
-			return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
-		}
 	}
 
-	var updatedCatalog models.Catalog
-
-	if err := json.Unmarshal(updatedJSON, &updatedCatalog); err != nil {
-		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	updatedCatalog, patchErr := common.ApplyPatch(&catalog, contentType, ctx.Body())
+	if patchErr != nil {
+		return common.Error(patchErr.Code, errMsg, patchErr.Error())
 	}
 
 	updatedCatalog.ID = catalog.ID
@@ -467,49 +435,18 @@ func (c *Catalog) PatchCatalogPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,
 		return common.Error(fiber.StatusNotFound, errMsg, "Publisher was not found")
 	}
 
-	publisherJSON, err := json.Marshal(&publisher)
-	if err != nil {
-		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
-	}
-
-	var updatedJSON []byte
-
-	switch ctx.Get(fiber.HeaderContentType) {
-	case contentTypeJSONPatch:
-		patch, err := jsonpatch.DecodePatch(ctx.Body())
-		if err != nil {
-			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
-		}
-
-		if err := common.ValidateJSONPatch(patch); err != nil {
-			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
-		}
-
-		updatedJSON, err = patch.Apply(publisherJSON)
-		if err != nil {
-			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
-		}
-
-	default:
-		publisherReq := new(common.PublisherPatch)
-
-		if err := common.ValidateRequestEntity(ctx, publisherReq, errMsg); err != nil {
+	contentType := ctx.Get(fiber.HeaderContentType)
+	if contentType != common.ContentTypeJSONPatch {
+		if err := common.ValidateRequestEntity(ctx, new(common.PublisherPatch), errMsg); err != nil {
 			return err //nolint:wrapcheck
 		}
-
-		updatedJSON, err = jsonpatch.MergePatch(publisherJSON, ctx.Body())
-		if err != nil {
-			return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
-		}
 	}
 
-	var updatedPublisher models.Publisher
-
-	if err := json.Unmarshal(updatedJSON, &updatedPublisher); err != nil {
-		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	updatedPublisher, patchErr := common.ApplyPatch(&publisher, contentType, ctx.Body())
+	if patchErr != nil {
+		return common.Error(patchErr.Code, errMsg, patchErr.Error())
 	}
 
-	// Prevent patches from changing the ID or catalog assignment.
 	updatedPublisher.ID = publisher.ID
 	updatedPublisher.CatalogID = publisher.CatalogID
 
@@ -622,7 +559,7 @@ func (c *Catalog) PostCatalogSoftware(ctx *fiber.Ctx) error {
 }
 
 // PatchCatalogSoftware updates software that belongs to the given catalog.
-func (c *Catalog) PatchCatalogSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop,gocognit
+func (c *Catalog) PatchCatalogSoftware(ctx *fiber.Ctx) error { //nolint:funlen,cyclop
 	const errMsg = "can't update Software"
 
 	catalog, err := c.resolveCatalog(ctx.Params("id"))
@@ -653,48 +590,18 @@ func (c *Catalog) PatchCatalogSoftware(ctx *fiber.Ctx) error { //nolint:funlen,c
 		return common.Error(fiber.StatusNotFound, errMsg, "Software was not found")
 	}
 
-	softwareJSON, err := json.Marshal(&software)
-	if err != nil {
-		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
-	}
-
-	var updatedJSON []byte
-
-	switch ctx.Get(fiber.HeaderContentType) {
-	case contentTypeJSONPatch:
-		patch, err := jsonpatch.DecodePatch(ctx.Body())
-		if err != nil {
-			return common.Error(fiber.StatusBadRequest, errMsg, errMalformedJSONPatch.Error())
-		}
-
-		if err := common.ValidateJSONPatch(patch); err != nil {
-			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
-		}
-
-		updatedJSON, err = patch.Apply(softwareJSON)
-		if err != nil {
-			return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
-		}
-
-	default:
-		softwareReq := common.SoftwarePatch{}
-		if err := common.ValidateRequestEntity(ctx, &softwareReq, errMsg); err != nil {
+	contentType := ctx.Get(fiber.HeaderContentType)
+	if contentType != common.ContentTypeJSONPatch {
+		if err := common.ValidateRequestEntity(ctx, &common.SoftwarePatch{}, errMsg); err != nil {
 			return err //nolint:wrapcheck
 		}
-
-		updatedJSON, err = jsonpatch.MergePatch(softwareJSON, ctx.Body())
-		if err != nil {
-			return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
-		}
 	}
 
-	var updatedSoftware models.Software
-
-	if err := json.Unmarshal(updatedJSON, &updatedSoftware); err != nil {
-		return common.Error(fiber.StatusInternalServerError, errMsg, err.Error())
+	updatedSoftware, patchErr := common.ApplyPatch(&software, contentType, ctx.Body())
+	if patchErr != nil {
+		return common.Error(patchErr.Code, errMsg, patchErr.Error())
 	}
 
-	// Catalog assignment is immutable via patch; keep the value from the URL.
 	updatedSoftware.CatalogID = software.CatalogID
 
 	updatedSoftware.URL.URL = common.NormalizeURL(updatedSoftware.URL.URL)
