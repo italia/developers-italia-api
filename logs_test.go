@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLogsEndpoints(t *testing.T) {
@@ -73,13 +76,27 @@ func TestLogsEndpoints(t *testing.T) {
 				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDEwLTA4LTAxVDIzOjU5OjU5WiIsIjRiNGExYjljLTA0MmUtMTFlZC04MmE4LWQ4YmJjMTQ2ZDE2NSJd")
 			},
 		},
-		// TODO
-		// {
-		// 	description: "GET with invalid format for page[size] query param",
-		// 	query:    "GET /v1/logs?page[size]=NOT_AN_INT",
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/json",
-		// },
+		{
+			description:         "GET with invalid format for page[size] query param",
+			query:               "GET /v1/logs?page[size]=NOT_AN_INT",
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Logs`, response["title"])
+				assert.Equal(t, "page[size] must be an integer", response["detail"])
+			},
+		},
+		{
+			description:         "GET with page[size] bigger than the max of 100 caps the size",
+			query:               "GET /v1/logs?page[size]=200",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			setupFunc:           addLogsForPaginationCapTest,
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				items := assertListResponse(t, response)
+				assert.Equal(t, 100, len(items))
+			},
+		},
 		{
 			description: `GET with "page[after]" query param`,
 			query:       "GET /v1/logs?page[after]=WyIyMDEwLTA3LTAxVDIzOjU5OjU5WiIsIjg1MWZlMGY0LTA0MmUtMTFlZC05MzNlLWQ4YmJjMTQ2ZDE2NSJd",
@@ -311,4 +328,71 @@ func TestLogsEndpoints(t *testing.T) {
 	}
 
 	runTestCases(t, tests)
+}
+
+func addLogsForPaginationCapTest(t *testing.T) {
+	t.Helper()
+
+	query := fmt.Sprintf(
+		"INSERT INTO logs (id, message, created_at, updated_at) VALUES (%s, %s, %s, %s)",
+		placeholder(1),
+		placeholder(2),
+		placeholder(3),
+		placeholder(4),
+	)
+
+	for i := range 100 {
+		createdAt := time.Date(2011, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(i) * time.Second)
+		_, err := db.Exec(
+			query,
+			fmt.Sprintf("00000000-0000-0000-0000-%012d", i),
+			"Pagination cap test log",
+			createdAt,
+			createdAt,
+		)
+		require.NoError(t, err)
+	}
+}
+
+func TestLogsDBChecks(t *testing.T) {
+	t.Run("POST log persists changes to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		const message = "New log persisted by DB check"
+
+		req, err := newTestRequest("POST", "/v1/logs", strings.NewReader(`{"message":"`+message+`"}`))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, 1, dbCount(t, "logs", "message", message))
+	})
+
+	t.Run("PATCH log persists changes to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		const (
+			logID   = "4f95b0d0-042e-11ed-8253-d8bbc146d165"
+			message = "Updated log message from DB check"
+		)
+
+		req, err := newTestRequest("PATCH", "/v1/logs/"+logID, strings.NewReader(`{"message":"`+message+`"}`))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, message, dbValue(t, "logs", "message", "id", logID))
+	})
 }

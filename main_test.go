@@ -38,9 +38,10 @@ type TestCase struct {
 	description string
 
 	// Test input
-	query   string
-	body    string
-	headers map[string][]string
+	query     string
+	body      string
+	headers   map[string][]string
+	setupFunc func(t *testing.T)
 
 	// Expected output
 	expectedCode        int
@@ -126,6 +127,10 @@ func runTestCases(t *testing.T, tests []TestCase) {
 
 		t.Run(description, func(t *testing.T) {
 			loadFixtures(t)
+
+			if test.setupFunc != nil {
+				test.setupFunc(t)
+			}
 
 			query := strings.Split(test.query, " ")
 

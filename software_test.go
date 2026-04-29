@@ -183,22 +183,28 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDE0LTA1LTE2VDAwOjAwOjAwWiIsIjlmMTM1MjY4LWEzN2UtNGVhZC05NmVjLWU0YTI0YmI5MzQ0YSJd")
 			},
 		},
-		// TODO
-		// {
-		// 	description: "GET with invalid format for page[size] query param",
-		// 	query:    "GET /v1/software?page[size]=NOT_AN_INT",
+		{
+			description: "GET with invalid format for page[size] query param",
+			query:       "GET /v1/software?page[size]=NOT_AN_INT",
 
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/json",
-		// },
-		// TODO
-		// {
-		// 	description: "GET with page[size] bigger than the max of 100",
-		// 	query:    "GET /v1/software?page[size]=200",
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Software`, response["title"])
+				assert.Equal(t, "page[size] must be an integer", response["detail"])
+			},
+		},
+		{
+			description: "GET with page[size] bigger than the max of 100 caps the size",
+			query:       "GET /v1/software?page[size]=200",
 
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/json",
-		// },
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				items := assertListResponse(t, response)
+				assert.LessOrEqual(t, len(items), 100)
+			},
+		},
 		{
 			description: `GET with "page[after]" query param`,
 			query:       "GET /v1/software?page[after]=WyIyMDE1LTA0LTI2VDAwOjAwOjAwWiIsIjEyNDI4MGQ3LTc1NTItNGZmZS05MzlmLWY0NjY5N2NjMGU4YSJd",
@@ -1402,6 +1408,26 @@ func TestSoftwareEndpoints(t *testing.T) {
 }
 
 func TestSoftwarePostDBChecks(t *testing.T) {
+	t.Run("POST software persists changes to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `{"publiccodeYml":"persisted-publiccode","url":"https://www.software-dbcheck.example.org/","aliases":["https://www.alias-one.example.org/","https://alias-two.example.org"]}`
+		req, err := newTestRequest("POST", "/v1/software", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		softwareID := dbValue(t, "software_urls", "software_id", "url", "https://software-dbcheck.example.org")
+		assert.Equal(t, "persisted-publiccode", dbValue(t, "software", "publiccode_yml", "id", softwareID))
+		assert.Equal(t, 3, dbCount(t, "software_urls", "software_id", softwareID))
+	})
+
 	t.Run("POST software does not accept analysis field", func(t *testing.T) {
 		loadFixtures(t)
 

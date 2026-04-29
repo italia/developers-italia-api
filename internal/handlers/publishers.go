@@ -56,7 +56,10 @@ func (p *Publisher) GetPublishers(ctx *fiber.Ctx) error {
 		stmt = stmt.Scopes(models.Active)
 	}
 
-	paginator := general.NewPaginator(ctx)
+	paginator, err := general.NewPaginator(ctx)
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, "can't get Publishers", err.Error())
+	}
 
 	result, cursor, err := paginator.Paginate(stmt, &publishers)
 	if err != nil {
@@ -284,14 +287,20 @@ func (p *Publisher) PatchPublisher(ctx *fiber.Ctx) error { //nolint:cyclop,funle
 // DeletePublisher deletes the publisher with the given ID.
 func (p *Publisher) DeletePublisher(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
-	result := p.db.Select("CodeHosting").Where("id = ? or alternative_id = ?", id, id).Delete(&models.Publisher{})
 
-	if result.Error != nil {
+	publisher := models.Publisher{}
+	if err := p.db.First(&publisher, "id = ? or alternative_id = ?", id, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, "can't delete Publisher", "Publisher was not found")
+		}
+
 		return common.Error(fiber.StatusInternalServerError, "can't delete Publisher", "db error")
 	}
 
-	if result.RowsAffected == 0 {
-		return common.Error(fiber.StatusNotFound, "can't delete Publisher", "Publisher was not found")
+	result := p.db.Select("CodeHosting").Delete(&publisher)
+
+	if result.Error != nil {
+		return common.Error(fiber.StatusInternalServerError, "can't delete Publisher", "db error")
 	}
 
 	return ctx.SendStatus(fiber.StatusNoContent)
