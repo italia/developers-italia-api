@@ -855,4 +855,47 @@ func TestCatalogSourcesDBChecks(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 422, res.StatusCode)
 	})
+
+	t.Run("POST rejects source with more than 20 args", func(t *testing.T) {
+		loadFixtures(t)
+
+		var b strings.Builder
+		b.WriteString(`{"name":"Too Many Args","sources":[{"url":"https://example.org/repo","args":[`)
+		for i := range 21 {
+			if i > 0 {
+				b.WriteString(",")
+			}
+			fmt.Fprintf(&b, `"arg%d"`, i)
+		}
+		b.WriteString("]}]}")
+
+		req, err := newTestRequest("POST", "/v1/catalogs", strings.NewReader(b.String()))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 422, res.StatusCode)
+	})
+
+	t.Run("POST rejects source with arg longer than 2048 chars", func(t *testing.T) {
+		loadFixtures(t)
+
+		longArg := strings.Repeat("x", 2049)
+		body := fmt.Sprintf(`{"name":"Long Arg","sources":[{"url":"https://example.org/repo","args":[%q]}]}`, longArg)
+
+		req, err := newTestRequest("POST", "/v1/catalogs", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 422, res.StatusCode)
+	})
 }

@@ -20,7 +20,7 @@ func NormalizeURL(rawURL string) string {
 type SourceInput struct {
 	Driver *string  `json:"driver" validate:"omitempty,min=1,max=64"`
 	URL    string   `json:"url" validate:"required,url,max=2048"`
-	Args   []string `json:"args" validate:"omitempty,dive,min=1"`
+	Args   []string `json:"args" validate:"omitempty,min=1,max=20,dive,min=1,max=2048"`
 }
 
 type CatalogPost struct {
