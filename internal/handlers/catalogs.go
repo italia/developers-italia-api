@@ -125,6 +125,7 @@ func (c *Catalog) PostCatalog(ctx *fiber.Ctx) error {
 		Name:          request.Name,
 		AlternativeID: request.AlternativeID,
 		Active:        request.Active,
+		Scopes:        request.Scopes,
 		Sources:       sources,
 	}
 

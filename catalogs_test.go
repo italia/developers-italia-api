@@ -146,6 +146,49 @@ func TestCatalogEndpoints(t *testing.T) {
 			expectedContentType: "application/problem+json",
 			expectedBody:        `{"title":"token authentication failed","status":401}`,
 		},
+		{
+			description: "POST catalog with mixed scopes",
+			query:       "POST /v1/catalogs",
+			body:        `{"name": "EU Catalog", "scopes": ["m49:150", "iso3166:IT", "iso3166:IT-25"], "sources": [{"url": "https://github.com/example/eu"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t,
+					[]interface{}{"m49:150", "iso3166:IT", "iso3166:IT-25"},
+					response["scopes"],
+				)
+			},
+		},
+		{
+			description: "POST catalog with bare scope",
+			query:       "POST /v1/catalogs",
+			body:        `{"name": "Lombardia Catalog", "scopes": ["IT-25"], "sources": [{"url": "https://github.com/example/lombardia"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, []interface{}{"IT-25"}, response["scopes"])
+			},
+		},
+		{
+			description: "POST catalog with empty scope item",
+			query:       "POST /v1/catalogs",
+			body:        `{"name": "Bad", "scopes": [""], "sources": [{"url": "https://github.com/example/bad"}]}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Catalog","detail":"invalid format: scopes[0] does not meet its size limits (too short)","status":422,"validationErrors":[{"field":"scopes[0]","rule":"min","value":""}]}`,
+		},
 
 		// PATCH /catalogs/:id
 		{

@@ -2162,6 +2162,27 @@ components:
             each publiccode.yml organisation field equals
             this prefix + the publisher alternativeId.
           example: 'urn:x-italian-pa:'
+        scopes:
+          type: array
+          maxItems: 20
+          description: >
+            Optional list of identifiers of the places this catalog
+            covers. The conventional form is `<scheme>:<code>`, with
+            `iso3166` (country alpha-2 codes and subdivisions, e.g.
+            `IT`, `IT-25`) and `m49` (UN M.49 numeric codes) as
+            common schemes; a bare value is interpreted as `iso3166`.
+            The format is not enforced server side: any non-empty
+            string up to 64 characters is accepted. An empty or
+            absent list means the catalog is thematic and not tied
+            to a specific place.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+            example: 'iso3166:IT-25'
+          example:
+            - 'iso3166:IT'
+            - 'm49:150'
         sources:
           type: array
           minItems: 1
