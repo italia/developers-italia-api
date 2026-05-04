@@ -38,6 +38,7 @@ type Catalog struct {
 	AlternativeID       *string         `json:"alternativeId,omitempty" gorm:"uniqueIndex"`
 	Active              *bool           `json:"active" gorm:"default:true;not null"`
 	PublishersNamespace *string         `json:"publishersNamespace,omitempty"`
+	Scopes              []string        `json:"scopes,omitempty" gorm:"serializer:json"`
 	Sources             []CatalogSource `json:"sources" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	CreatedAt           time.Time       `json:"createdAt" gorm:"index"`
 	UpdatedAt           time.Time       `json:"updatedAt"`
