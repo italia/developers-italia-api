@@ -775,7 +775,7 @@ func TestPublishersEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't update Publisher","detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"url","value":"INVALID_URL"}]}`,
+			expectedBody:        `{"title":"can't update Publisher","detail":"invalid format: url is invalid","status":422,"validationErrors":[{"field":"url","rule":"http_url","value":"INVALID_URL"}]}`,
 		},
 		{
 			description: "PATCH publishers with empty body",
