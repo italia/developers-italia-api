@@ -58,7 +58,7 @@ type PublisherPatch struct {
 }
 
 type CodeHosting struct {
-	URL   string `json:"url" validate:"required,url"`
+	URL   string `json:"url" validate:"required,http_url,code_hosting_url"`
 	Group *bool  `json:"group"`
 }
 
