@@ -82,7 +82,7 @@ func init() {
 	}
 
 	// Setup the app as it is done in the main function
-	app = Setup()
+	app, _ = Setup()
 }
 
 func TestMain(m *testing.M) {

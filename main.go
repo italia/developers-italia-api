@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/ansrivas/fiberprometheus/v2"
@@ -29,9 +32,31 @@ func main() {
 		Use:          "developers-italia-api",
 		SilenceUsage: true,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			app := Setup()
+			app, debouncer := Setup()
 
-			return app.Listen(":3000")
+			sigCh := make(chan os.Signal, 1)
+			signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+			go func() {
+				<-sigCh
+
+				if err := app.Shutdown(); err != nil {
+					log.Printf("graceful shutdown failed: %s", err)
+				}
+			}()
+
+			err := app.Listen(":3000")
+
+			// Drain runs after Listen returns so any webhook event held
+			// in the debouncer's pending window is dispatched before the
+			// process exits.
+			debouncer.Drain()
+
+			if err != nil {
+				return fmt.Errorf("listen: %w", err)
+			}
+
+			return nil
 		},
 	}
 
@@ -42,7 +67,7 @@ func main() {
 	}
 }
 
-func Setup() *fiber.App {
+func Setup() (*fiber.App, *webhooks.Debouncer) {
 	if err := env.Parse(&common.EnvironmentConfig); err != nil {
 		panic(err)
 	}
@@ -57,11 +82,19 @@ func Setup() *fiber.App {
 	//
 	// It dispatches the webhooks related to the event that occurred
 	// (es. Publisher creation, Software delete, etc.)
-	go func() {
-		for event := range models.EventChan {
+	debouncer := webhooks.NewDebouncer(
+		time.Duration(common.EnvironmentConfig.WebhookDebounceMS)*time.Millisecond,
+		time.Duration(common.EnvironmentConfig.WebhookDebounceMaxMS)*time.Millisecond,
+		func(event models.Event) {
 			if err := webhooks.DispatchWebhooks(event, gormDB); err != nil {
 				log.Println(err)
 			}
+		},
+	)
+
+	go func() {
+		for event := range models.EventChan {
+			debouncer.Submit(event)
 		}
 	}()
 
@@ -119,7 +152,7 @@ func Setup() *fiber.App {
 
 	setupHandlers(app, gormDB)
 
-	return app
+	return app, debouncer
 }
 
 func setupHandlers(app *fiber.App, gormDB *gorm.DB) { //nolint:funlen

@@ -14,6 +14,16 @@ type Environment struct {
 	CurrentEnvironment string     `env:"ENVIRONMENT" envDefault:"production"`
 	Database           string     `env:"DATABASE_DSN"`
 	PasetoKey          *Base64Key `env:"PASETO_KEY"`
+
+	// WebhookDebounceMS is the delay in milliseconds before a
+	// webhook is dispatched after the last write. Set to 0 to disable
+	// debouncing entirely. Note: debouncing is per replica.
+	WebhookDebounceMS int `env:"WEBHOOK_DEBOUNCE_MS" envDefault:"1000"`
+
+	// WebhookDebounceMaxMS is the hard cap in milliseconds on how long a
+	// webhook can be deferred by repeated resets of the debounce timer.
+	// Set to 0 to disable the cap. Ignored when WebhookDebounceMS is 0.
+	WebhookDebounceMaxMS int `env:"WEBHOOK_DEBOUNCE_MAX_MS" envDefault:"10000"`
 }
 
 func (k *Base64Key) UnmarshalText(text []byte) error {
