@@ -31,9 +31,8 @@ func ErrorWithValidationErrors(
 func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 	var problemJSON *ProblemJSONError
 
-	// Retrieve the custom status code if it's a fiber.*Error
 	var e *fiber.Error
-	if errors.Is(err, e) {
+	if errors.As(err, &e) {
 		problemJSON = &ProblemJSONError{Status: e.Code, Title: e.Message}
 	}
 
