@@ -2557,11 +2557,11 @@ components:
           description: URL where the webhook payload will be delivered to
         secret:
           type: string
-          maxLength: 255
-          pattern: '.*'
+          minLength: 16
+          maxLength: 256
           description: |
             Secret used to authenticate to the webhook endpoint
-          example: 'my-secret-token'
+          example: 'my-secret-token-16c'
         createdAt:
           type: string
           description: The time the webhook was created (RFC 3339 datetime)
