@@ -8,12 +8,27 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/italia/developers-italia-api/internal/models"
 	"gorm.io/gorm"
 )
+
+// dispatchTimeout caps the per-request webhook dispatch. It is a var (not
+// const) so tests can shorten it without sleeping for whole seconds.
+//
+//nolint:gochecknoglobals // tunable for tests, effectively const at runtime
+var dispatchTimeout = 10 * time.Second
+
+// httpClient is shared across dispatches so the underlying http.Transport
+// can reuse TCP and TLS connections to the same subscriber. The per-request
+// deadline is enforced via the request context, not via Client.Timeout.
+//
+//nolint:gochecknoglobals // singleton needed for connection pool reuse
+var httpClient = &http.Client{}
 
 func DispatchWebhooks(event models.Event, gorm *gorm.DB) error {
 	var webhooks []models.Webhook
@@ -63,10 +78,11 @@ func DispatchWebhooks(event models.Event, gorm *gorm.DB) error {
 }
 
 func post(url string, body []byte, signature string) {
-	client := http.DefaultClient
+	ctx, cancel := context.WithTimeout(context.Background(), dispatchTimeout)
+	defer cancel()
 
 	req, err := http.NewRequestWithContext(
-		context.Background(),
+		ctx,
 		http.MethodPost,
 		url,
 		bytes.NewReader(body),
@@ -82,7 +98,7 @@ func post(url string, body []byte, signature string) {
 		req.Header.Set("X-Webhook-Signature", signature)
 	}
 
-	response, err := client.Do(req)
+	response, err := httpClient.Do(req)
 	if err != nil {
 		//nolint:godox // need to implement this in the future
 		// TODO: Replace this and send anonymous failure metrics to a monitoring
@@ -93,6 +109,13 @@ func post(url string, body []byte, signature string) {
 		return
 	}
 
+	// Drain and close so the connection can return to the pool, regardless
+	// of whether the response is 2xx or an error status below.
+	defer func() {
+		_, _ = io.Copy(io.Discard, response.Body)
+		_ = response.Body.Close()
+	}()
+
 	if response.StatusCode < 200 || response.StatusCode > 299 {
 		//nolint:godox // need to implement this in the future
 		// TODO: Replace this and send anonymous failure metrics to a monitoring
@@ -102,6 +125,4 @@ func post(url string, body []byte, signature string) {
 
 		return
 	}
-
-	defer response.Body.Close()
 }
