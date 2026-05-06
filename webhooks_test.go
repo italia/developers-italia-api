@@ -8,6 +8,36 @@ import (
 
 func TestWebhooksEndpoints(t *testing.T) {
 	tests := []TestCase{
+		// POST /software/webhooks
+		{
+			description: "POST webhook with too-short secret returns 422",
+			query:       "POST /v1/software/webhooks",
+			body:        `{"url": "https://example.org/receiver", "secret": "tooshort"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't create Webhook", response["title"])
+			},
+		},
+		{
+			description: "POST webhook with valid 16-char secret returns 201",
+			query:       "POST /v1/software/webhooks",
+			body:        `{"url": "https://example.org/receiver", "secret": "1234567890abcdef"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assertUUID(t, response["id"])
+				assert.Equal(t, "https://example.org/receiver", response["url"])
+			},
+		},
 		// GET /webhooks/:id
 		{
 			query:               "GET /v1/webhooks/007bc84a-7e2d-43a0-b7e1-a256d4114aa7",

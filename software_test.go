@@ -1351,7 +1351,7 @@ func TestSoftwareEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/software/c5dec6fa-8a01-4881-9e7d-132770d4214d/webhooks",
-			body:  `{"url": "https://new.example.org", "secret": "xyz"}`,
+			body:  `{"url": "https://new.example.org", "secret": "1234567890abcdef"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},

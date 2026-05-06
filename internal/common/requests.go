@@ -84,7 +84,7 @@ type Log struct {
 
 type Webhook struct {
 	URL    string `json:"url" validate:"required,url"`
-	Secret string `json:"secret"`
+	Secret string `json:"secret" validate:"omitempty,min=16,max=256"`
 }
 
 func NormalizeEmail(email *string) *string {

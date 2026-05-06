@@ -969,7 +969,7 @@ func TestPublishersEndpoints(t *testing.T) {
 		},
 		{
 			query: "POST /v1/publishers/98a069f7-57b0-464d-b300-4b4b336297a0/webhooks",
-			body:  `{"url": "https://new.example.org", "secret": "xyz"}`,
+			body:  `{"url": "https://new.example.org", "secret": "1234567890abcdef"}`,
 			headers: map[string][]string{
 				"Authorization": {goodToken},
 				"Content-Type":  {"application/json"},
