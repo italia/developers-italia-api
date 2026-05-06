@@ -59,10 +59,10 @@ func DispatchWebhooks(event models.Event, gorm *gorm.DB) error {
 		return fmt.Errorf("error marshaling event JSON for %s: %w", subject, err)
 	}
 
-	signature := ""
-
 	for _, webhook := range webhooks {
-		if webhook.Secret != "" && signature == "" {
+		signature := ""
+
+		if webhook.Secret != "" {
 			h := hmac.New(sha256.New, []byte(webhook.Secret))
 
 			// This can't fail
