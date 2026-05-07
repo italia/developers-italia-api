@@ -98,7 +98,7 @@ func runTokenCreate(cmd *cobra.Command, _ []string) error {
 	fmt.Fprintf(os.Stderr, "claims:\n%s\n\n", payloadJSON)
 	fmt.Fprintf(os.Stderr, "token:\n")
 
-	fmt.Println(token)
+	fmt.Fprintln(os.Stdout, token)
 
 	fmt.Fprint(os.Stderr, "\npermissions:\n"+
 		"   - software:    create, update, delete\n"+
