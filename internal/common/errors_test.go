@@ -32,7 +32,8 @@ func TestCustomErrorHandler_FiberError(t *testing.T) {
 	var body ProblemJSONError
 	require.NoError(t, json.NewDecoder(res.Body).Decode(&body))
 
-	assert.Equal(t, "bad input", body.Title)
+	assert.Equal(t, http.StatusText(fiber.StatusBadRequest), body.Title)
+	assert.Equal(t, "bad input", body.Detail)
 	assert.Equal(t, fiber.StatusBadRequest, body.Status)
 }
 

@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -33,7 +34,7 @@ func CustomErrorHandler(ctx *fiber.Ctx, err error) error {
 
 	var e *fiber.Error
 	if errors.As(err, &e) {
-		problemJSON = &ProblemJSONError{Status: e.Code, Title: e.Message}
+		problemJSON = &ProblemJSONError{Status: e.Code, Title: http.StatusText(e.Code), Detail: e.Message}
 	}
 
 	if errors.Is(err, ErrAuthentication) {
