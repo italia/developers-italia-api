@@ -2146,6 +2146,11 @@ components:
           description: >
             Optional alternative user-provided identifier for this Catalog.
             If present, you can use it in place of the Catalog `id` as a path argument.
+            The reserved value `∅` (U+2205, URL-encoded `%E2%88%85`) materializes
+            the implicit root catalog: the row holds the configuration
+            (publishersNamespace, name, scopes, active) but its resources keep
+            being addressed via `catalog_id IS NULL`. Once set to `∅` it cannot
+            be changed via PATCH, and `sources` are not allowed.
           maxLength: 255
           example: 'example-catalog'
         active:
@@ -2185,11 +2190,11 @@ components:
             - 'm49:150'
         sources:
           type: array
-          minItems: 1
           maxItems: 100
           description: >
-            Data sources for this catalog. At least one is
-            required on creation.
+            Data sources for this catalog. At least one is required on
+            creation, except for the root catalog (alternativeId `∅`)
+            where sources are not allowed.
           example:
             - url: 'https://github.com/example-org'
               driver: 'github'

@@ -29,7 +29,7 @@ type CatalogPost struct {
 	Active              *bool         `json:"active"`
 	PublishersNamespace *string       `json:"publishersNamespace" validate:"omitempty,max=255"`
 	Scopes              []string      `json:"scopes" validate:"omitempty,max=20,dive,min=1,max=64"`
-	Sources             []SourceInput `json:"sources" validate:"required,gt=0,max=100,dive"`
+	Sources             []SourceInput `json:"sources" validate:"omitempty,max=100,dive"`
 }
 
 type CatalogPatch struct {
