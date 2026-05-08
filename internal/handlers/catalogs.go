@@ -121,6 +121,10 @@ func (c *Catalog) GetCatalog(ctx *fiber.Ctx) error {
 }
 
 // PostCatalog creates a new catalog.
+// When alternativeId is "∅" the new row materializes the root catalog: it
+// holds the configuration (sources are not allowed; resources are still
+// addressed via catalog_id IS NULL). For any other catalog at least one
+// source is required.
 func (c *Catalog) PostCatalog(ctx *fiber.Ctx) error {
 	const errMsg = "can't create Catalog"
 
@@ -130,15 +134,27 @@ func (c *Catalog) PostCatalog(ctx *fiber.Ctx) error {
 		return err //nolint:wrapcheck
 	}
 
+	asRoot := request.AlternativeID != nil && *request.AlternativeID == rootCatalogID
+
+	if asRoot && len(request.Sources) > 0 {
+		return common.Error(fiber.StatusUnprocessableEntity, errMsg,
+			"sources are not allowed on the root catalog")
+	}
+
+	if !asRoot && len(request.Sources) == 0 {
+		return common.Error(fiber.StatusUnprocessableEntity, errMsg, "sources is required")
+	}
+
 	sources := buildSources(request.Sources)
 
 	catalog := &models.Catalog{
-		ID:            utils.UUIDv4(),
-		Name:          request.Name,
-		AlternativeID: request.AlternativeID,
-		Active:        request.Active,
-		Scopes:        request.Scopes,
-		Sources:       sources,
+		ID:                  utils.UUIDv4(),
+		Name:                request.Name,
+		AlternativeID:       request.AlternativeID,
+		Active:              request.Active,
+		Scopes:              request.Scopes,
+		PublishersNamespace: request.PublishersNamespace,
+		Sources:             sources,
 	}
 
 	if err := c.db.Create(catalog).Error; err != nil {
@@ -158,14 +174,10 @@ func (c *Catalog) PostCatalog(ctx *fiber.Ctx) error {
 }
 
 // PatchCatalog updates the catalog with the given id.
-func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
+func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop,funlen
 	const errMsg = "can't update Catalog"
 
 	catalogID, _ := url.PathUnescape(ctx.Params("id"))
-
-	if catalogID == rootCatalogID {
-		return common.Error(fiber.StatusNotFound, errMsg, "Catalog was not found")
-	}
 
 	resolved, err := resolveCatalog(c.db, catalogID, "Sources")
 	if err != nil {
@@ -196,6 +208,13 @@ func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
 
 	updatedCatalog.ID = catalog.ID
 
+	if isRoot(&catalog) {
+		if updatedCatalog.AlternativeID == nil || *updatedCatalog.AlternativeID != rootCatalogID {
+			return common.Error(fiber.StatusUnprocessableEntity, errMsg,
+				"alternativeId on the root catalog cannot be changed")
+		}
+	}
+
 	sourcesInput := make([]common.SourceInput, 0, len(updatedCatalog.Sources))
 	for _, src := range updatedCatalog.Sources {
 		sourcesInput = append(sourcesInput, common.SourceInput{
@@ -205,7 +224,12 @@ func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
 		})
 	}
 
-	if len(sourcesInput) == 0 {
+	if isRoot(&catalog) {
+		if len(sourcesInput) > 0 {
+			return common.Error(fiber.StatusUnprocessableEntity, errMsg,
+				"sources are not allowed on the root catalog")
+		}
+	} else if len(sourcesInput) == 0 {
 		return common.Error(fiber.StatusUnprocessableEntity, errMsg, "sources must not be empty")
 	}
 
@@ -242,14 +266,12 @@ func (c *Catalog) PatchCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
 
 // DeleteCatalog deletes the catalog with the given id.
 // Returns 409 if the catalog still has associated publishers or software.
+// On the root (∅) the count of attached resources is taken from rows with
+// catalog_id IS NULL, since root resources are never tied to the row's UUID.
 func (c *Catalog) DeleteCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
 	const errMsg = "can't delete Catalog"
 
 	catalogID, _ := url.PathUnescape(ctx.Params("id"))
-
-	if catalogID == rootCatalogID {
-		return common.Error(fiber.StatusNotFound, errMsg, "Catalog was not found")
-	}
 
 	resolved, err := resolveCatalog(c.db, catalogID)
 	if err != nil {
@@ -271,12 +293,13 @@ func (c *Catalog) DeleteCatalog(ctx *fiber.Ctx) error { //nolint:cyclop
 	if err := c.db.Transaction(func(tran *gorm.DB) error {
 		var publisherCount, softwareCount int64
 
-		if err := tran.Model(&models.Publisher{}).
-			Where("catalog_id = ?", catalog.ID).Count(&publisherCount).Error; err != nil {
+		pubScope := tran.Model(&models.Publisher{}).Scopes(catalogScope(&catalog))
+		if err := pubScope.Count(&publisherCount).Error; err != nil {
 			return err
 		}
 
-		if err := tran.Model(&models.Software{}).Where("catalog_id = ?", catalog.ID).Count(&softwareCount).Error; err != nil {
+		swScope := tran.Model(&models.Software{}).Scopes(catalogScope(&catalog))
+		if err := swScope.Count(&softwareCount).Error; err != nil {
 			return err
 		}
 

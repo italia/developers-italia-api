@@ -136,7 +136,19 @@ func TestCatalogEndpoints(t *testing.T) {
 			},
 			expectedCode:        422,
 			expectedContentType: "application/problem+json",
-			expectedBody:        `{"title":"can't create Catalog","detail":"invalid format: name is required, sources is required","status":422,"validationErrors":[{"field":"name","rule":"required","value":""},{"field":"sources","rule":"required","value":""}]}`,
+			expectedBody:        `{"title":"can't create Catalog","detail":"invalid format: name is required","status":422,"validationErrors":[{"field":"name","rule":"required","value":""}]}`,
+		},
+		{
+			description: "POST catalog missing sources",
+			query:       "POST /v1/catalogs",
+			body:        `{"name": "Catalog without sources"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Catalog","detail":"sources is required","status":422}`,
 		},
 		{
 			description:         "POST catalog - no token",
@@ -940,5 +952,166 @@ func TestCatalogSourcesDBChecks(t *testing.T) {
 		res, err := app.Test(req, -1)
 		require.NoError(t, err)
 		assert.Equal(t, 422, res.StatusCode)
+	})
+}
+
+func TestRootCatalogMaterialize(t *testing.T) {
+	post := func(t *testing.T, path, body string) (int, map[string]interface{}) {
+		t.Helper()
+
+		req, err := newTestRequest("POST", path, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+
+		var resp map[string]interface{}
+		if res.StatusCode == 200 {
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&resp))
+		}
+
+		return res.StatusCode, resp
+	}
+
+	patch := func(t *testing.T, path, body string) (int, map[string]interface{}) {
+		t.Helper()
+
+		req, err := newTestRequest("PATCH", path, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+
+		var resp map[string]interface{}
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&resp))
+
+		return res.StatusCode, resp
+	}
+
+	del := func(t *testing.T, path string) int {
+		t.Helper()
+
+		req, err := newTestRequest("DELETE", path, nil)
+		require.NoError(t, err)
+		req.Header = map[string][]string{"Authorization": {goodToken}}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+
+		return res.StatusCode
+	}
+
+	t.Run("POST root with sources rejected", func(t *testing.T) {
+		loadFixtures(t)
+
+		status, _ := post(t, "/v1/catalogs",
+			`{"name":"Root","alternativeId":"∅","sources":[{"url":"https://x"}]}`)
+		assert.Equal(t, 422, status)
+	})
+
+	t.Run("POST root persists publishersNamespace", func(t *testing.T) {
+		loadFixtures(t)
+
+		status, resp := post(t, "/v1/catalogs",
+			`{"name":"Root","alternativeId":"∅","publishersNamespace":"urn:x-italian-pa:"}`)
+		require.Equal(t, 200, status)
+		assert.Equal(t, "urn:x-italian-pa:", resp["publishersNamespace"])
+		assert.Equal(t, "∅", resp["alternativeId"])
+		assertUUID(t, resp["id"])
+	})
+
+	t.Run("POST duplicate root returns 409", func(t *testing.T) {
+		loadFixtures(t)
+
+		status, _ := post(t, "/v1/catalogs", `{"name":"Root","alternativeId":"∅"}`)
+		require.Equal(t, 200, status)
+
+		status, _ = post(t, "/v1/catalogs", `{"name":"Other","alternativeId":"∅"}`)
+		assert.Equal(t, 409, status)
+	})
+
+	t.Run("PATCH root not materialized returns 404", func(t *testing.T) {
+		loadFixtures(t)
+
+		status, _ := patch(t, "/v1/catalogs/%E2%88%85", `{"name":"Renamed"}`)
+		assert.Equal(t, 404, status)
+	})
+
+	t.Run("PATCH root updates name", func(t *testing.T) {
+		loadFixtures(t)
+
+		status, _ := post(t, "/v1/catalogs", `{"name":"Root","alternativeId":"∅"}`)
+		require.Equal(t, 200, status)
+
+		status, resp := patch(t, "/v1/catalogs/%E2%88%85", `{"name":"Renamed Root"}`)
+		require.Equal(t, 200, status)
+		assert.Equal(t, "Renamed Root", resp["name"])
+		assert.Equal(t, "∅", resp["alternativeId"])
+	})
+
+	t.Run("PATCH root rejects alternativeId change", func(t *testing.T) {
+		loadFixtures(t)
+
+		status, _ := post(t, "/v1/catalogs", `{"name":"Root","alternativeId":"∅"}`)
+		require.Equal(t, 200, status)
+
+		status, resp := patch(t, "/v1/catalogs/%E2%88%85", `{"alternativeId":"renamed"}`)
+		assert.Equal(t, 422, status)
+		assert.Equal(t, "alternativeId on the root catalog cannot be changed", resp["detail"])
+	})
+
+	t.Run("PATCH root rejects sources", func(t *testing.T) {
+		loadFixtures(t)
+
+		status, _ := post(t, "/v1/catalogs", `{"name":"Root","alternativeId":"∅"}`)
+		require.Equal(t, 200, status)
+
+		status, resp := patch(t, "/v1/catalogs/%E2%88%85", `{"sources":[{"url":"https://x"}]}`)
+		assert.Equal(t, 422, status)
+		assert.Equal(t, "sources are not allowed on the root catalog", resp["detail"])
+	})
+
+	t.Run("DELETE root not materialized returns 404", func(t *testing.T) {
+		loadFixtures(t)
+
+		assert.Equal(t, 404, del(t, "/v1/catalogs/%E2%88%85"))
+	})
+
+	t.Run("DELETE root with attached resources returns 409", func(t *testing.T) {
+		loadFixtures(t)
+
+		status, _ := post(t, "/v1/catalogs", `{"name":"Root","alternativeId":"∅"}`)
+		require.Equal(t, 200, status)
+
+		assert.Equal(t, 409, del(t, "/v1/catalogs/%E2%88%85"))
+	})
+
+	t.Run("GET root publishers visible after materialization", func(t *testing.T) {
+		loadFixtures(t)
+
+		status, _ := post(t, "/v1/catalogs", `{"name":"Root","alternativeId":"∅"}`)
+		require.Equal(t, 200, status)
+
+		req, err := newTestRequest("GET", "/v1/catalogs/%E2%88%85/publishers?all=true", nil)
+		require.NoError(t, err)
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		var resp map[string]interface{}
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&resp))
+
+		data, ok := resp["data"].([]interface{})
+		require.True(t, ok, "expected data slice")
+		assert.NotEmpty(t, data, "root publishers (catalog_id IS NULL) should still be visible")
 	})
 }
