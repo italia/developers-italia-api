@@ -204,8 +204,8 @@ func (p *Log) PostCatalogLog(ctx *fiber.Ctx) error {
 
 	logReq := new(common.Log)
 
-	catalog := models.Catalog{}
-	if err := p.db.First(&catalog, "id = ? OR alternative_id = ?", ctx.Params("id"), ctx.Params("id")).Error; err != nil {
+	catalog, err := resolveCatalog(p.db, ctx.Params("id"))
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return common.Error(fiber.StatusNotFound, "can't create Log", "Catalog was not found")
 		}
@@ -223,10 +223,15 @@ func (p *Log) PostCatalogLog(ctx *fiber.Ctx) error {
 
 	table := models.Catalog{}.TableName()
 
+	var entityID *string
+	if !isRoot(catalog) {
+		entityID = &catalog.ID
+	}
+
 	log := models.Log{
 		ID:         utils.UUIDv4(),
 		Message:    logReq.Message,
-		EntityID:   &catalog.ID,
+		EntityID:   entityID,
 		EntityType: &table,
 	}
 

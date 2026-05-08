@@ -326,6 +326,52 @@ func TestLogsEndpoints(t *testing.T) {
 				assert.Equal(t, "invalid or malformed JSON", response["detail"])
 			},
 		},
+
+		// POST /catalogs/:id/logs
+		{
+			description: "POST catalog log - existing catalog by alternativeId",
+			query:       "POST /v1/catalogs/italia/logs",
+			body:        `{"message": "log scoped to italia catalog"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "log scoped to italia catalog", response["message"])
+				assertUUID(t, response["id"])
+				assertTimestamps(t, response)
+			},
+		},
+		{
+			description: "POST catalog log - root catalog (∅) succeeds with null entity",
+			query:       "POST /v1/catalogs/%E2%88%85/logs",
+			body:        `{"message": "log on the implicit root catalog"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "log on the implicit root catalog", response["message"])
+				assertUUID(t, response["id"])
+				assertTimestamps(t, response)
+			},
+		},
+		{
+			description: "POST catalog log - non-existing catalog returns 404",
+			query:       "POST /v1/catalogs/00000000-0000-0000-0000-000000000000/logs",
+			body:        `{"message": "should not happen"}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/json"},
+			},
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"can't create Log","detail":"Catalog was not found","status":404}`,
+		},
 	}
 
 	runTestCases(t, tests)
