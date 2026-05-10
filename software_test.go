@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -183,22 +184,29 @@ func TestSoftwareEndpoints(t *testing.T) {
 				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDE0LTA1LTE2VDAwOjAwOjAwWiIsIjlmMTM1MjY4LWEzN2UtNGVhZC05NmVjLWU0YTI0YmI5MzQ0YSJd&page[size]=2")
 			},
 		},
-		// TODO
-		// {
-		// 	description: "GET with invalid format for page[size] query param",
-		// 	query:    "GET /v1/software?page[size]=NOT_AN_INT",
+		{
+			description: "GET with invalid format for page[size] query param",
+			query:       "GET /v1/software?page[size]=NOT_AN_INT",
 
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/json",
-		// },
-		// TODO
-		// {
-		// 	description: "GET with page[size] bigger than the max of 100",
-		// 	query:    "GET /v1/software?page[size]=200",
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Software`, response["title"])
+				assert.Equal(t, "page[size] must be an integer", response["detail"])
+			},
+		},
+		{
+			description: "GET with page[size] bigger than the max of 100 caps the size",
+			query:       "GET /v1/software?page[size]=200",
 
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/json",
-		// },
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			setupFunc:           addSoftwareForPaginationCapTest,
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				items := assertListResponse(t, response)
+				assert.Equal(t, 100, len(items))
+			},
+		},
 		{
 			description: `GET with "page[after]" query param`,
 			query:       "GET /v1/software?page[after]=WyIyMDE1LTA0LTI2VDAwOjAwOjAwWiIsIjEyNDI4MGQ3LTc1NTItNGZmZS05MzlmLWY0NjY5N2NjMGU4YSJd",
@@ -1453,6 +1461,26 @@ func TestSoftwareEndpoints(t *testing.T) {
 }
 
 func TestSoftwarePostDBChecks(t *testing.T) {
+	t.Run("POST software persists changes to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `{"publiccodeYml":"persisted-publiccode","url":"https://www.software-dbcheck.example.org/","aliases":["https://www.alias-one.example.org/","https://alias-two.example.org"]}`
+		req, err := newTestRequest("POST", "/v1/software", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		softwareID := dbValue(t, "software_urls", "software_id", "url", "https://software-dbcheck.example.org")
+		assert.Equal(t, "persisted-publiccode", dbValue(t, "software", "publiccode_yml", "id", softwareID))
+		assert.Equal(t, 3, dbCount(t, "software_urls", "software_id", softwareID))
+	})
+
 	t.Run("POST software does not accept analysis field", func(t *testing.T) {
 		loadFixtures(t)
 
@@ -1641,5 +1669,49 @@ func TestSoftwareDeleteDBChecks(t *testing.T) {
 		assert.Equal(t, 204, res.StatusCode)
 
 		assert.Equal(t, 0, dbCount(t, "software_urls", "software_id", softwareID))
+	})
+}
+
+func addSoftwareForPaginationCapTest(t *testing.T) {
+	t.Helper()
+
+	const (
+		insertCount = 110
+		urlPrefix   = "https://cap-test.example.org/repo-"
+	)
+
+	swQuery := fmt.Sprintf(
+		"INSERT INTO software (id, software_url_id, publiccode_yml, active, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s)",
+		placeholder(1),
+		placeholder(2),
+		placeholder(3),
+		placeholder(4),
+		placeholder(5),
+		placeholder(6),
+	)
+	urlQuery := fmt.Sprintf(
+		"INSERT INTO software_urls (id, url, software_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s)",
+		placeholder(1),
+		placeholder(2),
+		placeholder(3),
+		placeholder(4),
+		placeholder(5),
+	)
+
+	for i := range insertCount {
+		swID := fmt.Sprintf("11111111-1111-1111-1111-%012d", i)
+		urlID := fmt.Sprintf("22222222-2222-2222-2222-%012d", i)
+		createdAt := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(i) * time.Second)
+
+		_, err := db.Exec(swQuery, swID, urlID, "-", true, createdAt, createdAt)
+		require.NoError(t, err)
+
+		_, err = db.Exec(urlQuery, urlID, fmt.Sprintf("%s%d", urlPrefix, i), swID, createdAt, createdAt)
+		require.NoError(t, err)
+	}
+
+	t.Cleanup(func() {
+		_, _ = db.Exec("DELETE FROM software_urls WHERE url LIKE "+placeholder(1), urlPrefix+"%")
+		_, _ = db.Exec("DELETE FROM software WHERE id LIKE "+placeholder(1), "11111111-1111-1111-1111-%")
 	})
 }

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -97,22 +99,29 @@ func TestPublishersEndpoints(t *testing.T) {
 				assertPaginationLinks(t, response, nil, "?page[after]=WyIyMDE4LTA1LTE2VDAwOjAwOjAwWiIsIjQ3ODA3ZTBjLTA2MTMtNGFlYS05OTE3LTU0NTVjYzZlZGRhZCJd&page[size]=2")
 			},
 		},
-		// TODO
-		// {
-		// 	description: "GET with invalid format for page[size] query param",
-		// 	query:    "GET /v1/publishers?page[size]=NOT_AN_INT",
+		{
+			description: "GET with invalid format for page[size] query param",
+			query:       "GET /v1/publishers?page[size]=NOT_AN_INT",
 
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/json",
-		// },
-		// TODO
-		// {
-		// 	description: "GET with page[size] bigger than the max of 100",
-		// 	query:    "GET /v1/publishers?page[size]=200",
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, `can't get Publishers`, response["title"])
+				assert.Equal(t, "page[size] must be an integer", response["detail"])
+			},
+		},
+		{
+			description: "GET with page[size] bigger than the max of 100 caps the size",
+			query:       "GET /v1/publishers?page[size]=200",
 
-		// 	expectedCode:        422,
-		// 	expectedContentType: "application/json",
-		// },
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			setupFunc:           addPublishersForPaginationCapTest,
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				items := assertListResponse(t, response)
+				assert.Equal(t, 100, len(items))
+			},
+		},
 		{
 			description: `GET with "page[after]" query param`,
 			query:       "GET /v1/publishers?page[after]=WyIyMDE4LTExLTI3VDAwOjAwOjAwWiIsIjgxZmRhN2M0LTZiYmYtNDM4Ny04Zjg5LTI1OGMxZTZmYWZhMiJd",
@@ -1084,6 +1093,31 @@ func TestPublishersEndpoints(t *testing.T) {
 	runTestCases(t, tests)
 }
 
+func TestPublishersPostDBChecks(t *testing.T) {
+	t.Run("POST publisher persists normalized fields to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		const description = "publisher persisted from db check"
+
+		body := `{"description":"` + description + `","codeHosting":[{"url":"https://www.publisher-dbcheck.example.org/repo/"}],"email":"Publisher-DB@Example.ORG"}`
+		req, err := newTestRequest("POST", "/v1/publishers", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		publisherID := dbValue(t, "publishers", "id", "description", description)
+		assert.Equal(t, "publisher-db@example.org", dbValue(t, "publishers", "email", "id", publisherID))
+		assert.Equal(t, publisherID, dbValue(t, "publishers_code_hosting", "publisher_id", "url", "https://publisher-dbcheck.example.org/repo"))
+		assert.Equal(t, 1, dbCount(t, "publishers_code_hosting", "publisher_id", publisherID))
+	})
+}
+
 func TestPublishersPatchDBChecks(t *testing.T) {
 	t.Run("PATCH publisher persists changes to DB", func(t *testing.T) {
 		loadFixtures(t)
@@ -1114,9 +1148,6 @@ func TestPublishersPatchDBChecks(t *testing.T) {
 
 func TestPublishersDeleteDBChecks(t *testing.T) {
 	t.Run("DELETE publisher removes code hosting rows", func(t *testing.T) {
-		// TODO: make this pass
-		t.Skip("publishers_code_hosting rows are not deleted on publisher DELETE (implementation bug)")
-
 		loadFixtures(t)
 
 		const publisherID = "15fda7c4-6bbf-4387-8f89-258c1e6fafb1"
@@ -1135,5 +1166,42 @@ func TestPublishersDeleteDBChecks(t *testing.T) {
 		assert.Equal(t, 204, res.StatusCode)
 
 		assert.Equal(t, 0, dbCount(t, "publishers_code_hosting", "publisher_id", publisherID))
+	})
+}
+
+func addPublishersForPaginationCapTest(t *testing.T) {
+	t.Helper()
+
+	const (
+		insertCount       = 110
+		descriptionPrefix = "Pagination cap test publisher "
+	)
+
+	query := fmt.Sprintf(
+		"INSERT INTO publishers (id, description, email, active, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s)",
+		placeholder(1),
+		placeholder(2),
+		placeholder(3),
+		placeholder(4),
+		placeholder(5),
+		placeholder(6),
+	)
+
+	for i := range insertCount {
+		createdAt := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(i) * time.Second)
+		_, err := db.Exec(
+			query,
+			fmt.Sprintf("11111111-1111-1111-1111-%012d", i),
+			fmt.Sprintf("%s%d", descriptionPrefix, i),
+			fmt.Sprintf("cap-test-%d@example.org", i),
+			true,
+			createdAt,
+			createdAt,
+		)
+		require.NoError(t, err)
+	}
+
+	t.Cleanup(func() {
+		_, _ = db.Exec("DELETE FROM publishers WHERE description LIKE "+placeholder(1), descriptionPrefix+"%")
 	})
 }
