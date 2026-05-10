@@ -397,6 +397,11 @@ func TestLogsEndpoints(t *testing.T) {
 func addLogsForPaginationCapTest(t *testing.T) {
 	t.Helper()
 
+	const (
+		insertCount = 110
+		message     = "Pagination cap test log"
+	)
+
 	query := fmt.Sprintf(
 		"INSERT INTO logs (id, message, created_at, updated_at) VALUES (%s, %s, %s, %s)",
 		placeholder(1),
@@ -405,17 +410,21 @@ func addLogsForPaginationCapTest(t *testing.T) {
 		placeholder(4),
 	)
 
-	for i := range 100 {
+	for i := range insertCount {
 		createdAt := time.Date(2011, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(i) * time.Second)
 		_, err := db.Exec(
 			query,
 			fmt.Sprintf("00000000-0000-0000-0000-%012d", i),
-			"Pagination cap test log",
+			message,
 			createdAt,
 			createdAt,
 		)
 		require.NoError(t, err)
 	}
+
+	t.Cleanup(func() {
+		_, _ = db.Exec("DELETE FROM logs WHERE message = "+placeholder(1), message)
+	})
 }
 
 func TestLogsDBChecks(t *testing.T) {

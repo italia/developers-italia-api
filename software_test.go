@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -200,9 +201,10 @@ func TestSoftwareEndpoints(t *testing.T) {
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
+			setupFunc:           addSoftwareForPaginationCapTest,
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				items := assertListResponse(t, response)
-				assert.LessOrEqual(t, len(items), 100)
+				assert.Equal(t, 100, len(items))
 			},
 		},
 		{
@@ -1667,5 +1669,49 @@ func TestSoftwareDeleteDBChecks(t *testing.T) {
 		assert.Equal(t, 204, res.StatusCode)
 
 		assert.Equal(t, 0, dbCount(t, "software_urls", "software_id", softwareID))
+	})
+}
+
+func addSoftwareForPaginationCapTest(t *testing.T) {
+	t.Helper()
+
+	const (
+		insertCount = 110
+		urlPrefix   = "https://cap-test.example.org/repo-"
+	)
+
+	swQuery := fmt.Sprintf(
+		"INSERT INTO software (id, software_url_id, publiccode_yml, active, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s)",
+		placeholder(1),
+		placeholder(2),
+		placeholder(3),
+		placeholder(4),
+		placeholder(5),
+		placeholder(6),
+	)
+	urlQuery := fmt.Sprintf(
+		"INSERT INTO software_urls (id, url, software_id, created_at, updated_at) VALUES (%s, %s, %s, %s, %s)",
+		placeholder(1),
+		placeholder(2),
+		placeholder(3),
+		placeholder(4),
+		placeholder(5),
+	)
+
+	for i := range insertCount {
+		swID := fmt.Sprintf("11111111-1111-1111-1111-%012d", i)
+		urlID := fmt.Sprintf("22222222-2222-2222-2222-%012d", i)
+		createdAt := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(i) * time.Second)
+
+		_, err := db.Exec(swQuery, swID, urlID, "-", true, createdAt, createdAt)
+		require.NoError(t, err)
+
+		_, err = db.Exec(urlQuery, urlID, fmt.Sprintf("%s%d", urlPrefix, i), swID, createdAt, createdAt)
+		require.NoError(t, err)
+	}
+
+	t.Cleanup(func() {
+		_, _ = db.Exec("DELETE FROM software_urls WHERE url LIKE "+placeholder(1), urlPrefix+"%")
+		_, _ = db.Exec("DELETE FROM software WHERE id LIKE "+placeholder(1), "11111111-1111-1111-1111-%")
 	})
 }

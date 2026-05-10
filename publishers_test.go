@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -114,9 +116,10 @@ func TestPublishersEndpoints(t *testing.T) {
 
 			expectedCode:        200,
 			expectedContentType: "application/json",
+			setupFunc:           addPublishersForPaginationCapTest,
 			validateFunc: func(t *testing.T, response map[string]interface{}) {
 				items := assertListResponse(t, response)
-				assert.LessOrEqual(t, len(items), 100)
+				assert.Equal(t, 100, len(items))
 			},
 		},
 		{
@@ -1163,5 +1166,42 @@ func TestPublishersDeleteDBChecks(t *testing.T) {
 		assert.Equal(t, 204, res.StatusCode)
 
 		assert.Equal(t, 0, dbCount(t, "publishers_code_hosting", "publisher_id", publisherID))
+	})
+}
+
+func addPublishersForPaginationCapTest(t *testing.T) {
+	t.Helper()
+
+	const (
+		insertCount       = 110
+		descriptionPrefix = "Pagination cap test publisher "
+	)
+
+	query := fmt.Sprintf(
+		"INSERT INTO publishers (id, description, email, active, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s)",
+		placeholder(1),
+		placeholder(2),
+		placeholder(3),
+		placeholder(4),
+		placeholder(5),
+		placeholder(6),
+	)
+
+	for i := range insertCount {
+		createdAt := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(i) * time.Second)
+		_, err := db.Exec(
+			query,
+			fmt.Sprintf("11111111-1111-1111-1111-%012d", i),
+			fmt.Sprintf("%s%d", descriptionPrefix, i),
+			fmt.Sprintf("cap-test-%d@example.org", i),
+			true,
+			createdAt,
+			createdAt,
+		)
+		require.NoError(t, err)
+	}
+
+	t.Cleanup(func() {
+		_, _ = db.Exec("DELETE FROM publishers WHERE description LIKE "+placeholder(1), descriptionPrefix+"%")
 	})
 }
