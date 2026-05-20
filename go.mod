@@ -3,7 +3,7 @@ module github.com/italia/developers-italia-api
 go 1.25.0
 
 require (
-	github.com/PuerkitoBio/purell v1.2.1
+	github.com/PuerkitoBio/purell v1.2.2
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/go-testfixtures/testfixtures/v3 v3.19.0
