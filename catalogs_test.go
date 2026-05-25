@@ -1115,3 +1115,170 @@ func TestRootCatalogMaterialize(t *testing.T) {
 		assert.NotEmpty(t, data, "root publishers (catalog_id IS NULL) should still be visible")
 	})
 }
+
+func TestCatalogAnalysisEndpoints(t *testing.T) {
+	const missingID = "00000000-0000-0000-0000-000000000000"
+
+	tests := []TestCase{
+		{
+			description:         "GET analysis on catalog with no analysis returns empty object",
+			query:               "GET /v1/catalogs/" + italiaID + "/analysis",
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Empty(t, response)
+			},
+		},
+		{
+			description: "PATCH analysis adds namespace with timestamp",
+			query:       "PATCH /v1/catalogs/" + italiaID + "/analysis",
+			body:        `{"badges": {"v": 1, "score": 90}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/merge-patch+json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				badges := response["badges"].(map[string]interface{})
+
+				assert.Equal(t, float64(1), badges["v"])
+				assert.Equal(t, float64(90), badges["score"])
+				assertRFC3339(t, badges["t"])
+			},
+		},
+		{
+			description: "PATCH analysis injects timestamp on every namespace in the body",
+			query:       "PATCH /v1/catalogs/" + italiaID + "/analysis",
+			body:        `{"badges": {"v": 1, "score": 90}, "maxima": {"v": 1, "stars": 42}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/merge-patch+json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				badges := response["badges"].(map[string]interface{})
+				maxima := response["maxima"].(map[string]interface{})
+
+				assertRFC3339(t, badges["t"])
+				assertRFC3339(t, maxima["t"])
+			},
+		},
+		{
+			description: "PATCH analysis resolves catalog by alternativeId",
+			query:       "PATCH /v1/catalogs/swiss/analysis",
+			body:        `{"badges": {"v": 1, "score": 10}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/merge-patch+json"},
+			},
+			expectedCode:        200,
+			expectedContentType: "application/json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				badges := response["badges"].(map[string]interface{})
+
+				assert.Equal(t, float64(10), badges["score"])
+				assertRFC3339(t, badges["t"])
+			},
+		},
+		{
+			description: "PATCH analysis missing v field returns 422",
+			query:       "PATCH /v1/catalogs/" + italiaID + "/analysis",
+			body:        `{"badges": {"score": 90}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/merge-patch+json"},
+			},
+			expectedCode:        422,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't update Catalog analysis", response["title"])
+			},
+		},
+		{
+			description:         "GET analysis on nonexistent catalog returns 404",
+			query:               "GET /v1/catalogs/" + missingID + "/analysis",
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't get Catalog analysis", response["title"])
+			},
+		},
+		{
+			description:         "GET analysis on root catalog (∅) returns 404 — root is implicit",
+			query:               "GET /v1/catalogs/%E2%88%85/analysis",
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't get Catalog analysis", response["title"])
+			},
+		},
+		{
+			description: "PATCH analysis on root catalog (∅) returns 404 — root is implicit",
+			query:       "PATCH /v1/catalogs/%E2%88%85/analysis",
+			body:        `{"badges": {"v": 1}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/merge-patch+json"},
+			},
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't update Catalog analysis", response["title"])
+			},
+		},
+		{
+			description: "PATCH analysis on nonexistent catalog returns 404",
+			query:       "PATCH /v1/catalogs/" + missingID + "/analysis",
+			body:        `{"badges": {"v": 1}}`,
+			headers: map[string][]string{
+				"Authorization": {goodToken},
+				"Content-Type":  {"application/merge-patch+json"},
+			},
+			expectedCode:        404,
+			expectedContentType: "application/problem+json",
+			validateFunc: func(t *testing.T, response map[string]interface{}) {
+				assert.Equal(t, "can't update Catalog analysis", response["title"])
+			},
+		},
+		{
+			description:         "PATCH analysis without token returns 401",
+			query:               "PATCH /v1/catalogs/" + italiaID + "/analysis",
+			body:                `{"badges": {"v": 1}}`,
+			expectedCode:        401,
+			expectedContentType: "application/problem+json",
+			expectedBody:        `{"title":"token authentication failed","status":401}`,
+		},
+	}
+
+	runTestCases(t, tests)
+}
+
+func TestCatalogAnalysisDBChecks(t *testing.T) {
+	t.Run("PATCH analysis persists to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `{"badges": {"v": 1, "score": 75}}`
+		req, err := newTestRequest("PATCH", "/v1/catalogs/"+italiaID+"/analysis", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/merge-patch+json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+
+		raw := dbValue(t, "catalogs", "analysis", "id", italiaID)
+
+		var analysis map[string]interface{}
+		require.NoError(t, json.NewDecoder(strings.NewReader(raw)).Decode(&analysis))
+
+		badges := analysis["badges"].(map[string]interface{})
+		assert.Equal(t, float64(1), badges["v"])
+		assert.Equal(t, float64(75), badges["score"])
+		assertRFC3339(t, badges["t"])
+	})
+}
