@@ -946,6 +946,73 @@ paths:
           $ref: '#/components/responses/Conflict'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  '/catalogs/{catalogId}/analysis':
+    parameters:
+      - schema:
+          type: string
+          maxLength: 255
+          pattern: '.*'
+          example: 'example-catalog'
+        name: catalogId
+        in: path
+        required: true
+        description: >
+          The catalog UUID or alternativeId.
+          Use `%E2%88%85` (URL-encoded ∅) to address the root (implicit) catalog.
+    get:
+      summary: Get analysis data for a Catalog
+      description: >
+        Get the analysis data for a Catalog by its id or alternativeId.
+        Returns an empty object if no analysis has been stored yet.
+      tags:
+        - catalogs
+      operationId: show-catalog-catalogId-analysis
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisData'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    patch:
+      summary: Update analysis data for a Catalog
+      description: >
+        Merge incoming namespaces into the stored analysis for a Catalog.
+        Only namespaces included in the request body are updated; existing
+        namespaces not in the request are left unchanged.
+        Each namespace must be a JSON object with an integer "v" field.
+        A "t" timestamp (RFC 3339) is injected automatically for every
+        namespace that was added or changed.
+      tags:
+        - catalogs
+      security:
+        - bearerAuth: []
+      operationId: update-catalog-catalogId-analysis
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      requestBody:
+        required: true
+        content:
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/AnalysisData'
   '/catalogs/{catalogId}/publishers':
     parameters:
       - schema:

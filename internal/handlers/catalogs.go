@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/url"
 	"sort"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
@@ -30,6 +32,9 @@ type CatalogInterface interface { //nolint:interfacebloat
 	GetCatalogSoftware(ctx *fiber.Ctx) error
 	PostCatalogSoftware(ctx *fiber.Ctx) error
 	PatchCatalogSoftware(ctx *fiber.Ctx) error
+
+	GetCatalogAnalysis(ctx *fiber.Ctx) error
+	PatchCatalogAnalysis(ctx *fiber.Ctx) error
 }
 
 type Catalog struct {
@@ -899,4 +904,67 @@ func resolveCatalog(gormdb *gorm.DB, rawID string, preloads ...string) (*models.
 	}
 
 	return nil, dbErr
+}
+
+// GetCatalogAnalysis returns the analysis data for the catalog with the given id.
+func (c *Catalog) GetCatalogAnalysis(ctx *fiber.Ctx) error {
+	const errMsg = "can't get Catalog analysis"
+
+	id, _ := url.PathUnescape(ctx.Params("id"))
+
+	catalog, err := resolveCatalog(c.db, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Catalog was not found")
+		}
+
+		return common.InternalServerError(errMsg)
+	}
+
+	if catalog == nil {
+		return common.Error(fiber.StatusNotFound, errMsg, "Catalog was not found")
+	}
+
+	if catalog.Analysis == nil {
+		return ctx.JSON(common.AnalysisData{})
+	}
+
+	return ctx.JSON(catalog.Analysis)
+}
+
+// PatchCatalogAnalysis merges the incoming analysis namespaces into the stored analysis.
+// The request body is an AnalysisData object (namespace → arbitrary JSON with "v" field).
+func (c *Catalog) PatchCatalogAnalysis(ctx *fiber.Ctx) error {
+	const errMsg = "can't update Catalog analysis"
+
+	id, _ := url.PathUnescape(ctx.Params("id"))
+
+	catalog, err := resolveCatalog(c.db, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return common.Error(fiber.StatusNotFound, errMsg, "Catalog was not found")
+		}
+
+		return common.InternalServerError(errMsg)
+	}
+
+	if catalog == nil {
+		return common.Error(fiber.StatusNotFound, errMsg, "Catalog was not found")
+	}
+
+	var incoming common.AnalysisData
+	if err := json.Unmarshal(ctx.Body(), &incoming); err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+	}
+
+	merged, err := injectTouchedAnalysis(catalog.Analysis, incoming, time.Now())
+	if err != nil {
+		return common.Error(fiber.StatusUnprocessableEntity, errMsg, err.Error())
+	}
+
+	if err := c.db.Model(catalog).Update("analysis", merged).Error; err != nil {
+		return common.InternalServerError(errMsg)
+	}
+
+	return ctx.JSON(merged)
 }

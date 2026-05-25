@@ -57,6 +57,11 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 		if err := database.Exec(sql).Error; err != nil {
 			return nil, fmt.Errorf("can't create analysis GIN index: %w", err)
 		}
+
+		sql = "CREATE INDEX IF NOT EXISTS idx_catalogs_analysis_gin ON catalogs USING GIN (analysis)"
+		if err := database.Exec(sql).Error; err != nil {
+			return nil, fmt.Errorf("can't create catalog analysis GIN index: %w", err)
+		}
 	}
 
 	// Migrate logs only if there is no "entity" column yet, which should mean when the database
