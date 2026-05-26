@@ -447,7 +447,8 @@ func injectTouchedAnalysis(
 		return nil, err //nolint:wrapcheck
 	}
 
-	result := make(common.AnalysisData, len(updated))
+	result := make(common.AnalysisData, len(original)+len(updated))
+	maps.Copy(result, original)
 	maps.Copy(result, updated)
 	maps.Copy(result, injected)
 
