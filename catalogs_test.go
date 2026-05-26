@@ -1281,4 +1281,38 @@ func TestCatalogAnalysisDBChecks(t *testing.T) {
 		assert.Equal(t, float64(75), badges["score"])
 		assertRFC3339(t, badges["t"])
 	})
+
+	t.Run("PATCH analysis preserves existing namespaces", func(t *testing.T) {
+		loadFixtures(t)
+
+		req1, err := newTestRequest("PATCH", "/v1/catalogs/"+italiaID+"/analysis", strings.NewReader(`{"ns-one": {"v": 1, "score": 90}}`))
+		require.NoError(t, err)
+		req1.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/merge-patch+json"},
+		}
+
+		res1, err := app.Test(req1, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res1.StatusCode)
+
+		req2, err := newTestRequest("PATCH", "/v1/catalogs/"+italiaID+"/analysis", strings.NewReader(`{"ns-two": {"v": 2, "grade": "A"}}`))
+		require.NoError(t, err)
+		req2.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/merge-patch+json"},
+		}
+
+		res2, err := app.Test(req2, -1)
+		require.NoError(t, err)
+		assert.Equal(t, 200, res2.StatusCode)
+
+		raw := dbValue(t, "catalogs", "analysis", "id", italiaID)
+
+		var analysis map[string]interface{}
+		require.NoError(t, json.NewDecoder(strings.NewReader(raw)).Decode(&analysis))
+
+		assert.Contains(t, analysis, "ns-one", "ns-one namespace must survive a subsequent PATCH of a different namespace")
+		assert.Contains(t, analysis, "ns-two", "ns-two namespace must be present after second PATCH")
+	})
 }
