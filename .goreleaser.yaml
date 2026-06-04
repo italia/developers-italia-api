@@ -10,8 +10,10 @@ builds:
   - binary: software-catalog-api
     env:
       - CGO_ENABLED=0
+    flags:
+      - -trimpath
     ldflags:
-     - -s -w
+      - -s -w -buildid=
     goos:
       - linux
 archives:

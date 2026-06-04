@@ -3,7 +3,7 @@
 #
 # Goreleaser takes care of building the binary.
 #
-FROM alpine:3
+FROM alpine:3.22@sha256:310c62b5e7ca5b08167e4384c68db0fd2905dd9c7493756d356e893909057601
 
 COPY software-catalog-api /usr/local/bin/software-catalog-api
 RUN ln -s /usr/local/bin/software-catalog-api /usr/local/bin/developers-italia-api

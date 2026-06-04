@@ -16,9 +16,12 @@ jobs:
   tests-postgresql:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     services:
       db:
-        image: postgres:14
+        image: postgres:14@sha256:a209aced4fa19381231fae4d9a4c5816f7691294f13572f8bddc082ba32e1c7c
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test
@@ -31,10 +34,13 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
           go-version: 1.25.x
       - run: go test -race ./...
         env:
           DATABASE_DSN: "postgres://postgres:postgres@localhost:5432/test?sslmode=disable"
+          GOFLAGS: -mod=readonly
