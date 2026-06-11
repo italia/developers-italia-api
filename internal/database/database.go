@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"strings"
@@ -37,7 +38,7 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("can't open database: %w", err)
 	}
 
-	if err = database.AutoMigrate(
+	modelsToMigrate := []any{
 		&models.Catalog{},
 		&models.CatalogSource{},
 		&models.Publisher{},
@@ -46,10 +47,13 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 		&models.Software{},
 		&models.SoftwareURL{},
 		&models.Webhook{},
-	); err != nil {
-		return nil, fmt.Errorf("can't migrate database: %w", err)
 	}
 
+	for _, m := range modelsToMigrate {
+		if err := database.AutoMigrate(m); err != nil {
+			return nil, fmt.Errorf("can't migrate model %T: %w", m, err)
+		}
+	}
 	// Workaround until #72 (proper migrations): GIN index on analysis for
 	// per-namespace queries. SQLite doesn't support GIN, PostgreSQL only.
 	if !strings.HasPrefix(connection, "file:") {
@@ -63,10 +67,10 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 	// is empty.
 	// This is a workaround for https://github.com/go-gorm/gorm/issues/5534 where GORM
 	// fails to migrate an existing generated column on PostgreSQL if it already exists.
-	var entity string
+	var entity sql.NullString
 	if database.Raw("SELECT entity FROM logs LIMIT 1").Scan(&entity).Error != nil {
 		if err = database.AutoMigrate(&models.Log{}); err != nil {
-			return nil, fmt.Errorf("can't migrate database: %w", err)
+			return nil, fmt.Errorf("can't migrate model \"Log\": %w", err)
 		}
 	}
 
