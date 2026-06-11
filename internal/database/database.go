@@ -38,22 +38,10 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("can't open database: %w", err)
 	}
 
-	modelsToMigrate := []any{
-		&models.Catalog{},
-		&models.CatalogSource{},
-		&models.Publisher{},
-		&models.Event{},
-		&models.CodeHosting{},
-		&models.Software{},
-		&models.SoftwareURL{},
-		&models.Webhook{},
+	if err := migrateModels(database); err != nil {
+		return nil, fmt.Errorf("database migration error: %w", err)
 	}
 
-	for _, m := range modelsToMigrate {
-		if err := database.AutoMigrate(m); err != nil {
-			return nil, fmt.Errorf("can't migrate model %T: %w", m, err)
-		}
-	}
 	// Workaround until #72 (proper migrations): GIN index on analysis for
 	// per-namespace queries. SQLite doesn't support GIN, PostgreSQL only.
 	if !strings.HasPrefix(connection, "file:") {
@@ -63,16 +51,36 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 		}
 	}
 
+	return database, nil
+}
+
+// Migrate all models.
+func migrateModels(database *gorm.DB) error {
+	for _, model := range []any{
+		&models.Catalog{},
+		&models.CatalogSource{},
+		&models.Publisher{},
+		&models.Event{},
+		&models.CodeHosting{},
+		&models.Software{},
+		&models.SoftwareURL{},
+		&models.Webhook{},
+	} {
+		if err := database.AutoMigrate(model); err != nil {
+			return fmt.Errorf("can't migrate %T: %w", model, err)
+		}
+	}
+
 	// Migrate logs only if there is no "entity" column yet, which should mean when the database
 	// is empty.
 	// This is a workaround for https://github.com/go-gorm/gorm/issues/5534 where GORM
 	// fails to migrate an existing generated column on PostgreSQL if it already exists.
 	var entity sql.NullString
 	if database.Raw("SELECT entity FROM logs LIMIT 1").Scan(&entity).Error != nil {
-		if err = database.AutoMigrate(&models.Log{}); err != nil {
-			return nil, fmt.Errorf("can't migrate model \"Log\": %w", err)
+		if err := database.AutoMigrate(&models.Log{}); err != nil {
+			return fmt.Errorf("can't migrate model \"Log\": %w", err)
 		}
 	}
 
-	return database, nil
+	return nil
 }
