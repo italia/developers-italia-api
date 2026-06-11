@@ -31,5 +31,5 @@ dockers:
  -
    dockerfile: Dockerfile.goreleaser
    image_templates:
-     - "ghcr.io/thisisnttheway/developers-italia-api:{{ .Tag }}"
-     - "ghcr.io/thisisnttheway/developers-italia-api:latest"
+     - "ghcr.io/italia/developers-italia-api:{{ .Tag }}"
+     - "ghcr.io/italia/developers-italia-api:latest"
