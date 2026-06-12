@@ -54,7 +54,6 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 	return database, nil
 }
 
-// Migrate all models.
 func migrateModels(database *gorm.DB) error {
 	for _, model := range []any{
 		&models.Catalog{},
