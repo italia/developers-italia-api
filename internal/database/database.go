@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"strings"
@@ -37,17 +38,8 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("can't open database: %w", err)
 	}
 
-	if err = database.AutoMigrate(
-		&models.Catalog{},
-		&models.CatalogSource{},
-		&models.Publisher{},
-		&models.Event{},
-		&models.CodeHosting{},
-		&models.Software{},
-		&models.SoftwareURL{},
-		&models.Webhook{},
-	); err != nil {
-		return nil, fmt.Errorf("can't migrate database: %w", err)
+	if err := migrateModels(database); err != nil {
+		return nil, fmt.Errorf("database migration error: %w", err)
 	}
 
 	// Workaround until #72 (proper migrations): GIN index on analysis for
@@ -64,16 +56,35 @@ func NewDatabase(connection string) (*gorm.DB, error) {
 		}
 	}
 
+	return database, nil
+}
+
+func migrateModels(database *gorm.DB) error {
+	for _, model := range []any{
+		&models.Catalog{},
+		&models.CatalogSource{},
+		&models.Publisher{},
+		&models.Event{},
+		&models.CodeHosting{},
+		&models.Software{},
+		&models.SoftwareURL{},
+		&models.Webhook{},
+	} {
+		if err := database.AutoMigrate(model); err != nil {
+			return fmt.Errorf("can't migrate %T: %w", model, err)
+		}
+	}
+
 	// Migrate logs only if there is no "entity" column yet, which should mean when the database
 	// is empty.
 	// This is a workaround for https://github.com/go-gorm/gorm/issues/5534 where GORM
 	// fails to migrate an existing generated column on PostgreSQL if it already exists.
-	var entity string
+	var entity sql.NullString
 	if database.Raw("SELECT entity FROM logs LIMIT 1").Scan(&entity).Error != nil {
-		if err = database.AutoMigrate(&models.Log{}); err != nil {
-			return nil, fmt.Errorf("can't migrate database: %w", err)
+		if err := database.AutoMigrate(&models.Log{}); err != nil {
+			return fmt.Errorf("can't migrate model \"Log\": %w", err)
 		}
 	}
 
-	return database, nil
+	return nil
 }
