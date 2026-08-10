@@ -12,3 +12,5 @@ test.db-wal
 
 # Helm chart package
 /developers-italia-api-*.tgz
+
+.env
