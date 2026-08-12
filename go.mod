@@ -10,7 +10,7 @@ require (
 	github.com/gofiber/contrib/paseto v1.2.4
 	github.com/gofiber/fiber/v2 v2.52.14
 	github.com/stretchr/testify v1.11.1
-	gorm.io/driver/postgres v1.6.1
+	gorm.io/driver/postgres v1.6.2
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.2
 )
