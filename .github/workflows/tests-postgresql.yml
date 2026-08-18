@@ -12,6 +12,8 @@ on:
       - 'go.mod'
       - 'go.sum'
 
+permissions: {}
+
 jobs:
   tests-postgresql:
     runs-on: ubuntu-latest

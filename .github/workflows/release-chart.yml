@@ -3,12 +3,16 @@ on:
     tags:
       - helm/*
 
-permissions:
-  packages: write
+permissions: {}
 
 jobs:
   release_chart:
     runs-on: ubuntu-22.04
+    permissions:
+      # To check out the repository
+      contents: read
+      # To push the chart to GitHub Container Registry
+      packages: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
