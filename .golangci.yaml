@@ -84,12 +84,6 @@ linters:
       - third_party$
       - builtin$
       - examples$
-    rules:
-      # Allow prints and panics in publiccode-parser/, as it's the
-      # CLI tool.
-      - path: publiccode-parser/
-        linters:
-          - forbidigo
 
 formatters:
   enable:
@@ -103,4 +97,4 @@ formatters:
     paths:
       - third_party$
       - builtin$
-      - examples$ # fast: true
+      - examples$
