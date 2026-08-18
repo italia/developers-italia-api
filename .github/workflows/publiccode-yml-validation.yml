@@ -3,6 +3,8 @@ on:
     paths:
       - 'publiccode.yml'
 
+permissions: {}
+
 jobs:
   publiccode_yml_validation:
     runs-on: ubuntu-latest

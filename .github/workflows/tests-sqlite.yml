@@ -12,6 +12,8 @@ on:
       - 'go.mod'
       - 'go.sum'
 
+permissions: {}
+
 jobs:
   tests-sqlite:
     runs-on: ubuntu-latest
