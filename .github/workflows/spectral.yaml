@@ -27,7 +27,20 @@ jobs:
       - run: curl --fail -L https://raw.githubusercontent.com/italia/api-oas-checker/f6f4e6e360b2ce9816dcca29396571dda1c6027d/security/functions/checkSecurity.js > functions/checkSecurity.js
 
       - uses: bfabio/spectral-action@5af95a6a2985901bd5e689c663b4f93c660f0d2c
+        id: lint
         with:
           file_glob: software-catalog-api.oas.yaml
           spectral_ruleset: .spectral.yml
           repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Write the lint outcome to the job summary
+        if: always()
+        env:
+          OUTCOME: ${{ steps.lint.outcome }}
+          CHECKS_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}/checks
+        run: |
+          {
+            echo "## OpenAPI lint: $OUTCOME"
+            echo
+            echo "Findings are annotated on the spec, in the [Lint check]($CHECKS_URL)."
+          } >> "$GITHUB_STEP_SUMMARY"
