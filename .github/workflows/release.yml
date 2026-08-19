@@ -41,5 +41,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        id: attest
         with:
           subject-path: dist/checksums.txt
+      - # Attach the provenance to the release, where tools like scorecard
+        # expect to find it (*.intoto.jsonl)
+        run: |
+          cp "$BUNDLE_PATH" checksums.txt.intoto.jsonl
+          gh release upload "$GITHUB_REF_NAME" checksums.txt.intoto.jsonl
+        env:
+          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
