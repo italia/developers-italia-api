@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"strings"
 )
 
@@ -34,8 +35,9 @@ func UnmarshalDisallowUnknownFields(data []byte, v any) error {
 	// Check if there's any data left in the decoder's buffer.
 	// This ensures that there's no extra JSON after the main object
 	// otherwise something like '{"foo": 1}{"bar": 2}' or even '{}garbage'
-	// will not error out.
-	if dec.More() {
+	// will not error out. dec.More() is not enough: it returns false
+	// when the next byte is '}' or ']', letting '{}}' pass.
+	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
 		return ErrExtraDataAfterDecoding
 	}
 
