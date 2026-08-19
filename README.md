@@ -7,12 +7,10 @@
 </p>
 
 <p align="center">
-  <a href="https://goreportcard.com/report/github.com/italia/developers-italia-api">
-    <img
-      src="https://goreportcard.com/badge/github.com/italia/developers-italia-api"
-      alt="Go Report Card"
-    >
-  </a>
+  <a href="https://www.bestpractices.dev/projects/14158">
+    <img src="https://www.bestpractices.dev/projects/14158/badge">
+  </a> 
+  
   <img alt="License" src="https://img.shields.io/github/license/italia/developers-italia-api?color=brightgreen">
   <a href="https://slack.developers.italia.it">
     <img
