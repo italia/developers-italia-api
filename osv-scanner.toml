@@ -1,0 +1,14 @@
+# Vulnerabilities Scorecard reports against the module graph that this
+# project is not exposed to. Each entry needs a reason and gets revisited
+# when it expires.
+
+[[IgnoredVulns]]
+id = "GO-2026-5932"
+reason = """
+golang.org/x/crypto/openpgp is unmaintained, and the advisory has no fixed
+version. This project never links it: `go list -deps ./...` pulls in
+chacha20poly1305, blake2b, sha3, ed25519, hkdf and cryptobyte, and
+`go mod why golang.org/x/crypto/openpgp` answers that the main module does
+not need the package. x/crypto itself cannot be dropped, since fasthttp,
+x/net and validator/v10 all require it.
+"""
