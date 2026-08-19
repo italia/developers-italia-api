@@ -45,9 +45,6 @@
 
 ## Development
 
-The application uses [Air](https://github.com/cosmtrek/air) for live-reloading
-in the development environment.
-
 To start developing:
 
 1. Clone the repo
@@ -61,8 +58,6 @@ Docker Compose will bring up the app and PostgreSQL containers.
 
 Wait until the Docker logs explicitly say the API is up and you can use its
 endpoints at `http://localhost:3000/v1/`.
-
-The application will automatically reload when a change is made.
 
 ## Configuration
 
