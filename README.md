@@ -12,12 +12,6 @@
   </a> 
   
   <img alt="License" src="https://img.shields.io/github/license/italia/developers-italia-api?color=brightgreen">
-  <a href="https://slack.developers.italia.it">
-    <img
-      src="https://img.shields.io/badge/chat-on%20slack-7289da.svg?sanitize=true"
-      alt="Chat on Slack"
-    >
-  </a>
 </p>
 
 <div align="center">
