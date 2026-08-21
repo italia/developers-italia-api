@@ -16,7 +16,8 @@ services:
       ENVIRONMENT: local
 
   db:
-    image: postgres:14.3-alpine
+    # Same image the CI test job runs against
+    image: postgres:14@sha256:a209aced4fa19381231fae4d9a4c5816f7691294f13572f8bddc082ba32e1c7c
     restart: always
     environment:
       POSTGRES_USER: postgres
