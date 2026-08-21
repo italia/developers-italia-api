@@ -1,0 +1,48 @@
+on:
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  tests-added:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Require a test change alongside a code change
+        # Read through the API rather than a checkout: the file list is
+        # all this needs, and a shallow clone cannot produce it.
+        run: |
+          pr=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json files,labels)
+
+          if printf '%s' "$pr" | jq -e '.labels[] | select(.name == "no-test-needed")' > /dev/null; then
+            echo "Skipped, the no-test-needed label is set." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          paths=$(printf '%s' "$pr" | jq -r '.files[].path')
+          code=$(printf '%s\n' "$paths" | grep -E '\.go$' | grep -v '_test\.go$' || true)
+          tests=$(printf '%s\n' "$paths" | grep -E '_test\.go$' || true)
+
+          if [ -z "$code" ] || [ -n "$tests" ]; then
+            exit 0
+          fi
+
+          {
+            echo "## No test changed"
+            echo
+            echo "This pull request changes Go code without touching any \`*_test.go\` file:"
+            echo
+            printf '%s\n' "$code" | sed 's/^/- \`/;s/$/\`/'
+            echo
+            echo "Add a test, or set the \`no-test-needed\` label when the change"
+            echo "cannot alter behavior, such as a rename or a lint fix."
+            echo
+            echo "See [CONTRIBUTING.md]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/main/CONTRIBUTING.md#tests)."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
