@@ -132,7 +132,7 @@ func Setup() (*fiber.App, *webhooks.Debouncer) {
 		},
 		Methods:      []string{fiber.MethodGet, fiber.MethodHead},
 		CacheControl: true,
-		Expiration:   10 * time.Second, //nolint:gomnd
+		Expiration:   10 * time.Second,
 		KeyGenerator: func(ctx *fiber.Ctx) string {
 			return ctx.Path() + string(ctx.Context().QueryArgs().QueryString())
 		},
