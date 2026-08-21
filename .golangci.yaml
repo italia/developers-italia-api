@@ -23,6 +23,8 @@ linters:
   disable:
     # We don't want to limit dependencies
     - depguard
+    # Deprecated, superseded by wsl_v5
+    - wsl
     # Not terribly useful and ends up in too much boilerplate
     - exhaustruct
     # https://github.com/italia/developers-italia-api/issues/190)
