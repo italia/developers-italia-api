@@ -27,11 +27,9 @@ checksum:
 snapshot:
   version_template: "{{ incpatch .Version }}-next"
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
+  # The release body comes from CHANGELOG.md via --release-notes. A
+  # generated commit list is not release notes for the OpenSSF badge.
+  disable: true
 dockers:
  -
    dockerfile: Dockerfile.goreleaser
