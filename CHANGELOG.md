@@ -15,6 +15,11 @@ Releases before 1.0.0 are documented only in the
 - A security policy, `SECURITY.md`, saying how to report a vulnerability
   privately and which versions get fixes.
 
+### Security
+
+- The database image used for local development is pinned by digest,
+  and is the same one the tests run against.
+
 ## [1.4.0] - 2026-08-19
 
 ### Added
