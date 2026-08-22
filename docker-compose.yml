@@ -17,7 +17,7 @@ services:
 
   db:
     # Same image the CI test job runs against
-    image: postgres:14@sha256:a209aced4fa19381231fae4d9a4c5816f7691294f13572f8bddc082ba32e1c7c
+    image: postgres:18@sha256:06cad38a5d9f5d24b4d83d86def30795d5e4b757fedbf5281172b576dedcd941
     restart: always
     environment:
       POSTGRES_USER: postgres
