@@ -15,21 +15,21 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/italia/developers-italia-api/cmd"
-	"github.com/italia/developers-italia-api/internal/common"
-	"github.com/italia/developers-italia-api/internal/database"
-	"github.com/italia/developers-italia-api/internal/handlers"
-	"github.com/italia/developers-italia-api/internal/jsondecoder"
-	"github.com/italia/developers-italia-api/internal/middleware"
-	"github.com/italia/developers-italia-api/internal/models"
-	"github.com/italia/developers-italia-api/internal/webhooks"
+	"github.com/italia/open-catalog-api/cmd"
+	"github.com/italia/open-catalog-api/internal/common"
+	"github.com/italia/open-catalog-api/internal/database"
+	"github.com/italia/open-catalog-api/internal/handlers"
+	"github.com/italia/open-catalog-api/internal/jsondecoder"
+	"github.com/italia/open-catalog-api/internal/middleware"
+	"github.com/italia/open-catalog-api/internal/models"
+	"github.com/italia/open-catalog-api/internal/webhooks"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:          "developers-italia-api",
+		Use:          "open-catalog-api",
 		SilenceUsage: true,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			app, debouncer := Setup()

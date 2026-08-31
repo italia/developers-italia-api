@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/italia/developers-italia-api/internal/models"
+	"github.com/italia/open-catalog-api/internal/models"
 )
 
 // Dispatcher is the function called by the Debouncer when a coalesced

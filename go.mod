@@ -1,4 +1,4 @@
-module github.com/italia/developers-italia-api
+module github.com/italia/open-catalog-api
 
 go 1.25.0
 

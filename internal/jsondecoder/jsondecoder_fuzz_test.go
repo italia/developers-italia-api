@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/italia/developers-italia-api/internal/jsondecoder"
+	"github.com/italia/open-catalog-api/internal/jsondecoder"
 )
 
 func FuzzUnmarshalDisallowUnknownFields(f *testing.F) {

@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/italia/developers-italia-api/internal/common"
+	"github.com/italia/open-catalog-api/internal/common"
 	"github.com/o1egl/paseto"
 	"github.com/spf13/cobra"
 )

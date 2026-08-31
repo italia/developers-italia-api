@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/italia/developers-italia-api/internal/common"
+	"github.com/italia/open-catalog-api/internal/common"
 	"gorm.io/gorm"
 )
 

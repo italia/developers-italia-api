@@ -3,7 +3,7 @@ package common_test
 import (
 	"testing"
 
-	"github.com/italia/developers-italia-api/internal/common"
+	"github.com/italia/open-catalog-api/internal/common"
 )
 
 func FuzzApplyPatchJSONPatch(f *testing.F) {

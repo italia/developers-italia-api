@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/italia/developers-italia-api/internal/models"
+	"github.com/italia/open-catalog-api/internal/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
