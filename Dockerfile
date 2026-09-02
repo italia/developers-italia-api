@@ -3,7 +3,7 @@
 # See Dockerfile.goreleaser for the image published on release or staging.
 #
 
-FROM golang:1.25@sha256:cbff9d1a9041b316010f2da6b701b6c0d597718cb90928c85eb597334a0d23d4 AS base
+FROM golang:1.27@sha256:7543a96ce82c8e9003cae079ee3e0bc5b7799df8eed2a041e403af0d31fa4e67 AS base
 
 SHELL ["/bin/bash", "-o", "pipefail", "-euxc"]
 
