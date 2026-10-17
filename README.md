@@ -1,98 +1,11 @@
-<!-- markdownlint-disable no-inline-html -->
+# Open Catalog API
 
-<h1 align="center">Open Catalog API</h1>
-
-<p align="center">
-  <img width="200" src=".github/logo.png" alt="open-catalog-api logo">
-</p>
-
-<p align="center">
-  <a href="https://www.bestpractices.dev/projects/14158">
-    <img src="https://www.bestpractices.dev/projects/14158/badge">
-  </a> 
-  
-  <img alt="License" src="https://img.shields.io/github/license/italia/open-catalog-api?color=brightgreen">
-</p>
-
-<div align="center">
-  <h3>
-    <a href="https://developers.italia.it/it/api/developers-italia">
-      API documentation
-    </a>
-  </h3>
-</div>
-
-<p align="center">
-  <strong>Open Catalog API</strong> is a RESTful API for public software catalogs.
-  It powers national open source catalogs for public administrations:
-</p>
-
-- 🇮🇹 [developers.italia.it](https://developers.italia.it)
-- 🇨🇭 [swiss/oss-catalog](https://github.com/swiss/oss-catalog)
-
-## Requirements
-
-* Golang 1.25+
-* [PostgreSQL](https://www.postgresql.org/)
-
-## Development
-
-To start developing:
-
-1. Clone the repo
-2. Build and start the containers
-
-   ```shell
-   docker compose up
-   ```
-
-Docker Compose will bring up the app and PostgreSQL containers.
-
-Wait until the Docker logs explicitly say the API is up and you can use its
-endpoints at `http://localhost:3000/v1/`.
-
-## Configuration
-
-You can configure the API with environment variables:
-
-* `DATABASE_DSN`: the URI used to connect to the database,
-  fe `postgres://user:password@host:5432/dbname`.
-  Supports PostgreSQL and SQLite.
-
-* `PASETO_KEY` (optional): Base64 encoded 32 bytes key used to check the
-  [PASETO](https://paseto.io/) authentication tokens. You can generate a key
-  and a token with the built-in subcommand:
-
-  ```console
-  open-catalog-api token create
-  ```
-
-  Pass `--key` to use an existing key, `--sub` to identify the caller,
-  and `--expiry` to set a custom duration (default: 1 year, `0` = never
-  expires).
-
-  If not set, the API will run in read only mode.
-
-* `ENVIRONMENT` (optional): possible values `test`, `development`, `production`.
-  Default `production`.
-
-* `MAX_REQUESTS` (optional): number of requests per minute after which responses
-  will be ratelimited.
-  Default: no limit.
-
-## Contributing
-
-This project exists also thanks to your contributions! Here is a list of people
-who already contributed to this repository:
-
-<a href="https://github.com/italia/open-catalog-api/graphs/contributors">
-  <img
-  src="https://contributors-img.web.app/image?repo=italia/open-catalog-api"
-  />
-</a>
-
-## License
-
-Copyright © 2022-present Presidenza del Consiglio dei Ministri
-
-The source code is released under the AGPL version 3.
+> [!WARNING]
+> This repository is no longer maintained.
+>
+> Development continues at
+> [publiccodeyml/open-catalog-api](https://github.com/publiccodeyml/open-catalog-api).
+>
+> This repository will soon move to the
+> [publiccodeyml](https://github.com/publiccodeyml) organization, with
+> automatic redirects from the old URLs.
