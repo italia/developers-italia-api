@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -10,7 +11,7 @@ import (
 	"time"
 
 	"github.com/italia/open-catalog-api/internal/common"
-	"github.com/o1egl/paseto"
+	"github.com/italia/open-catalog-api/internal/middleware"
 	"github.com/spf13/cobra"
 )
 
@@ -75,27 +76,17 @@ func runTokenCreate(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	now := time.Now().UTC()
-	payload := paseto.JSONToken{
-		IssuedAt: now,
-		Subject:  subject,
-	}
-
-	if expiry > 0 {
-		payload.Expiration = now.Add(expiry)
-	}
-
-	token, err := paseto.NewV2().Encrypt(key, payload, nil)
+	token, claims, err := middleware.IssueV2Token(key, subject, expiry, time.Now().UTC())
 	if err != nil {
 		return fmt.Errorf("can't create token: %w", err)
 	}
 
-	payloadJSON, err := json.MarshalIndent(payload, "", "  ")
-	if err != nil {
+	var payloadJSON bytes.Buffer
+	if err := json.Indent(&payloadJSON, claims, "", "  "); err != nil {
 		return fmt.Errorf("can't marshal token payload: %w", err)
 	}
 
-	fmt.Fprintf(os.Stderr, "claims:\n%s\n\n", payloadJSON)
+	fmt.Fprintf(os.Stderr, "claims:\n%s\n\n", payloadJSON.Bytes())
 	fmt.Fprintf(os.Stderr, "token:\n")
 
 	fmt.Fprintln(os.Stdout, token)
