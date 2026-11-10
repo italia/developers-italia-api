@@ -189,14 +189,26 @@ func (p *Webhook[T]) PostSingleResourceWebhook(ctx *fiber.Ctx) error {
 	return ctx.JSON(&webhook)
 }
 
+// webhookPatchTarget is the part of a webhook a JSON Patch may address.
+// The secret is left out on purpose: it is write-only and never returned, so
+// it must not travel through the document the patch is applied to.
+type webhookPatchTarget struct {
+	URL string `json:"url" validate:"required,url"`
+}
+
 // PatchWebhook updates the webhook with the given ID.
+// Supports both JSON Merge Patch (default) and JSON Patch (application/json-patch+json).
 func (p *Webhook[T]) PatchWebhook(ctx *fiber.Ctx) error {
 	const errMsg = "can't update Webhook"
 
+	isJSONPatch := ctx.Get(fiber.HeaderContentType) == common.ContentTypeJSONPatch
+
 	webhookReq := new(common.Webhook)
 
-	if err := common.ValidateRequestEntity(ctx, webhookReq, errMsg); err != nil {
-		return err //nolint:wrapcheck
+	if !isJSONPatch {
+		if err := common.ValidateRequestEntity(ctx, webhookReq, errMsg); err != nil {
+			return err //nolint:wrapcheck
+		}
 	}
 
 	webhook := models.Webhook{}
@@ -211,6 +223,21 @@ func (p *Webhook[T]) PatchWebhook(ctx *fiber.Ctx) error {
 			errMsg,
 			fiber.ErrInternalServerError.Message,
 		)
+	}
+
+	if isJSONPatch {
+		target := webhookPatchTarget{URL: webhook.URL}
+
+		patched, patchErr := common.ApplyPatch(&target, common.ContentTypeJSONPatch, ctx.Body())
+		if patchErr != nil {
+			return common.Error(patchErr.Code, errMsg, patchErr.Error())
+		}
+
+		if validationErrors := common.ValidateStruct(&patched); validationErrors != nil {
+			return common.ErrorWithValidationErrors(fiber.StatusUnprocessableEntity, errMsg, validationErrors)
+		}
+
+		webhookReq.URL = patched.URL
 	}
 
 	webhook.URL = common.NormalizeURL(webhookReq.URL)
