@@ -1,9 +1,11 @@
 package main
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWebhooksEndpoints(t *testing.T) {
@@ -206,4 +208,111 @@ func TestWebhooksEndpoints(t *testing.T) {
 	}
 
 	runTestCases(t, tests)
+}
+
+func TestWebhookPostDBChecks(t *testing.T) {
+	t.Run("POST resource webhook persists to DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		const webhookURL = "https://persisted.example.org/receiver"
+		body := `{"url":"` + webhookURL + `","secret":"1234567890abcdef"}`
+
+		req, err := newTestRequest("POST", "/v1/software/webhooks", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, 1, dbCount(t, "webhooks", "url", webhookURL))
+		assert.Equal(t, "software", dbValue(t, "webhooks", "entity_type", "url", webhookURL))
+		assert.Equal(t, "", dbValue(t, "webhooks", "entity_id", "url", webhookURL))
+		assert.Equal(t, "1234567890abcdef", dbValue(t, "webhooks", "secret", "url", webhookURL))
+	})
+
+	t.Run("POST single resource webhook persists entity ID", func(t *testing.T) {
+		loadFixtures(t)
+
+		const webhookURL = "https://single-persisted.example.org/receiver"
+		body := `{"url":"` + webhookURL + `","secret":"1234567890abcdef"}`
+
+		req, err := newTestRequest("POST", "/v1/software/"+swissSoftwareID+"/webhooks", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, 1, dbCount(t, "webhooks", "url", webhookURL))
+		assert.Equal(t, swissSoftwareID, dbValue(t, "webhooks", "entity_id", "url", webhookURL))
+		assert.Equal(t, "software", dbValue(t, "webhooks", "entity_type", "url", webhookURL))
+	})
+}
+
+func TestWebhookPatchDBChecks(t *testing.T) {
+	t.Run("PATCH webhook persists the normalized URL", func(t *testing.T) {
+		loadFixtures(t)
+
+		const webhookID = "007bc84a-7e2d-43a0-b7e1-a256d4114aa7"
+
+		body := `{"url":"https://1-b.example.org/patched"}`
+		req, err := newTestRequest("PATCH", "/v1/webhooks/"+webhookID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, "https://1-b.example.org/patched", dbValue(t, "webhooks", "url", "id", webhookID))
+		assert.Equal(t, 0, dbCount(t, "webhooks", "url", "https://1-b.example.org/receiver"))
+		assert.Equal(t, "software", dbValue(t, "webhooks", "entity_type", "id", webhookID))
+	})
+}
+
+func TestWebhookDeleteDBChecks(t *testing.T) {
+	t.Run("DELETE webhook removes the row from DB", func(t *testing.T) {
+		loadFixtures(t)
+
+		const webhookID = "007bc84a-7e2d-43a0-b7e1-a256d4114aa7"
+
+		req, err := newTestRequest("DELETE", "/v1/webhooks/"+webhookID, nil)
+		require.NoError(t, err)
+		req.Header = map[string][]string{"Authorization": {goodToken}}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 204, res.StatusCode)
+
+		assert.Equal(t, 0, dbCount(t, "webhooks", "id", webhookID))
+		assert.Equal(t, 0, dbCount(t, "webhooks", "url", "https://1-b.example.org/receiver"))
+	})
+
+	t.Run("DELETE webhook leaves the other webhooks in place", func(t *testing.T) {
+		loadFixtures(t)
+
+		const webhookID = "007bc84a-7e2d-43a0-b7e1-a256d4114aa7"
+		const otherID = "e7f6dbda-c3f5-4b2f-b3d8-39a34026e60a"
+
+		req, err := newTestRequest("DELETE", "/v1/webhooks/"+webhookID, nil)
+		require.NoError(t, err)
+		req.Header = map[string][]string{"Authorization": {goodToken}}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 204, res.StatusCode)
+
+		assert.Equal(t, 1, dbCount(t, "webhooks", "id", otherID))
+	})
 }
