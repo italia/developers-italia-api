@@ -12,6 +12,10 @@ Releases before 1.0.0 are documented only in the
 
 ### Added
 
+- `PATCH /webhooks/{id}` accepts `application/json-patch+json` now, like software,
+  publishers and catalogs already did. The webhook secret is never part of the
+  document the patch is applied to, so a patch cannot read or overwrite it.
+
 - A security policy, `SECURITY.md`, saying how to report a vulnerability
   privately and which versions get fixes.
 

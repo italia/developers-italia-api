@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWebhooksEndpoints(t *testing.T) {
@@ -206,4 +209,138 @@ func TestWebhooksEndpoints(t *testing.T) {
 	}
 
 	runTestCases(t, tests)
+}
+func TestWebhookJSONPatch(t *testing.T) {
+	const webhookID = "007bc84a-7e2d-43a0-b7e1-a256d4114aa7"
+
+	t.Run("JSON Patch replaces the URL", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `[{"op":"replace","path":"/url","value":"https://1-b.example.org/json-patched"}]`
+
+		req, err := newTestRequest("PATCH", "/v1/webhooks/"+webhookID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json-patch+json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, "https://1-b.example.org/json-patched", dbValue(t, "webhooks", "url", "id", webhookID))
+		assert.Equal(t, 0, dbCount(t, "webhooks", "url", "https://1-b.example.org/receiver"))
+	})
+
+	t.Run("JSON Patch leaves the secret alone", func(t *testing.T) {
+		loadFixtures(t)
+
+		const secret = "1234567890abcdef"
+		const webhookURL = "https://secret-keeper.example.org/receiver"
+
+		createReq, err := newTestRequest("POST", "/v1/software/webhooks",
+			strings.NewReader(`{"url":"`+webhookURL+`","secret":"`+secret+`"}`))
+		require.NoError(t, err)
+		createReq.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		createRes, err := app.Test(createReq, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, createRes.StatusCode)
+
+		var created map[string]interface{}
+		require.NoError(t, json.NewDecoder(createRes.Body).Decode(&created))
+		createdID := created["id"].(string)
+
+		require.Equal(t, secret, dbValue(t, "webhooks", "secret", "id", createdID))
+
+		body := `[{"op":"replace","path":"/url","value":"https://secret-keeper.example.org/patched"}]`
+
+		req, err := newTestRequest("PATCH", "/v1/webhooks/"+createdID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json-patch+json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, secret, dbValue(t, "webhooks", "secret", "id", createdID))
+		assert.Equal(t, "https://secret-keeper.example.org/patched", dbValue(t, "webhooks", "url", "id", createdID))
+	})
+
+	t.Run("JSON Patch rejects an empty URL", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `[{"op":"replace","path":"/url","value":""}]`
+
+		req, err := newTestRequest("PATCH", "/v1/webhooks/"+webhookID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json-patch+json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 422, res.StatusCode)
+
+		assert.Equal(t, "https://1-b.example.org/receiver", dbValue(t, "webhooks", "url", "id", webhookID))
+	})
+
+	t.Run("JSON Patch rejects a path the webhook does not have", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `[{"op":"replace","path":"/secret","value":"1234567890abcdef"}]`
+
+		req, err := newTestRequest("PATCH", "/v1/webhooks/"+webhookID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json-patch+json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 422, res.StatusCode)
+	})
+
+	t.Run("JSON Patch rejects a malformed document", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `{"url":"https://1-b.example.org/not-a-patch"}`
+
+		req, err := newTestRequest("PATCH", "/v1/webhooks/"+webhookID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json-patch+json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 400, res.StatusCode)
+	})
+
+	t.Run("JSON Patch on a webhook that does not exist", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `[{"op":"replace","path":"/url","value":"https://1-b.example.org/json-patched"}]`
+
+		req, err := newTestRequest("PATCH", "/v1/webhooks/00000000-0000-0000-0000-000000000000", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json-patch+json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 404, res.StatusCode)
+	})
 }
