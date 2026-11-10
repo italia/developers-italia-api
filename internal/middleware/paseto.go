@@ -2,14 +2,19 @@ package middleware
 
 import (
 	"crypto/rand"
-	"encoding/json"
-	"fmt"
 	"log"
+	"strings"
 
-	pasetoware "github.com/gofiber/contrib/paseto"
+	"aidanwoods.dev/go-paseto"
 	"github.com/gofiber/fiber/v2"
 	"github.com/italia/open-catalog-api/internal/common"
-	"github.com/o1egl/paseto"
+)
+
+const (
+	// pasetoTokenPrefix is the prefix expected in the Authorization header.
+	pasetoTokenPrefix = "Bearer "
+	// pasetoContextKey is the fiber locals key holding the parsed token.
+	pasetoContextKey = "paseto"
 )
 
 func NewRandomPasetoKey() *common.Base64Key {
@@ -23,24 +28,43 @@ func NewRandomPasetoKey() *common.Base64Key {
 }
 
 func NewPasetoMiddleware(envs common.Environment) fiber.Handler {
-	return pasetoware.New(pasetoware.Config{
-		TokenPrefix:  "Bearer",
-		SymmetricKey: envs.PasetoKey[:],
-		Next: func(ctx *fiber.Ctx) bool {
-			// Skip this authentication middleware on GET requests,
-			// GETs are public.
-			return ctx.Method() == fiber.MethodGet
-		},
-		Validate: func(data []byte) (any, error) {
-			var payload paseto.JSONToken
-			if err := json.Unmarshal(data, &payload); err != nil {
-				return nil, fmt.Errorf("can't unmarshal PASETO token: %w", err)
-			}
+	if envs.PasetoKey == nil {
+		log.Fatalf("can't load PASETO key: key is not set")
+	}
 
-			return payload, nil
-		},
-		ErrorHandler: func(ctx *fiber.Ctx, _ error) error {
+	tokenKey, err := paseto.V2SymmetricKeyFromBytes(envs.PasetoKey[:])
+	if err != nil {
+		log.Fatalf("can't load PASETO key: %s", err.Error())
+	}
+
+	// Tokens issued before this migration do not carry an "exp" claim,
+	// so the expiry check is disabled to keep them valid.
+	parser := paseto.NewParserWithoutExpiryCheck()
+
+	return func(ctx *fiber.Ctx) error {
+		// Skip this authentication middleware on GET requests,
+		// GETs are public.
+		if ctx.Method() == fiber.MethodGet {
+			return ctx.Next()
+		}
+
+		header := ctx.Get(fiber.HeaderAuthorization)
+		if header == "" {
 			return common.CustomErrorHandler(ctx, common.ErrAuthentication)
-		},
-	})
+		}
+
+		tainted, found := strings.CutPrefix(header, pasetoTokenPrefix)
+		if !found {
+			return common.CustomErrorHandler(ctx, common.ErrAuthentication)
+		}
+
+		token, err := parser.ParseV2Local(tokenKey, tainted)
+		if err != nil {
+			return common.CustomErrorHandler(ctx, common.ErrAuthentication)
+		}
+
+		ctx.Locals(pasetoContextKey, token)
+
+		return ctx.Next()
+	}
 }

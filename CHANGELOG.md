@@ -15,6 +15,14 @@ Releases before 1.0.0 are documented only in the
 - A security policy, `SECURITY.md`, saying how to report a vulnerability
   privately and which versions get fixes.
 
+### Changed
+
+- Tokens are now read and written with `aidanwoods.dev/go-paseto`, which
+  replaces the unmaintained `github.com/o1egl/paseto` and the
+  `gofiber/contrib/paseto` middleware built on it. The token format and
+  the `PASETO_KEY` setting are unchanged, so tokens issued before the
+  upgrade keep working.
+
 ### Security
 
 - The database image used for local development is pinned by digest,

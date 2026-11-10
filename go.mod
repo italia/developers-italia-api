@@ -7,7 +7,6 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/go-testfixtures/testfixtures/v3 v3.19.0
-	github.com/gofiber/contrib/paseto v1.2.4
 	github.com/gofiber/fiber/v2 v2.52.16
 	github.com/stretchr/testify v1.12.1
 	gorm.io/driver/postgres v1.6.3
@@ -16,6 +15,7 @@ require (
 )
 
 require (
+	aidanwoods.dev/go-paseto v1.6.0
 	github.com/ansrivas/fiberprometheus/v2 v2.18.0
 	github.com/evanphx/json-patch/v5 v5.9.11
 	github.com/jackc/pgx/v5 v5.11.0
@@ -43,15 +43,12 @@ require (
 )
 
 require (
-	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
-	github.com/aead/chacha20poly1305 v0.0.0-20201124145622-1a5aba2a8b29 // indirect
-	github.com/aead/poly1305 v0.0.0-20180717145839-3fee0db0b635 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/o1egl/paseto v1.0.0
 	github.com/pilagod/gorm-cursor-paginator/v2 v2.7.0
 )
 
 require (
+	aidanwoods.dev/go-result v0.3.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
@@ -66,7 +63,6 @@ require (
 	github.com/leodido/go-urn v1.5.0 // indirect
 	github.com/molecule-man/go-brrr v1.3.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	go.opentelemetry.io/otel v1.45.0 // indirect
