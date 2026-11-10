@@ -1316,3 +1316,73 @@ func TestCatalogAnalysisDBChecks(t *testing.T) {
 		assert.Contains(t, analysis, "ns-two", "ns-two namespace must be present after second PATCH")
 	})
 }
+
+func TestCatalogPostDBChecks(t *testing.T) {
+	t.Run("POST catalog persists name, alternativeId and publishersNamespace", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `{"name":"Persisted Catalog","alternativeId":"persisted","publishersNamespace":"urn:x-persisted:","sources":[{"url":"https://persisted.example.org/catalog"}]}`
+
+		req, err := newTestRequest("POST", "/v1/catalogs", strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		var created map[string]interface{}
+		require.NoError(t, json.NewDecoder(res.Body).Decode(&created))
+		catalogID := created["id"].(string)
+
+		assert.Equal(t, "Persisted Catalog", dbValue(t, "catalogs", "name", "id", catalogID))
+		assert.Equal(t, "persisted", dbValue(t, "catalogs", "alternative_id", "id", catalogID))
+		assert.Equal(t, "urn:x-persisted:", dbValue(t, "catalogs", "publishers_namespace", "id", catalogID))
+		assert.Equal(t, 1, dbCount(t, "catalog_sources", "catalog_id", catalogID))
+	})
+}
+
+func TestCatalogPatchDBChecks(t *testing.T) {
+	t.Run("PATCH catalog persists name, alternativeId and publishersNamespace", func(t *testing.T) {
+		loadFixtures(t)
+
+		body := `{"name":"Renamed Catalog","alternativeId":"renamed","publishersNamespace":"urn:x-renamed:"}`
+
+		req, err := newTestRequest("PATCH", "/v1/catalogs/"+italiaID, strings.NewReader(body))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, "Renamed Catalog", dbValue(t, "catalogs", "name", "id", italiaID))
+		assert.Equal(t, "renamed", dbValue(t, "catalogs", "alternative_id", "id", italiaID))
+		assert.Equal(t, "urn:x-renamed:", dbValue(t, "catalogs", "publishers_namespace", "id", italiaID))
+	})
+
+	t.Run("PATCH catalog keeps the fields it does not touch", func(t *testing.T) {
+		loadFixtures(t)
+
+		req, err := newTestRequest("PATCH", "/v1/catalogs/"+swissID, strings.NewReader(`{"publishersNamespace":"urn:x-swiss:"}`))
+		require.NoError(t, err)
+		req.Header = map[string][]string{
+			"Authorization": {goodToken},
+			"Content-Type":  {"application/json"},
+		}
+
+		res, err := app.Test(req, -1)
+		require.NoError(t, err)
+		require.Equal(t, 200, res.StatusCode)
+
+		assert.Equal(t, "urn:x-swiss:", dbValue(t, "catalogs", "publishers_namespace", "id", swissID))
+		assert.Equal(t, "Swiss Catalog", dbValue(t, "catalogs", "name", "id", swissID))
+		assert.Equal(t, "swiss", dbValue(t, "catalogs", "alternative_id", "id", swissID))
+	})
+}
